@@ -1,0 +1,105 @@
+# create a new packages server
+# NOTE: should be used with --limit most of the time
+# NOTE: make sure there is room/space for this server on the vmhost
+# NOTE: most of these vars_path come from group_vars/packages* or from hostvars
+
+- include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=packages:packages-stg"
+
+- name: make the box be real
+  hosts: packages:packages-stg
+  user: root
+  gather_facts: True
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+  - base
+  - rkhunter
+  - nagios/client
+  - hosts
+  - fas_client
+  - collectd/base
+  - rsyncd
+  - sudo
+  - { role: openvpn/client,
+      when: env != "staging" }
+  - apache
+
+  tasks:
+  - include: "{{ tasks }}/yumrepos.yml"
+  - include: "{{ tasks }}/2fa_client.yml"
+  - include: "{{ tasks }}/motd.yml"
+  - include: "{{ tasks }}/mod_wsgi.yml"
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
+
+- name: set up gluster server on prod
+  hosts: packages
+  user: root
+  gather_facts: True
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+  - role: gluster/server
+    name: gluster
+    username: "{{ packagesglusterusername }}"
+    password: "{{ packagesglusterpassword }}"
+    owner: root
+    group: root
+    datadir: /srv/glusterfs/packages
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
+
+- name: set up gluster client on prod
+  hosts: packages
+  user: root
+  gather_facts: True
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+  - fedmsg/base
+  - role: gluster/client
+    name: gluster
+    servers:
+    - packages03.rpmfusion.org
+    - packages04.rpmfusion.org
+    username: "{{ packagesglusterusername }}"
+    password: "{{ packagesglusterpassword }}"
+    owner: apache
+    group: fedmsg
+    mountdir: /var/cache/fedoracommunity
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
+
+- name: dole out the new service specific config
+  hosts: packages:packages-stg
+  user: root
+  gather_facts: True
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+  - fedmsg/hub
+  - packages3/web
+  - role: collectd/fedmsg-service
+    process: fedmsg-hub
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"

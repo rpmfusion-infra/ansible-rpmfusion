@@ -1,0 +1,66 @@
+# create a new notifs-backend server
+# NOTE: should be used with --limit most of the time
+# NOTE: make sure there is room/space for this server on the vmhost
+# NOTE: most of these vars_path come from group_vars/mirrorlist or from hostvars
+
+- include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=notifs-backend:notifs-backend-stg"
+
+- name: dole out the generic configuration
+  hosts: notifs-backend:notifs-backend-stg
+  user: root
+  gather_facts: True
+
+  vars_files: 
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+  - base
+  - rkhunter
+  - hosts
+  - fas_client
+  - nagios/client
+  - collectd/base
+  - fedmsg/base
+  - sudo
+  # The proxies don't actually need to talk to these hosts so we won't bother
+  # putting them on the vpn.
+  #- { role: openvpn/client,
+  #    when: env != "staging" }
+
+  tasks:
+  - include: "{{ tasks }}/yumrepos.yml"
+  - include: "{{ tasks }}/2fa_client.yml"
+  - include: "{{ tasks }}/motd.yml"
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
+
+- name: dole out the service-specific config
+  hosts: notifs-backend:notifs-backend-stg
+  user: root
+  gather_facts: True
+
+  pre_tasks:
+  - name: tell nagios to shush w.r.t. the backend since it usually complains
+    nagios: action=downtime minutes=25 service=host host={{ inventory_hostname_short }}{{ env_suffix }}
+    delegate_to: noc01.rpmfusion.org
+    ignore_errors: true
+    tags:
+    - fedmsgdconfig
+    - notifs/backend
+
+  roles:
+  - fedmsg/hub
+  - notifs/backend
+  - role: collectd/fedmsg-service
+    process: fedmsg-hub
+
+  vars_files: 
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"

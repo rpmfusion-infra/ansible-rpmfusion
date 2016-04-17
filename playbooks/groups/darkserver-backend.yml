@@ -1,0 +1,73 @@
+- include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=darkserver-backend:darkserver-backend-stg"
+
+- name: make the box be real
+  hosts: darkserver-backend:darkserver-backend-stg
+  user: root
+  gather_facts: True
+
+  vars_files: 
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  pre_tasks:
+
+  - yum: name=libsemanage-python state=present
+  - name: "Set SElinux booleans"
+    seboolean: name=httpd_can_network_connect_db state=yes persistent=yes 
+
+  roles:
+  - base
+  - collectd/base
+  - fas_client
+  - hosts
+  - nagios/client
+  - rsyncd
+  - sudo
+  - redis
+  - { role: openvpn/client, when: env != "staging" }
+
+  - role: apache
+
+  tasks:
+  - include: "{{ tasks }}/yumrepos.yml"
+  - include: "{{ tasks }}/2fa_client.yml"
+  - include: "{{ tasks }}/motd.yml"
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
+
+- name: set up fedmsg basics
+  hosts: darkserver-backend:darkserver-backend-stg
+  user: root
+  gather_facts: True
+
+  vars_files: 
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+  - fedmsg/base
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
+
+- name: dole out the service-specific config
+  hosts: darkserver-backend:darkserver-backend-stg
+  user: root
+  gather_facts: True
+
+  vars_files: 
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+  - fedmsg/hub
+  - darkserver/backend
+  - role: collectd/fedmsg-service
+    process: fedmsg-hub
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"

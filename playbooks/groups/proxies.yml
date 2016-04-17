@@ -1,0 +1,165 @@
+# create a new proxy server
+
+- include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=proxies:proxies-stg"
+
+- name: make the box be real
+  hosts: proxies-stg:proxies
+  user: root
+  gather_facts: True
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+  - base
+  - rkhunter
+  - nagios/client
+  - collectd/base
+  - sudo
+  - rsyncd
+  - { role: openvpn/client,
+      when: env != "staging" }
+  - apache
+
+  tasks:
+  - include: "{{ tasks }}/yumrepos.yml"
+  - include: "{{ tasks }}/2fa_client.yml"
+  - include: "{{ tasks }}/motd.yml"
+
+  # You might think we would want these tasks on the proxy nodes, but they
+  # actually deliver a configuration that our proxy-specific roles below then go
+  # and overwrite... so, let's just leave them out.
+  #- include: "{{ tasks }}/apache.yml"
+  #- include: "{{ tasks }}/mod_wsgi.yml"
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
+
+
+  # TODO
+  #
+  # - fedora-web::build (bapp0*)
+  # - fedora-docs::build (bapp0*)
+  # - review-stats::build (bapp0*)
+  # - membership-map::build (bapp0*)
+  #
+  ## TBD
+  # - sysctl ip_conntrack_max bits  - do we still need this on rhel7?
+  # - semanage ports.. we're likely going to need one for every app.
+  # - sebooleans.. let's try running first, see what gets blocked, and then
+  #                selectively enable where semanage port fails
+  #
+  ## Not going to do
+  # - smolt::proxy -- note going to do this.  smolt is dead.  long live smolt.
+  # - domainnotarget stuff - only smolt used this
+
+
+- name: Set up the proxy basics
+  hosts: proxies-stg:proxies
+  user: root
+  gather_facts: False
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
+
+  pre_tasks:
+  #
+  # When we have a prerelease we also need to drop the config files.
+
+  - name: Remove prerelease-to-final-spins-1
+    file: path=/etc/httpd/conf.d/spins.rpmfusion.org/prerelease-to-final-spins-1-redirectmatch.conf state=absent
+
+  - name: Remove prerelease-to-final-spins-2
+    file: path=/etc/httpd/conf.d/spins.rpmfusion.org/prerelease-to-final-spins-2-redirectmatch.conf state=absent
+
+  - name: Remove prerelease-to-final-labs-1
+    file: path=/etc/httpd/conf.d/labs.rpmfusion.org/prerelease-to-final-labs-1-redirectmatch.conf state=absent
+
+  - name: Remove prerelease-to-final-labs-2
+    file: path=/etc/httpd/conf.d/labs.rpmfusion.org/prerelease-to-final-labs-2-redirectmatch.conf state=absent
+
+  - name: Remove prerelease-to-final-arm-1
+    file: path=/etc/httpd/conf.d/arm.rpmfusion.org/prerelease-to-final-arm-1-redirectmatch.conf state=absent
+
+  - name: Remove prerelease-to-final-arm-2
+    file: path=/etc/httpd/conf.d/arm.rpmfusion.org/prerelease-to-final-arm-2-redirectmatch.conf state=absent
+
+  - name: Remove prerelease-to-final-gfo
+    file: path=/etc/httpd/conf.d/getfedora.org/prerelease-to-final-gfo-redirectmatch.conf state=absent
+
+  - name: Remove prerelease-to-final-spins
+    file: path=/etc/httpd/conf.d/spins.rpmfusion.org/prerelease-to-final-spins-redirectmatch.conf state=absent
+
+  - name: Remove prerelease-to-final-labs
+    file: path=/etc/httpd/conf.d/labs.rpmfusion.org/prerelease-to-final-labs-redirectmatch.conf state=absent
+
+  - name: Remove prerelease-to-final-arm
+    file: path=/etc/httpd/conf.d/arm.rpmfusion.org/prerelease-to-final-arm-redirectmatch.conf state=absent
+
+  roles:
+  - httpd/proxy
+  - varnish
+  #
+  # Re-run hosts here so things are ok for the haproxy check
+  #
+  - hosts
+
+# After setting up the "basics" of the proxy hosts above, here below we break
+# out the proxy-specific configuration into a couple different sub-playbooks.
+# Othewise, this file would be unbearably long.
+
+- include: /srv/web/infra/ansible/playbooks/include/proxies-certificates.yml
+- include: /srv/web/infra/ansible/playbooks/include/proxies-websites.yml
+- include: /srv/web/infra/ansible/playbooks/include/proxies-reverseproxy.yml
+- include: /srv/web/infra/ansible/playbooks/include/proxies-rewrites.yml
+- include: /srv/web/infra/ansible/playbooks/include/proxies-redirects.yml
+- include: /srv/web/infra/ansible/playbooks/include/proxies-fedora-web.yml
+- include: /srv/web/infra/ansible/playbooks/include/proxies-haproxy.yml
+- include: /srv/web/infra/ansible/playbooks/include/proxies-miscellaneous.yml
+
+- name: Make sure we are deployed fully
+  hosts: proxies-stg:proxies
+  user: root
+  gather_facts: False
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
+
+  pre_tasks:
+  #
+  # If this is an initial deployment, we need the initial ticketkey
+  # If it's not, doesn't hurt to copy it over again
+  #
+  - name: deploy ticket key
+    copy: src=/root/ticketkey_{{env}}.tkey dest=/etc/httpd/ticketkey_{{env}}.tkey
+          owner=root group=root mode=0600
+    notify:
+    - reload httpd
+
+  #
+  # If this is an initial deployment, make sure docs are synced over. 
+  # Do not count these as changed ever
+  #
+  - name: make sure docs are synced. This could take a very very very logtime to finish
+    shell: /usr/local/bin/lock-wrapper docs-sync "/usr/local/bin/docs-rsync" >& /dev/null
+    changed_when: false
+    ignore_errors: true
+
+  - name: make sure selinux contexts are right on srv
+    command: restorecon -R /srv
+    changed_when: false
+
+  roles:
+  - fas_client

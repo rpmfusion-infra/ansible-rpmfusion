@@ -1,0 +1,122 @@
+# create a new mailman server
+# NOTE: make sure there is room/space for this server on the vmhost
+# NOTE: most of these vars_path come from group_vars/mirrorlist or from hostvars
+
+- include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=mailman:mailman-stg"
+
+- name: make the box be real
+  hosts: mailman-stg:mailman
+  user: root
+  gather_facts: True
+
+  vars_files:
+  - /srv/web/infra/ansible/vars/global.yml
+  - "/srv/private/ansible/vars.yml"
+  - "/srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml"
+
+  roles:
+  - base
+  - rkhunter
+  - nagios/client
+  - hosts
+  - fas_client
+  - collectd/base
+  - sudo
+  - { role: openvpn/client,
+      when: env != "staging" }
+  - apache
+
+  tasks:
+  # this is how you include other task lists
+  - include: "{{ tasks }}/yumrepos.yml"
+  - include: "{{ tasks }}/2fa_client.yml"
+  - include: "{{ tasks }}/motd.yml"
+  - include: "{{ tasks }}/mod_wsgi.yml"
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
+
+
+#
+# Database setup
+#
+
+- name: prepare setting up the database
+  hosts: db01.stg.rpmfusion.org:db01.rpmfusion.org
+  gather_facts: no
+  user: root
+
+  tasks:
+  - name: install psycopg2 for the postgresql ansible modules
+    yum: pkg=python-psycopg2 state=present
+    tags:
+    - packages
+
+- name: setup the database
+  hosts: db01.stg.rpmfusion.org:db01.rpmfusion.org
+  gather_facts: no
+  become: yes
+  become_user: postgres
+  vars_files:
+  - /srv/web/infra/ansible/vars/global.yml
+  - "/srv/private/ansible/vars.yml"
+  - "/srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml"
+
+  tasks:
+  # mailman auto-updates its schema, there can only be one admin user
+  - name: mailman DB user
+    postgresql_user: name=mailmanadmin password={{ mailman_mm_db_pass }}
+  - name: hyperkitty DB admin user
+    postgresql_user: name=hyperkittyadmin password={{ mailman_hk_admin_db_pass }}
+  - name: hyperkitty DB user
+    postgresql_user: name=hyperkittyapp password={{ mailman_hk_db_pass }}
+  - name: databases creation
+    postgresql_db: name={{ item }} owner="{{ item }}admin" encoding=UTF-8
+    with_items:
+    - mailman
+    - hyperkitty
+  - name: test database creation
+    postgresql_db: name=test_hyperkitty owner=hyperkittyadmin encoding=UTF-8
+
+
+# Real MM/HK-specific work
+- name: setup mailman and hyperkitty
+  hosts: mailman-stg:mailman
+  user: root
+  gather_facts: True
+
+  vars_files:
+  - /srv/web/infra/ansible/vars/global.yml
+  - "/srv/private/ansible/vars.yml"
+  - "/srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml"
+
+  roles:
+  - role: mailman
+    mailman_mailman_db_pass: "{{ mailman_mm_db_pass }}"
+    mailman_hyperkitty_admin_db_pass: "{{ mailman_hk_admin_db_pass }}"
+    mailman_hyperkitty_db_pass: "{{ mailman_hk_db_pass }}"
+    mailman_hyperkitty_cookie_key: "{{ mailman_hk_cookie_key }}"
+  - fedmsg/base
+
+  tasks:
+  - name: install more needed packages
+    yum: pkg={{ item }} state=present
+    with_items:
+    - tar
+    tags:
+    - packages
+
+  #- name: easy access to the postgresql databases
+  #  template: src=$files/mailman/pgpass.j2 dest=/root/.pgpass
+  #            owner=root group=root mode=0600
+
+  - name: start services
+    service: state=started enabled=yes name={{ item }}
+    with_items:
+    - httpd
+    - mailman3
+    - postfix
+    when: inventory_hostname.startswith('mailman01.online') or inventory_hostname.startswith('lists-dev')
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"

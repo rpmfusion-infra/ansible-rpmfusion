@@ -1,0 +1,39 @@
+# create a new database server system
+# NOTE: should be used with --limit most of the time
+# NOTE: most of these vars_path come from group_vars/backup_server or from hostvars
+
+- include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=db-datanommer02.rpmfusion.org:db-qa01.qa.rpmfusion.org:db-koji01.rpmfusion.org:db-fas01.stg.rpmfusion.org:db-fas01.rpmfusion.org:db01.rpmfusion.org:db01.stg.rpmfusion.org:db-s390-koji01.qa.rpmfusion.org:db-arm-koji01.qa.rpmfusion.org"
+
+# Once the instance exists, configure it. 
+
+- name: configure postgresql server system
+  hosts: db-datanommer02.rpmfusion.org:db-qa01.qa.rpmfusion.org:db-koji01.rpmfusion.org:db-fas01.stg.rpmfusion.org:db-fas01.rpmfusion.org:db01.rpmfusion.org:db01.stg.rpmfusion.org:db-s390-koji01.qa.rpmfusion.org:db-arm-koji01.qa.rpmfusion.org
+  user: root
+  gather_facts: True
+
+  vars_files: 
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+  - base
+  - rkhunter
+  - fas_client
+  - nagios/client
+  - hosts
+  - postgresql_server
+  - collectd/base
+  - collectd/postgres  # This requires a 'databases' var to be set in host_vars
+  - sudo
+  - { role: openvpn/client, when: inventory_hostname == "db-fas01.rpmfusion.org" or inventory_hostname == "db01.rpmfusion.org" }
+
+  tasks:
+  - include: "{{ tasks }}/yumrepos.yml"
+  - include: "{{ tasks }}/2fa_client.yml"
+  - include: "{{ tasks }}/motd.yml"
+
+# TODO: add iscsi task
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"

@@ -1,0 +1,41 @@
+#- include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=log01.rpmfusion.org"
+
+- name: make the box be real
+  hosts: log01.rpmfusion.org
+  user: root
+  gather_facts: True
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+  - base
+  - rkhunter
+  - nagios/client
+  - hosts
+  - fas_client
+  - apache
+  - collectd/base
+  - collectd/server
+  - sudo
+  - epylog
+  - openvpn/client
+  - awstats
+
+  tasks:
+  - include: "{{ tasks }}/yumrepos.yml"
+  - include: "{{ tasks }}/2fa_client.yml"
+  - include: "{{ tasks }}/motd.yml"
+
+#
+# We exclude some dirs from restorecon on updates on logservers as they are very large
+# and it takes a long long time to run restorecon over them. 
+#
+  - name: exclude some directories from selinux relabeling on updates
+    copy: src="{{ files }}/logserver/fixfiles_exclude_dirs" dest=/etc/selinux/fixfiles_exclude_dirs owner=root mode=0644
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
+

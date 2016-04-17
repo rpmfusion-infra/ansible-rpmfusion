@@ -1,0 +1,120 @@
+# create a new koji hub server system
+# NOTE: should be used with --limit most of the time
+# NOTE: most of these vars_path come from group_vars/koji-hub or from hostvars
+
+- include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=koji-stg:koji01.rpmfusion.org:koji02.rpmfusion.org:s390-koji01.qa.rpmfusion.org:arm-koji01.qa.rpmfusion.org"
+
+# Once the instance exists, configure it.
+
+- name: make koji_hub server system
+  hosts: koji-stg:koji01.rpmfusion.org:koji02.rpmfusion.org:s390-koji01.qa.rpmfusion.org:arm-koji01.qa.rpmfusion.org
+  user: root
+  gather_facts: True
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  pre_tasks:
+    - include: "{{ tasks }}/osbs_certs.yml"
+    - include: "{{ tasks }}/osbs_repos.yml"
+
+  roles:
+  - base
+  - rkhunter
+  - nagios/client
+  - hosts
+  - fas_client
+  - builder_repo
+  - collectd/base
+  - apache
+  - fedmsg/base
+  - koji_hub
+  - { role: rsyncd, when: not inventory_hostname.startswith('koji') }
+  - { role: koji_builder, when: env == "staging" or inventory_hostname.startswith('s390') or inventory_hostname.startswith('arm') }
+  - {
+      role: osbs-client,
+        when: env == 'staging',
+        general: {
+          verbose: 0,
+          build_json_dir: '/usr/share/osbs/',
+          openshift_required_version: 1.1.0,
+        },
+        default: {
+          username: "{{ osbs_koji_stg_username }}",
+          password: "{{ osbs_koji_stg_password }}",
+          koji_certs_secret: "koji",
+          openshift_url: 'https://{{ osbs_fqdn }}/',
+          registry_uri: 'https://{{ docker_registry }}/v2',
+          source_registry_uri: 'https://{{ docker_registry }}/v2',
+          build_host: '{{ osbs_fqdn }}',
+          koji_root: 'http://{{ koji_root }}',
+          koji_hub: 'http://{{ koji_hub }}',
+          sources_command: 'fedpkg sources',
+          build_type: 'prod',
+          authoritative_registry: 'registry.example.com',
+          vendor: 'Fedora Project',
+          verify_ssl: false,
+          use_auth: true,
+          builder_use_auth: true,
+          distribution_scope: 'private',
+          registry_api_versions: 'v2',
+          builder_openshift_url: 'https://172.17.0.1:8443/'
+        }
+    }
+
+  - { role: nfs/server, when: env == "staging" }
+  - { role: keepalived, when: env == "production" and inventory_hostname.startswith('koji') }
+  - role: nfs/client
+    mnt_dir: '/mnt/fedora_koji'
+    nfs_src_dir: 'fedora_koji'
+    when: env == 'production' and inventory_hostname.startswith('koji')
+  - role: nfs/client
+    mnt_dir: '/mnt/koji'
+    nfs_src_dir: 'fedora_s390/data'
+    when: env == 'production' and inventory_hostname.startswith('s390')
+  - role: nfs/client
+    mnt_dir: '/mnt/koji'
+    nfs_src_dir: 'fedora_arm/data'
+    when: env == 'production' and inventory_hostname.startswith('arm')
+    # In staging, we mount fedora_koji as read only (see nfs_mount_opts)
+  - role: nfs/client
+    mnt_dir: '/mnt/fedora_koji_prod'
+    nfs_src_dir: 'fedora_koji'
+    when: env == 'staging' and inventory_hostname.startswith('koji')
+  - sudo
+
+  tasks:
+  - name: create secondary volume dir for stg koji
+    file: dest=/mnt/koji/vol state=directory owner=apache group=apache mode=0755
+    tags: koji_hub
+    when: env == 'staging'
+  - name: create symlink for stg/prod secondary volume
+    file: src=/mnt/fedora_koji_prod/koji dest=/mnt/koji/vol/prod state=link
+    tags: koji_hub
+    when: env == 'staging'
+  - include: "{{ tasks }}/yumrepos.yml"
+  - include: "{{ tasks }}/2fa_client.yml"
+  - include: "{{ tasks }}/motd.yml"
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
+
+
+#- name: Start the kojid builder daemon, but only on staging.
+#  # Really -- this should never be set for prod.
+#  hosts: koji-stg:s390-koji01.qa.rpmfusion.org
+#  user: root
+#  gather_facts: True
+#
+#  # XXX - should these just be included in koji_builder and koji_hub roles?
+#  tasks:
+#  - name: make sure kojid is running
+#    service: name=kojid state=running
+#    tags:
+#    - kojid
+#  - name: make sure kojira is running
+#    service: name=kojira state=running
+#    tags:
+#    - kojira

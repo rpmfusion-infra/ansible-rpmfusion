@@ -1,0 +1,42 @@
+- include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=batcave"
+
+- name: make the box be real
+  hosts: batcave
+  user: root
+  gather_facts: True
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+  - base
+  - rkhunter
+  - nagios/client
+  - hosts
+  - fas_client
+  - ansible-server
+  - sudo
+  - collectd/base
+  - git/hooks
+  - cgit/base
+  - cgit/clean_lock_cron
+  - cgit/make_pkgs_list
+  - rsyncd
+  - apache
+  - httpd/mod_ssl
+  - { role: httpd/certificate, name: wildcard-2014.rpmfusion.org, SSLCertificateChainFile: wildcard-2014.rpmfusion.org.intermediate.cert }
+  - openvpn/client
+  - batcave
+
+  - { role: nfs/client, mnt_dir: '/srv/web/pub',  nfs_src_dir: 'fedora_ftp/fedora.redhat.com/pub' }
+  - { role: nfs/client, mnt_dir: '/mnt/fedora/app',  nfs_src_dir: 'fedora_app/app' }
+  
+  tasks:
+  - include: "{{ tasks }}/yumrepos.yml"
+  - include: "{{ tasks }}/2fa_client.yml"
+  - include: "{{ tasks }}/motd.yml"
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
