@@ -1,0 +1,16 @@
+
+[buildvm]
+
+[buildvmhost]
+
+[buildhw]
+
+[buildarm:children]
+scaleway-c1
+
+[scaleway-c1]
+
+[builders:children]
+buildhw
+buildvm
+buildarm

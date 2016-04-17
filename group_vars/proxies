@@ -1,0 +1,79 @@
+---
+# Define resources for this group of hosts here.
+lvm_size: 30000
+mem_size: 8192
+num_cpus: 4
+
+# This is used in the httpd.conf to determine the value for serverlimit and 
+# maxrequestworkers. On 8gb proxies, 900 seems fine. But on 4gb proxies, this 
+# should be lowered in the host vars for that proxy.
+maxrequestworkers: 900
+
+tcp_ports: [
+    # For apache, generally.
+    80,
+    443,
+
+    # This is for the haproxy HTML stats page
+    # TODO -- there's no need for this to be wide open to the world.  With this
+    # in place, you can visit https://apps.fedoraproject.org:8080 and get the
+    # haproxy stats page.  We should close this and just have admins go through
+    # the apache reverseproxy at https://admin.fedoraproject.org/haproxy/proxy1
+    8080,
+
+    # For fedmsg websocket server over stunnel
+    9939,
+    # For fedmsg raw zeromq socket (outbound)
+    9940,
+    # 9941 is closed generally, is for the inbound fedmsg and is covered in
+    # custom_rules
+ ]
+custom_rules: [
+    # Need for rsync from log01 for logs.
+    '-A INPUT -p tcp -m tcp -s 10.5.126.13 --dport 873 -j ACCEPT',
+    '-A INPUT -p tcp -m tcp -s 192.168.1.59 --dport 873 -j ACCEPT',
+    '-A INPUT -p tcp -m tcp -s 209.132.181.102 --dport 873 -j ACCEPT',
+
+    # allow varnish from localhost
+    '-A INPUT -p tcp -m tcp -s 127.0.0.1 --dport 6081 -j ACCEPT',
+    '-A INPUT -p tcp -m tcp -s 127.0.0.1 --dport 6082 -j ACCEPT',
+
+    # also allow varnish from internal for purge requests
+    '-A INPUT -p tcp -m tcp -s 192.168.1.0/24 --dport 6081 -j ACCEPT',
+    '-A INPUT -p tcp -m tcp -s 10.5.126.0/24 --dport 6081 -j ACCEPT',
+
+    # Allow jenkins.fedorainfracloud to talk to the inbound fedmsg relay.
+    '-A INPUT -p tcp -m tcp --dport 9941 -s 209.132.184.57 -j ACCEPT',
+    # Allow copr-be.cloud to talk to the inbound fedmsg relay.
+    '-A INPUT -p tcp -m tcp --dport 9941 -s 209.132.184.48 -j ACCEPT',
+    # Also, ppc-hub.qa.fedoraproject.org (secondary arch koji)
+    '-A INPUT -p tcp -m tcp --dport 9941 -s 209.132.181.21 -j ACCEPT',
+    # Also, arm-koji01.qa.fedoraproject.org (secondary arch)
+    '-A INPUT -p tcp -m tcp --dport 9941 -s 10.5.124.138 -j ACCEPT',
+
+    # Allow retrace/faf to talk to the inbound fedmsg relay.
+    # retrace01.qa.fedoraproject.org
+    '-A INPUT -p tcp -m tcp --dport 9941 -s 10.5.124.171 -j ACCEPT',
+    # retrace02.qa.fedoraproject.org
+    '-A INPUT -p tcp -m tcp --dport 9941 -s 10.5.124.172 -j ACCEPT',
+    # Also, s390-hub01.qa.fedoraproject.org (secondary arch)
+    '-A INPUT -p tcp -m tcp --dport 9941 -s 10.5.124.191 -j ACCEPT',
+
+    # Allow resultsdb talk to the inbound fedmsg relay.
+    '-A INPUT -p tcp -m tcp --dport 9941 -s 10.5.124.207 -j ACCEPT',
+    # Allow openqa01 to talk to the inbound fedmsg relay.
+    '-A INPUT -p tcp -m tcp --dport 9941 -s 10.5.131.71 -j ACCEPT',
+ ]
+
+fas_client_groups: sysadmin-main
+
+collectd_apache: true
+
+# For the MOTD
+csi_security_category: Moderate
+csi_purpose: Provides frontend (reverse) proxy for most web applications
+csi_relationship: |
+    Using Apache -> haproxy, these hosts contact app servers and
+        other various hosts to provide web applications at sites like
+        fedoraproject.org and admin.fedoraproject.org.  The proxy servers are
+        balanced via dns and geoIP and are spread all over the place.
