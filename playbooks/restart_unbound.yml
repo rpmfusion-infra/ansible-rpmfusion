@@ -1,0 +1,16 @@
+# This playboook restarts unbound on a host
+#
+# requires --extra-vars="target=somevhostname"
+#
+
+- name: find instances
+  hosts: "{{ target }}"
+  gather_facts: False
+  user: root
+
+  vars_files:
+  - /srv/web/infra/ansible/vars/global.yml
+  - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  tasks:
+  - include: "{{ tasks }}/restart_unbound.yml"

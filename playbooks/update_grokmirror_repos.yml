@@ -1,0 +1,13 @@
+# update all mirrors currently served by grokmirror
+
+- name: update grokmirror repos
+  hosts: taskotron-dev:taskotron-stg:taskotron-prod
+  become: true
+  become_user: "{{ grokmirror_user }}"
+  gather_facts: false
+
+  tasks:
+     - name: update grokmirror repos
+       command: chdir={{ grokmirror_basedir }}/{{ item.name }} git fetch origin {{ grokmirror_default_branch }}:{{ grokmirror_default_branch }}
+       with_items: grokmirror_repos
+

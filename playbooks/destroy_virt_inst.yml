@@ -1,0 +1,40 @@
+# only works with -e target=
+# read configs from host_vars
+# check for host already existing
+# if it exists
+# kill it
+# lvremove disk?
+# if not
+# exit with failure
+
+# requires --extra-vars="target=hostspec"
+
+- name: destroy and undefine vm
+  hosts: "{{ target }}"
+  user: root
+  gather_facts: false
+
+  tasks:
+  - name: get vm list on the vmhost
+    delegate_to: "{{ vmhost }}"
+    virt: command=list_vms
+    register: result
+
+  - name: fail if the host is not already defined/existent
+    local_action: fail msg="host does not exist on {{ vmhost }}"
+    when: inventory_hostname not in result.list_vms
+
+  - name: pause for 30s before doing it
+    pause: seconds=30 prompt="Destroying (and lvremove for) vm now {{ target }}, abort if this is wrong"
+    
+  - name: destroy the vm
+    virt: name={{ inventory_hostname }} command=destroy
+    delegate_to: "{{ vmhost }}"
+
+  - name: undefine the vm
+    virt: name={{ inventory_hostname }} command=undefine
+    delegate_to: "{{ vmhost }}"
+
+  - name: destroy the lv
+    command: /sbin/lvremove -f {{volgroup}}/{{inventory_hostname}}
+    delegate_to: "{{ vmhost }}"

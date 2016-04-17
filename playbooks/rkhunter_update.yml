@@ -1,0 +1,28 @@
+# requires --extra-vars="target='host1:host2:group etc' yumcommand=update'"
+
+- name: update all run rkhunter if installed
+  hosts: "{{ target }}"
+  user: root
+
+  tasks:
+  - name: expire-caches
+    command: yum clean expire-cache
+    
+  - name: yum -y {{ yumcommand }}
+    command: yum -y {{ yumcommand }}
+    async: 7200
+    poll: 15
+
+  - name: check for rkhunter
+    command: /usr/bin/test -f /usr/bin/rkhunter
+    register: rkhunter
+    ignore_errors: true
+  
+  - name: run rkhunter --propupd
+    command: /usr/bin/rkhunter --propupd
+    when: rkhunter|success
+
+
+
+
+

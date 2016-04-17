@@ -1,0 +1,32 @@
+# This playbook updates hosts without guests.
+#
+# requires --extra-vars="target=somehostname yumcommand=update"
+
+
+- name: update the system
+  hosts: "{{ target }}"
+  gather_facts: false
+  user: root
+ 
+  tasks: 
+  - name: expire-caches
+    command: yum clean expire-cache
+    
+  - name: yum -y {{ yumcommand }}
+    command: yum -y {{ yumcommand }}
+    async: 7200
+    poll: 30
+
+- name: run rkhunter if installed
+  hosts:  "{{ target }}"
+  user: root
+
+  tasks:
+  - name: check for rkhunter
+    command: /usr/bin/test -f /usr/bin/rkhunter
+    register: rkhunter
+    ignore_errors: true
+  
+  - name: run rkhunter --propupd
+    command: /usr/bin/rkhunter --propupd
+    when: rkhunter|success

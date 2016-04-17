@@ -1,0 +1,25 @@
+# Run `fasClient` on all hosts, N hosts at a time
+#
+# We exclude builders, persistent-cloud, jenkins-master and jenkins-slave as they don't have fasclient
+#
+
+- name: run fasClient -a to make email aliases on bastion
+  hosts: hv01.online.rpmfusion.net
+  user: root
+  gather_facts: False
+
+  tasks:
+  - name: actually run fasClient -a
+    command: fasClient -a
+    ignore_errors: true
+    when: inventory_hostname_short.startswith('bastion0')
+
+- name: run fasClient -i on the rest of hosts which only affects sysadmins
+  hosts: all
+  user: root
+  gather_facts: False
+
+  tasks:
+  - name: actually run fasClient -i
+    command: fasClient -i
+    ignore_errors: true
