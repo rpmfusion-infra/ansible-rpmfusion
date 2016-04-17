@@ -1,0 +1,115 @@
+#!/usr/bin/python -tt
+import sys
+import json
+import time
+from optparse import OptionParser
+import subprocess
+import os
+import glob
+
+logpath='/var/log/ansible'
+search_terms=['CHANGED','FAILED']
+
+def date_cheat(datestr):
+    dc = subprocess.Popen(['date', '-d', datestr, '+%Y/%m/%d'], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
+    dc = dc.strip()
+    return dc
+    
+
+def parse_args(args):
+    usage = """
+          logview [options] [-d datestr] [-p playbook]
+          
+          examples:
+          logview -d yesterday -l # lists playbooks run on that date
+          
+          logview -s OK -s FAILED -d yesterday # list events from yesterday that failed or were ok
+          
+          logview -s CHANGED -d yesterday -p mirrorlist # list events that changed from the mirrorlist playbook
+          
+          logview -s ANY -d yesterday -p mirrorlist # list all events from the mirrorlist playbook
+          
+          
+          """
+    parser = OptionParser(usage=usage)
+    parser.add_option("-d", default='today', dest='datestr', help="time string of when you want logs")
+    parser.add_option("-p", default='*', dest='playbook', help="the playbook you want to look for")
+    parser.add_option("-v", default=False, dest='verbose', action='store_true', help='Verbose')
+    parser.add_option("-s", default=[], dest='search_terms', action='append', help="status to search for")
+    parser.add_option("-l", default=False, dest="list_pb", action='store_true', help="list playbooks for a specific date")
+    parser.add_option("--profile", default=False, dest="profile", action='store_true', help="output timing input per task")
+    (opts, args) = parser.parse_args(args)
+
+    opts.datestr = date_cheat(opts.datestr)
+    if not opts.search_terms:
+        opts.search_terms = search_terms
+    return opts, args
+
+def search_logs(opts, logfiles):
+    msg = ''
+    for fn in sorted(logfiles):
+        hostname=os.path.basename(fn).replace('.log', '')
+        timestamp = os.path.basename(os.path.dirname(fn))
+        for line in open(fn):
+            things = line.split('\t')
+            if len(things) < 5:
+                msg += "(logview error - unhandled line): %r\n" % line
+                continue
+
+            # See callback_plugins/logdetail.py for how these lines get created.
+            #MSG_FORMAT="%(now)s\t%(count)s\t%(category)s\t%(name)s\t%(data)s\n"
+            task_ts, count, category, name, data = things
+
+            if category in opts.search_terms or 'ANY' in opts.search_terms:
+                slurp = json.loads(data)
+                if opts.profile:
+                    st = slurp.get('task_start', 0)
+                    end = slurp.get('task_end', 0)
+                    if st and end:
+                        dur = '%.2f' % (float(end) - float(st))
+                    else:
+                        dur = None
+                    
+                msg += '%s\t%s\t%s\t%s\t%s\t%s'  % (
+                    timestamp, hostname, task_ts, count, category, name)
+
+                if not opts.verbose:
+                    if type(slurp) == dict:
+                        for term in ['task_userid', 'cmd']:
+                            if term in slurp:
+                                msg += '\t%s:%s' % (term, slurp.get(term, None))
+                    if opts.profile and dur:
+                        msg += '\t%s:%s' % ('dur', dur)
+                        
+                    msg += '\n'
+                else:
+                    if opts.profile and dur:
+                        msg += '\t%s:%s' % ('dur', dur)
+                    msg += '\n'
+                    msg += json.dumps(slurp, indent=4)
+                    msg += '\n'
+                        
+
+    return msg
+
+   
+def main(args):
+    opts,args = parse_args(args)
+    for pb in glob.glob(logpath + '/' + opts.playbook):
+        pb_name = os.path.basename(pb)
+        for pb_logdir in glob.glob(pb + '/' + opts.datestr):
+            if opts.list_pb:
+                print pb_name
+                continue
+                
+            logfiles = glob.glob(pb_logdir + '/*/*.log')
+            msg = search_logs(opts, logfiles)
+            if msg:
+                print pb_name
+                print msg
+                
+          
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
+    

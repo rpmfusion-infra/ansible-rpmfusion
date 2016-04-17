@@ -1,0 +1,53 @@
+#!/usr/bin/python
+# skvidal
+# doteast: porting to ansible 2.0
+# dump out the hosts marked with 'freezes: true' in their vars
+
+
+import ansible.inventory
+import sys
+from optparse import OptionParser
+
+from ansible.parsing.dataloader import DataLoader
+from ansible.vars import VariableManager
+from ansible.inventory import Inventory
+
+
+parser = OptionParser(version="1.0")
+parser.add_option('-i', dest='inventory', default=None,
+                  help="Path to inventory file/dir")
+opts, args = parser.parse_args(sys.argv[1:])
+
+variable_manager = VariableManager()
+loader = DataLoader()
+
+
+if opts.inventory:
+    inv = Inventory(loader=loader,variable_manager=variable_manager, host_list=opts.inventory)
+else:
+    inv = Inventory(loader=loader,variable_manager=variable_manager)
+
+variable_manager.set_inventory(inv)
+
+frozen = []
+unfrozen = []
+for host in sorted(inv.get_hosts()):
+    vars = variable_manager.get_vars(loader=loader, host=host)
+    freezes = vars.get('freezes', None)
+
+    if freezes:
+        frozen.append(host.get_name())
+    elif freezes is None:
+        print 'Error: missing freezes: %s' % host.get_name()
+    else:
+        unfrozen.append(host.get_name())
+
+print 'freeze:'
+for host in sorted(frozen):
+    print 'F: ' + host
+
+
+print 'do not freeze:'
+for host in sorted(unfrozen):
+    print 'NF: ' + host
+
