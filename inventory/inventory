@@ -1,0 +1,13 @@
+[dbserver]
+db02.rpmfusion.org
+
+[koji]
+koji01.rpmfusion.org
+
+[pkgs]
+pkgs01.rpmfusion.org
+
+[proxies]
+
+[virthost]
+
