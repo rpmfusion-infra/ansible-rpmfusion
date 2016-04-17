@@ -1,0 +1,46 @@
+---
+# openvpn - ftw - or something
+- name: install openvpn
+  yum: name=openvpn state=present
+  tags:
+  - packages
+
+- name: /etc/openvpn/ca.crt from  vpn/openvpn/keys/ca.crt
+  copy: src="{{ private }}/files/vpn/openvpn/keys/ca.crt" dest=/etc/openvpn/ca.crt mode=0600 owner=root group=root
+  tags:
+  - config
+  notify:
+  - restart openvpn
+
+#- name: /etc/openvpn/crl.pem from vpn/openvpn/keys/crl.pem
+#  copy: src="{{ private }}/vpn/openvpn/keys/crl.pem" dest=/etc/openvpn/crl.pem mode=0644 owner=root group=root
+#  tags:
+#  - config
+#  notify:
+#  - restart openvpn
+
+- name: /etc/openvpn/openvpn.conf
+  copy: src="{{ files }}/openvpn/client.conf" dest=/etc/openvpn/openvpn.conf
+  tags:
+  - config
+  notify:
+  - restart openvpn
+
+- name: /etc/openvpn/client.crt
+  copy: src="{{ private }}/files/vpn/openvpn/keys/{{ inventory_hostname }}.crt" dest=/etc/openvpn/client.crt mode=0600 owner=root group=root
+  tags:
+  - config
+  notify:
+  - restart openvpn
+
+- name: /etc/openvpn/client.key
+  copy: src="{{ private }}/files/vpn/openvpn/keys/{{ inventory_hostname }}.key" dest=/etc/openvpn/client.key mode=0600 owner=root group=root
+  tags:
+  - config
+  notify:
+  - restart openvpn
+
+- name: enable openvpn service for rhel 6
+  service: name=openvpn state=running enabled=true
+  tags:
+  - service
