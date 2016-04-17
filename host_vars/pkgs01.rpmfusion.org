@@ -1,0 +1,15 @@
+nm: 255.255.255.0
+gw: 195.154.185.1
+dns: 62.210.16.6
+ks_url: http://192.168.181.254/install/ks/pks01.ks
+ks_repo: http://192.168.181.254/repo/redhat/el7Server/x86_64/os/
+volgroup: /dev/vg_hv03_virt
+eth0_ip: 212.129.31.198
+eth1_ip: 192.168.181.137
+vmhost: hv01.online.rpmfusion.org
+datacenter: online
+
+nrpe_procs_warn: 900
+nrpe_procs_crit: 1000
+
+fedmsg_koji_instance: primary
