@@ -1,0 +1,92 @@
+# Restart fedmsg services
+#
+# The grande list of "what is running and where" is maintained here manually.
+# By running this playbook, you're not actually guaranteed that all services
+# everywhere will be restarted.  As stuff changes over time, this playbook will
+# need to be periodically updated with new things.
+
+- name: restart fedmsg-gateway instances
+  hosts: fedmsg-gateways;fedmsg-gateways-stg
+  user: root
+  gather_facts: False
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  tasks:
+  - name: bounce the fedmsg-gateway service
+    service: name=fedmsg-gateway state=restarted
+
+- name: restart fedmsg-relay instances
+  hosts: fedmsg-relays;fedmsg-relays-stg
+  user: root
+  gather_facts: False
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  tasks:
+  - name: bounce the fedmsg-relay service
+    service: name=fedmsg-relay state=restarted
+
+- name: restart fedmsg-irc instances
+  hosts: fedmsg-ircs;fedmsg-ircs-stg
+  user: root
+  gather_facts: False
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  tasks:
+  - name: bounce the fedmsg-irc service
+    service: name=fedmsg-irc state=restarted
+
+- name: tell nagios to be quiet about FMN for the moment
+  hosts: notifs-backend;notifs-backend-stg
+  user: root
+  gather_facts: False
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  tasks:
+  - name: schedule a 25 minute downtime.  give notifs backend time to start up.
+    nagios: action=downtime minutes=25 service=host host={{ inventory_hostname_short }}{{ env_suffix }}
+    delegate_to: noc01.rpmfusion.org
+    ignore_errors: true
+
+- name: restart fedmsg-hub instances
+  hosts: fedmsg-hubs;fedmsg-hubs-stg
+  user: root
+  gather_facts: False
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  tasks:
+  - name: bounce the fedmsg-hub service
+    service: name=fedmsg-hub state=restarted
+
+- name: restart moksha-hub instances
+  hosts: moksha-hubs;moksha-hubs-stg
+  user: root
+  gather_facts: False
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  tasks:
+  - name: bounce the moksha-hub service
+    service: name=moksha-hub state=restarted

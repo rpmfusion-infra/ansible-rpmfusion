@@ -1,0 +1,29 @@
+# provision a new kernel-qa system
+# NOTE: this assumes the kernel-qa boxes are already up and are accessible
+# NOTE: most of these vars_path come from group_vars/kernel-qa or from hostvars
+
+- name: make kernel-qa
+  hosts: kernel-qa
+  user: root
+  gather_facts: True
+
+  vars_files: 
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+  - base
+  - rkhunter
+  - nagios/client
+  - fas_client
+  - sudo
+  - hosts
+
+  tasks:
+  - include: "{{ tasks }}/2fa_client.yml"
+  - include: "{{ tasks }}/motd.yml"
+
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"

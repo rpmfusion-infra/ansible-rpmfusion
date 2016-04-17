@@ -1,0 +1,41 @@
+# requires --extra-vars="target='host1;host2;group etc' package='python-tahrir'"
+#
+# Alternatively, you could update a group of packages like
+# --extra-vars="target='host1;host2' package='python-t*'"
+#
+# To update from testing, adjust as follow:
+# --extra-vars="target='host1;host2' package='python-t*' testing=True"
+
+- name: push packages out
+  hosts: "{{target}}"
+  user: root
+
+  vars:
+    testing: False
+
+  tasks:
+
+  - name: yum update {{ package }} from main repo
+    yum: name="{{ package }}" state=latest update_cache=yes
+    when: not testing and ansible_distribution_major_version|int < 22
+
+  - name: yum update {{ package }} from testing repo
+    yum: name="{{ package }}" state=latest enablerepo=infrastructure-testing update_cache=yes
+    when: testing and ansible_distribution_major_version|int < 22
+
+  - name: dnf clean all (since we can't do it when updating)
+    command: dnf clean all
+    when: not testing and ansible_distribution_major_version|int > 21
+
+  - name: dnf update {{ package }} from main repo
+    dnf: name="{{ package }}" state=latest
+    when: not testing and ansible_distribution_major_version|int > 21
+
+  - name: dnf clean all (since we can't do it when updating)
+    command: dnf clean all --enablerepo=infrastructure-testing
+    when: testing and ansible_distribution_major_version|int > 21
+
+  - name: dnf update {{ package }} from testing repo
+    dnf: name="{{ package }}" state=latest enablerepo=infrastructure-testing
+    when: testing and ansible_distribution_major_version|int > 21
+
