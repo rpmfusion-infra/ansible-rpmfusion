@@ -1,0 +1,408 @@
+---
+# tasklist for setting up Dist Git
+#
+# This is a bit complex, so I'm dividing it into sections.
+
+# -- Common ----------------------------------------------
+# This is very basic stuff that is needed by multiple of the next sections.
+- name: install the needed packages
+  yum: pkg={{item}} state=present
+  with_items:
+  - git
+  - httpd
+  - mod_ssl
+  - python-fedmsg-genacls
+  - /usr/sbin/semanage
+
+- name: install the httpd config file
+  copy: src=pkgs.rpmfusion.org.conf dest=/etc/httpd/conf.d/pkgs.rpmfusion.org.conf
+  notify:
+  - reload httpd
+
+- name: install the httpd config directory
+  file: dest=/etc/httpd/conf.d/pkgs.rpmfusion.org state=directory
+  notify:
+  - reload httpd
+
+- name: install the mod_ssl configuration
+  copy: src=ssl.conf dest=/etc/httpd/conf.d/ssl.conf
+  notify:
+  - reload httpd
+
+- name: allow httpd to access the files on NFS
+  seboolean: name=httpd_use_nfs state=yes persistent=yes
+
+- name: allow httpd to access git user content
+  seboolean: name=httpd_read_user_content state=yes persistent=yes
+
+# -- Dist Git --------------------------------------------
+# This is the Git setup itself: group, root directory, scripts,...
+- name: create the distgit root directory (/srv/git)
+  file: dest=/srv/git state=directory mode=0755
+
+- name: check the selinux context of the distgit root directory
+  command: matchpathcon /srv/git
+  register: distgitcontext
+  always_run: yes
+  changed_when: false
+  tags:
+  - config
+  - distgit
+  - selinux
+
+- name: set the SELinux policy for the distgit root directory
+  command: semanage fcontext -a -t git_user_content_t "/srv/git(/.*)?"
+  when: distgitcontext.stdout.find('git_user_content_t') == -1
+  tags:
+  - config
+  - distgit
+  - selinux
+
+- name: create the distgit root directory (/srv/git/repositories)
+  file: dest=/srv/git/repositories state=directory mode=2775 group=packager
+
+# These should all map to pkgdb namespaces
+- name: create our namespace directories inside there..
+  file: dest=/srv/git/repositories/{{item}} state=directory mode=2775 group=packager
+  with_items:
+  - free/rpms
+  - nonfree/rpms
+
+- name: install the distgit scripts
+  copy: src={{item}} dest=/usr/local/bin/{{item}} owner=root group=root mode=0755
+  with_items:
+    - setup_git_package
+    - mkbranch
+    - mkbranch_branching
+    - pkgdb2-clone
+  tags:
+  - config
+  - distgit
+
+- name: install the Dist Git-related httpd config
+  copy: src=git-smart-http.conf dest=/etc/httpd/conf.d/pkgs.rpmfusion.org/git-smart-http.conf
+  notify:
+  - reload httpd
+
+- name: Symlink pkgs-git-repos-list
+  copy: src=repolist.conf dest=/etc/httpd/conf.d/pkgs.rpmfusion.org/repolist.conf
+  notify:
+  - reload httpd
+
+- name: install the pkgdb_sync_git_branches.py scripts
+  template: src={{item}} dest=/usr/local/bin/{{item}} owner=root group=root mode=0755
+  with_items:
+    - pkgdb_sync_git_branches.py
+  tags:
+  - config
+  - distgit
+
+- name: schedule the update hook check
+  cron: >
+    name="check-update-hooks" cron_file="ansible-check-update-hooks"
+    minute=0 hour=0 weekday=3
+    user=nobody
+    job="MAILTO=root PATH=/usr/bin:/usr/local/bin git check-perms --check=update-hook /srv/git/repositories}}"
+
+# -- Gitolite --------------------------------------------
+# This is the permission management for package maintainers, using Gitolite.
+- name: create the /var/log/gitolite directory
+  file: path=/var/log/gitolite owner=root group=packager state=directory mode=2775
+
+- name: create the gen-acls group
+  group: name=gen-acls gid=417 state=present
+
+- name: create the gen-acls user
+  user: >
+        name=gen-acls
+        comment="dummy system account for the gen-acls fedmsg job"
+        uid=417
+        group=gen-acls
+        groups=packager
+        shell=/bin/bash
+        home=/srv/git
+
+- name: create the /etc/gitolite/conf directory
+  file: path=/etc/gitolite/conf owner=gen-acls group=gen-acls state=directory mode=0755
+
+- name: create the /etc/gitolite/logs directory
+  file: path=/etc/gitolite/logs owner=gen-acls group=packager
+        state=directory mode=0775
+
+- name: create the /etc/gitolite/local/VREF directory
+  file: path=/etc/gitolite/local/VREF owner=gen-acls group=packager
+        state=directory mode=0775
+
+- name: create /etc/gitolite/gitolite.rc
+  template: src=gitolite.rc dest=/etc/gitolite/gitolite.rc owner=root group=root mode=0755
+
+- name: Create the rpms symlink (should not be needed, might still be used by some old scripts)
+  command: ln -s /srv/git/repositories / /srv/git/rpms
+           creates=/srv/git/rpms
+  tags:
+  - config
+  - distgit
+
+- name: Create the gitolite.rc symlink
+  command: ln -s /etc/gitolite/gitolite.rc /srv/git/.gitolite.rc
+           creates=/srv/git/.gitolite.rc
+  tags:
+  - config
+  - distgit
+
+- name: Create the gitolite configuration symlink
+  command: ln -s /etc/gitolite/ /srv/git/.gitolite
+           creates=/srv/git/.gitolite
+  tags:
+  - config
+  - distgit
+
+- name: Copy in RepoAliases.header
+  copy: src=RepoAliases.header dest=/etc/gitolite/RepoAliases.header owner=root group=root mode=0755
+
+- name: Create the update-block-push-origin symlink
+  command: ln -s /usr/share/git-core/update-block-push-origin /etc/gitolite/local/VREF/update-block-push-origin
+           creates=/etc/gitolite/local/VREF/update-block-push-origin
+  tags:
+  - config
+  - distgit
+
+- name: install the genacls.sh script
+  template: src={{item}} dest=/usr/local/bin/{{item}} mode=0755
+  with_items:
+    - genacls.sh
+  tags:
+  - config
+  - distgit
+
+- name: install the genacls.pkgdb scripts
+  template: src={{item}} dest=/usr/local/bin/{{item}}
+            owner=root group=root mode=0755
+  with_items:
+    - genacls.pkgdb
+  tags:
+  - config
+  - distgit
+
+- name: Add the genacl daily cron job
+  copy: src=genacls.cron dest=/etc/cron.d/genacls.cron
+        owner=root mode=644
+  tags:
+  - config
+  - distgit
+
+- name: install the fedmsg configuration
+  copy: src=fedmsg-genacls-config.py dest=/etc/fedmsg.d/genacls.py owner=root group=root mode=0644
+  tags:
+  - config
+  - distgit
+
+- name: Get admin users
+  command: "/srv/web/infra/ansible/scripts/users-from-fas @sysadmin-main {{ admin_groups }}"
+  register: admin_user_list
+  always_run: True
+  changed_when: "1 != 1"
+  run_once: True
+  delegate_to: localhost
+  tags:
+  - config
+  - distgit
+
+- name: Save the list the users having a shell access
+  template: src=gitolite_admins dest=/etc/gitolite/admins
+            owner=gen-acls group=packager mode=660
+  tags:
+  - config
+  - distgit
+
+- name: Fix permissions on the Gitolite stuff
+  file: dest={{ item.name }} group=packager mode={{ item.mode }} state={{ item.state }}
+  with_items:
+    - {name: /etc/gitolite/hooks, mode: 770, state: directory}
+    - {name: /etc/gitolite/hooks/common, mode: 770, state: directory}
+
+- name: Fix permissions on the Gitolite stuff (touch update if it does not exist)
+  copy: content="" dest=/etc/gitolite/hooks/common/update force=no owner=root group=packager mode=0755
+  tags:
+  - distgit
+  - config
+
+# -- CGit ------------------------------------------------
+# This is the pretty web view of the repositories, using CGit.
+- name: install the prod cgitrc file
+  copy: src=cgitrc dest=/etc/cgitrc
+  tags: distgit
+  notify:
+  - reload httpd
+
+- name: install our custom header for cgit
+  template: src=cgit-header.html dest=/usr/share/cgit/cgit-header-fedora.html
+  tags: distgit
+  notify:
+  - reload httpd
+
+- name: install the CGit-related httpd redirect config
+  copy: src=redirect.conf dest=/etc/httpd/conf.d/pkgs.rpmfusion.org/redirect.conf
+  tags: distgit
+  notify:
+  - reload httpd
+
+- name: install the CGit-related httpd main config
+  copy: src=cgit.conf dest=/etc/httpd/conf.d/cgit.conf
+  tags: distgit
+  notify:
+  - reload httpd
+
+
+# -- Lookaside Cache -------------------------------------
+# This is the annex to Dist Git, where we host source tarballs.
+- name: install the Lookaside Cache httpd configs
+  copy: src={{item}} dest=/etc/httpd/conf.d/pkgs.rpmfusion.org/{{item}}
+  with_items:
+  - lookaside.conf
+  - lookaside-upload.conf
+  notify:
+  - reload httpd
+  tags:
+  - distgit
+
+- name: create the Lookaside Cache root directory
+  file: dest=/srv/cache/lookaside/pkgs state=directory
+        owner=apache group=apache
+  tags:
+  - distgit
+
+- name: set the selinux boolean nis_enabled
+  seboolean: name=nis_enabled persistent=yes state=yes
+  tags:
+  - distgit
+  - config
+  - selinux
+
+- name: set the selinux boolean git_cgi_use_nfs
+  seboolean: name=git_cgi_use_nfs persistent=yes state=yes
+  tags:
+  - distgit
+  - config
+  - selinux
+
+# Not sure why, but fixes https://fedorahosted.org/fedora-infrastructure/ticket/4825
+- name: set the selinux boolean git_system_enable_homedirs
+  seboolean: name=git_system_enable_homedirs persistent=yes state=yes
+  tags:
+  - distgit
+  - config
+  - selinux
+
+- name: check the selinux context of the Lookaside Cache root directory
+  command: matchpathcon /srv/cache
+  register: lcachecontext
+  always_run: yes
+  changed_when: false
+  tags:
+  - config
+  - lookaside
+  - selinux
+  - distgit
+
+- name: set the SELinux policy for the Lookaside Cache root directory
+  command: semanage fcontext -a -t nfs_t "/srv/cache(/.*)?"
+  when: lcachecontext.stdout.find('nfs_t') == -1 and env != "staging"
+  tags:
+  - config
+  - lookaside
+  - selinux
+  - distgit
+
+- name: install the fedora-ca.cert
+  copy: src={{private}}/files/fedora-ca.cert dest=/etc/httpd/conf/cacert.pem
+  tags:
+  - distgit
+
+- name: install the pkgs cert
+  copy: src={{private}}/files/pkgs.rpmfusion.org_key_and_cert.pem
+        dest=/etc/httpd/conf/pkgs.rpmfusion.org_key_and_cert.pem
+        owner=apache mode=0400
+  when: env != "staging"
+  tags:
+  - distgit
+
+- name: install the pkgs.stg cert
+  copy: src={{private}}/files/pkgs.stg.fedoraproject.org_key_and_cert.pem
+        dest=/etc/httpd/conf/pkgs.rpmfusion.org_key_and_cert.pem
+        owner=apache mode=0400
+  when: env == "staging"
+  tags:
+  - distgit
+
+- name: install the updatecrl.sh script
+  copy: src=updatecrl.sh dest=/usr/local/bin/updatecrl.sh owner=root mode=755
+  tags:
+  - distgit
+
+- name: run the updatecrl script
+  command: /usr/local/bin/updatecrl.sh creates=/etc/pki/tls/crl.pem
+  tags:
+  - distgit
+
+- name: schedule cron job to run the updatectl script
+  cron: >
+    name="updatecrl" cron_file="ansible-updatecrl"
+    minute=0
+    user=root
+    job="/usr/local/bin/updatecrl.sh"
+  tags:
+  - distgit
+
+- name: create /srv/web directory
+  file: dest=/srv/web state=directory
+
+- name: install the upload CGI script
+  copy: src=dist-git-upload.cgi dest=/srv/web/upload.cgi owner=root group=root mode=0755
+  notify:
+  - reload httpd
+  tags:
+  - distgit
+
+- name: check the selinux context of the upload CGI script
+  command: matchpathcon /srv/web/upload.cgi
+  register: upcgicontext
+  always_run: yes
+  changed_when: false
+  tags:
+  - config
+  - lookaside
+  - selinux
+
+- name: set the SELinux policy for the upload CGI script
+  command: semanage fcontext -a -t git_script_exec_t "/srv/web/upload.cgi"
+  when: upcgicontext.stdout.find('git_script_exec_t') == -1
+  tags:
+  - config
+  - lookaside
+  - selinux
+
+# Three tasks for handling our selinux policy for upload.cgi
+- name: ensure a directory exists for our SELinux policy
+  file: dest=/usr/local/share/selinux/ state=directory
+  tags: selinux
+
+- name: copy over our custom selinux policy
+  copy: src=upload_cgi.pp dest=/usr/local/share/selinux/upload_cgi.pp
+  register: selinux_module
+  tags: selinux
+
+- name: install our custom selinux policy
+  command: semodule -i /usr/local/share/selinux/upload_cgi.pp
+  when: selinux_module|changed
+  tags: selinux
+
+- name: copy over our custom nfs selinux policy
+  copy: src=cgi-nfs.pp dest=/usr/local/share/selinux/cgi-nfs.pp
+  register: nfs_selinux_module
+  tags: selinux
+
+- name: install our custom nfs selinux policy
+  command: semodule -i /usr/local/share/selinux/cgi-nfs.pp
+  when: nfs_selinux_module|changed
+  tags: selinux
