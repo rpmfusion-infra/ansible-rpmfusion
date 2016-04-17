@@ -1,0 +1,152 @@
+########################################
+# Handlers for restarting services
+#
+
+- name: restart apache
+  command: /usr/local/bin/conditional-restart.sh httpd httpd
+
+- name: reload apache
+  action: service name=httpd state=reloaded
+
+- name: restart collectd
+  action: service name=collectd state=restarted
+
+- name: restart crond
+  action: service name=crond state=restarted
+
+- name: restart fedmsg-gateway
+  command: /usr/local/bin/conditional-restart.sh fedmsg-gateway fedmsg-gateway
+
+- name: restart fedmsg-hub
+  command: /usr/local/bin/conditional-restart.sh fedmsg-hub fedmsg-hub
+
+- name: restart fedmsg-irc
+  command: /usr/local/bin/conditional-restart.sh fedmsg-irc fedmsg-irc
+
+- name: restart fedmsg-relay
+  command: /usr/local/bin/conditional-restart.sh fedmsg-relay fedmsg-relay
+
+- name: reload httpd
+  command: /usr/local/bin/conditional-reload.sh httpd httpd
+
+- name: restart iptables
+  action: service name=iptables state=restarted
+
+- name: restart ip6tables
+  action: service name=ip6tables state=restarted
+
+- name: restart jenkins
+  action: service name=jenkins state=restarted
+
+- name: restart libvirtd
+  action: service name=libvirtd state=restarted
+
+- name: restart mailman
+  action: service name=mailman state=restarted
+
+- name: restart named
+  action: service name=named state=restarted
+
+- name: restart ntpd
+  action: service name=ntpd state=restarted
+
+- name: restart openvpn (Fedora)
+  when: ansible_distribution == "Fedora"
+  action: service name=openvpn@openvpn state=restarted
+  #notify:
+  #- fix openvpn routing
+
+- name: restart openvpn (RHEL6)
+  when: ansible_distribution == "RedHat" and ansible_distribution_major_version|int == 6
+  action: service name=openvpn state=restarted
+  #notify:
+  #- fix openvpn routing
+
+- name: restart openvpn (RHEL7)
+  when: ansible_distribution == "RedHat" and ansible_distribution_major_version|int == 7
+  action: service name=openvpn@openvpn state=restarted
+  #notify:
+  #- fix openvpn routing
+
+- name: fix openvpn routing
+  action: shell /etc/openvpn/fix-routes.sh
+
+- name: restart postfix
+  action: service name=postfix state=restarted
+
+- name: restart xinetd
+  action: service name=xinetd state=restarted
+
+- name: restart netapproute
+  action: command /etc/sysconfig/network-scripts/ifup-routes eth1
+
+- name: restart network
+  action: service name=network state=restarted
+
+- name: rebuild postfix transport
+  command: /usr/sbin/postmap /etc/postfix/transport
+
+- name: restart glusterd
+  service: name=glusterd state=restarted
+
+- name: restart supervisord
+  service: name=supervisord state=restarted
+
+- name: run rkhunter
+  command: rkhunter --propupd
+
+- name: restart moksha-hub
+  service: name=moksha-hub state=restarted
+
+- name: restart dhcpd
+  service: name=dhcpd state=restarted
+
+- name: restart memcached
+  service: name=memcached state=restarted
+
+- name: reload systemd
+  command: systemctl daemon-reload
+
+- name: restart nagios
+  shell: nagios -v /etc/nagios/nagios.cfg && systemctl restart nagios
+
+- name: restart bridge
+  shell: /usr/lib/systemd/systemd-sysctl --prefix=/proc/sys/net/bridge
+
+- name: reload libvirtd
+  service: name=libvirtd state=reloaded
+  ignore_errors: true
+  when: ansible_virtualization_role == 'host'
+
+- name: "update ca-trust"
+  command: /usr/bin/update-ca-trust
+
+- name: restart stunnel
+  service: name=stunnel state=restarted
+
+- name: restart cinder
+  service: name=openstack-cinder-api state=restarted
+  service: name=openstack-cinder-scheduler state=restarted
+  service: name=openstack-cinder-volume state=restarted
+
+- name: restart autocloud
+  service: name=autocloud state=restarted
+
+- name: restart mirrorlist-server
+  service: name=mirrorlist-server state=restarted
+
+- name: restart NetworkManager
+  service: name=NetworkManager state=restarted
+
+- name: reload NetworkManager-connections
+  command: nmcli c reload
+
+- name: apply interface-changes
+  command: nmcli con up {{ item.split()[1] }}
+  async: 1
+  poll: 0
+  with_items:
+  - "{{ if_uuid.stdout_lines }}"
+
+- name: flush journald tmpfiles to persistent store
+  command: pkill -f -USR1 systemd-journald
