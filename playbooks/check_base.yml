@@ -4,7 +4,6 @@
   hosts: "{{ target }}"
   user: root
 
-  tasks:
   - include: "{{ tasks }}/yumrepos.yml"
   - include: "{{ tasks }}/motd.yml"
   - include: "{{ tasks }}/2fa_client.yml"
