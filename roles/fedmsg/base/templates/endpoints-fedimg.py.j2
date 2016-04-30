@@ -1,0 +1,20 @@
+{% if env == 'staging' %}
+suffix  = 'stg.online.rpmfusion.org'
+{% else %}
+suffix = 'online.rpmfusion.org'
+{% endif %}
+
+# REMEMBER -- if you change these, you need to also change the iptables rules in
+# inventory/groups/fedimg and inventory/groups/fedimsg-stg
+primary_threads = 4
+atomic_threads = 2
+NUM_FEDIMG_PORTS = 2 * ((primary_threads + atomic_threads) + 1)
+
+config = dict(
+    endpoints={
+        "fedimg.fedimg01": [
+            "tcp://fedimg01.%s:30%0.2i" % (suffix, i)
+            for i in range(NUM_FEDIMG_PORTS)
+        ],
+    },
+)

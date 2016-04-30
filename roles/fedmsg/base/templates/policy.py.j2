@@ -1,0 +1,29 @@
+config = dict(
+    routing_nitpicky=True,
+    routing_policy={
+        # The gist here is that only messages signed by the
+        # bodhi-app0{1,2,3,4,5,6,7,8} certificates may bear the
+        # "org.fedoraproject.prod.bodhi.update.request.stable" topic, or else
+        # they fail validation and are either dropped or marked as invalid
+        # (depending on the consumer's wishes).
+        #
+        # There is another option that we do not set.  If `routing_nitpicky` is
+        # set to True, then a given message's topic *must* appear in this list
+        # in order for it to pass validation.  For instance, we have
+        # routing_nitpicky set to False by default and no
+        # "org.fedoraproject.prod.logger.log" topics appear in this policy,
+        # therefore, any message bearing that topic and *any* certificate signed
+        # by our CA may pass validation.
+        #
+
+        # ** policy dynamically generated from inventory vars
+        # See ansible/filter_plugins/fedmsg.py for this inversion filter.
+        {% for topic, certs in groups | invert_fedmsg_policy(hostvars, env) %}
+        "{{topic}}": [
+        {% for cert in certs %}
+            "{{ cert }}",
+        {% endfor %}
+        ],
+        {% endfor %}
+    },
+)

@@ -1,0 +1,28 @@
+config = dict(
+    sign_messages=True,
+    validate_signatures=True,
+    ssldir="/etc/pki/fedmsg",
+
+    {% if env == 'staging' %}
+    crl_location="https://stg.rpmfusion.org/fedmsg/crl.pem",
+    {% else %}
+    crl_location="https://rpmfusion.org/fedmsg/crl.pem",
+    {% endif %}
+    crl_cache="/var/run/fedmsg/crl.pem",
+    crl_cache_expiry=86400,  # Daily
+
+    certnames=dict([
+    # This is the set of certs for this host, dynamically generated from the
+    # ``fedmsg_certs`` host vars
+    {% for cert in fedmsg_certs %}
+    ("{{cert.get('alias', cert['service'])}}.{{inventory_hostname_short}}", "{{cert['service']}}-{{fedmsg_fqdn | default(ansible_fqdn)}}"),
+    {% endfor %}
+] + [
+        # This is the beginning of the static list.  We should eventually remove
+        # this.
+        ("shell.hosted04", "shell-hosted04.vpn.rpmfusion.org"),
+    ] + [
+        ("jenkins.jenkins-master-unknown", "jenkins-jenkins.fedorainfracloud.org"),
+    ]),
+)
+

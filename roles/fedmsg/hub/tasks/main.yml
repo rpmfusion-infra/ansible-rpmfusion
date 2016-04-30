@@ -1,0 +1,52 @@
+---
+# Setup a fedmsg-hub
+
+- name: install needed packages
+  yum: pkg={{ item }} state=present
+  with_items:
+  - fedmsg-hub
+  tags:
+  - packages
+  when: ansible_distribution_major_version|int < 22
+
+- name: install needed packages
+  dnf: pkg={{ item }} state=present
+  with_items:
+  - fedmsg-hub
+  tags:
+  - packages
+  when: ansible_distribution_major_version|int > 21
+
+- name: fedmsg-hub service
+  service: name=fedmsg-hub state=started enabled=yes
+
+- name: enable the websocket server if we should
+  copy: src=websockets.py dest=/etc/fedmsg.d/websockets.py
+  when: enable_websocket_server
+  notify: restart fedmsg-hub
+
+- name: disable the websocket server if we should..
+  file: dest=/etc/fedmsg.d/websockets.py state=absent
+  when: not enable_websocket_server
+  notify: restart fedmsg-hub
+
+- name: set fedmsg ownership on /var/run/fedmsg
+  file: >
+    dest=/var/run/fedmsg/
+    mode=2775
+    owner=fedmsg
+    group=fedmsg
+    state=directory
+  tags:
+  - fedmsgmonitor
+
+- name: ensure that nrpe has rights to monitor us
+  file: >
+    dest=/var/run/fedmsg/monitoring-fedmsg-hub.socket
+    mode=0775
+    owner=fedmsg
+    group=nrpe
+    state=file
+  ignore_errors: true
+  tags:
+  - fedmsgmonitor

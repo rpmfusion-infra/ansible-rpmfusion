@@ -1,0 +1,17 @@
+{% if env == 'staging' %}
+suffix  = 'stg.online.rpmfusion.org'
+machines = ['autocloud-backend01', 'autocloud-backend02']
+{% else %}
+suffix = 'online.rpmfusion.org'
+machines = ['autocloud-backend-libvirt', 'autocloud-backend-vbox']
+{% endif %}
+
+endpoints = {}
+for machine in machines:
+    endpoint = [
+        "tcp://%s.%s:30%0.2i" % (machine, suffix, i)
+        for i in range(4)
+    ]
+    endpoints['autocloud.%s' % machine] = endpoint
+
+config = dict(endpoints=endpoints)

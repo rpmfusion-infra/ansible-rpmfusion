@@ -1,0 +1,58 @@
+{% if env == 'staging' %}
+suffix  = 'stg.online.rpmfusion.org'
+non_phx_suffix = 'stg.rpmfusion.org'
+{% else %}
+suffix = 'online.rpmfusion.org'
+non_phx_suffix = 'rpmfusion.org'
+{% endif %}
+
+# This is just an extension of fedmsg.d/endpoints.py.  This dict
+# will get merged in with the other.
+config = dict(
+    endpoints={
+        # This is the output side of the relay to which all other
+        # services can listen.
+        "relay_outbound": [
+            # Messages emerge here
+            "tcp://busgateway01.%s:3999" % suffix,
+        ],
+    },
+    # This is the address of an active->passive relay.  It is used for the
+    # fedmsg-logger command which requires another service with a stable
+    # listening address for it to send messages to.
+    # It is also used by the git-hook, for the same reason.
+    # It is also used by the mediawiki php plugin which, due to the oddities of
+    # php, can't maintain a single passive-bind endpoint of it's own.
+    relay_inbound=[
+        {% if 'persistent-cloud' in group_names or 'jenkins-master' in group_names %}
+
+        # Stuff from the cloud has to go through our external proxy first..
+        #"tcp://hub.rpmfusion.org:9941",
+
+        # ...and normally, we'd like them to go through round-robin, but we're
+        # not getting messages in from proxies across the vpn.  So, only use
+        # proxy01 for now.
+        "tcp://209.132.181.16:9941",
+        {% elif 'fedmsg-qa-network' in group_names %}
+
+        # We want the retrace (and other) boxes to talk to the *internal* IP of
+        # proxy01, because otherwise the RHIT firewall blocks them.
+        "tcp://proxy01.online.rpmfusion.org:9941",
+
+        {% elif 'fedmsg-qa-network-stg' in group_names %}
+
+        "tcp://proxy01.stg.online.rpmfusion.org:9941",
+
+        {% else %}
+
+        # Primarily, scripts from inside phx2 connect here.
+        # Furthermore, scripts from outside (coprs, secondary arch koji) connect
+        # here via haproxy.
+        "tcp://busgateway01.%s:9941" % suffix,
+
+        # Scripts from the vpn (people03, anitya) connect here
+        "tcp://busgateway01.vpn.rpmfusion.org:3998",
+
+        {% endif %}
+    ],
+)

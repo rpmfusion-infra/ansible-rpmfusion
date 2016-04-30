@@ -1,0 +1,16 @@
+{% if env == 'staging' %}
+suffix  = 'stg.online.rpmfusion.org'
+{% else %}
+suffix = 'online.rpmfusion.org'
+{% endif %}
+
+config = dict(
+    endpoints={
+        "fedbadges.badges-backend01": [
+            "tcp://badges-backend01.%s:3000" % suffix,
+            "tcp://badges-backend01.%s:3001" % suffix,
+            "tcp://badges-backend01.%s:3002" % suffix,
+            "tcp://badges-backend01.%s:3003" % suffix,
+        ],
+    },
+)

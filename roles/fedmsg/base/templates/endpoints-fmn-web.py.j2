@@ -1,0 +1,18 @@
+{% if env == 'staging' %}
+suffix  = 'stg.online.rpmfusion.org'
+{% else %}
+suffix = 'online.rpmfusion.org'
+{% endif %}
+
+config = dict(
+    endpoints={
+        "fmn.notifs-web01": [
+            "tcp://notifs-web01.%s:30%0.2i" % (suffix, i)
+            for i in range(16)
+        ],
+        "fmn.notifs-web02": [
+            "tcp://notifs-web02.%s:30%0.2i" % (suffix, i)
+            for i in range(16)
+        ],
+    },
+)

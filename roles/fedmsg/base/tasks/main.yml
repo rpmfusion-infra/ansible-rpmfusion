@@ -1,0 +1,333 @@
+---
+# tasklist for setting up fedmsg
+# This is the base set of files needed for fedmsg
+
+- name: install needed packages
+  yum: pkg={{ item }} state=present
+  with_items:
+  - libsemanage-python
+  - python-psutil
+  - policycoreutils-python  # This is in the kickstart now.  Here for old hosts.
+  tags:
+  - packages
+  - fedmsg/base
+  when: ansible_distribution_major_version|int < 22
+
+- name: install python2 fedmsg package
+  yum: pkg=fedmsg state=present
+  when: "'python34-fedmsg' not in group_names and ansible_distribution_major_version|int < 22"
+  tags: fedmsg/base
+
+- name: install python2 fedmsg package
+  dnf: pkg=fedmsg state=present
+  when: "'python34-fedmsg' not in group_names and ansible_distribution_major_version|int > 21"
+  tags: fedmsg/base
+
+- name: install the python34 fedmsg package (yum)
+  yum: pkg=python34-fedmsg-core state=present
+  when: "'python34-fedmsg' in group_names and ansible_distribution_major_version|int < 22"
+  tags: fedmsg/base
+
+- name: install the python3 fedmsg package (dnf)
+  dnf: pkg=python3-fedmsg-core state=present
+  when: "'python34-fedmsg' in group_names and ansible_distribution_major_version|int > 21"
+  tags: fedmsg/base
+
+- name: install needed packages
+  dnf: pkg={{ item }} state=present
+  with_items:
+  - libsemanage-python
+  - python-psutil
+  - policycoreutils-python  # This is in the kickstart now.  Here for old hosts.
+  tags:
+  - packages
+  - fedmsg/base
+  when: ansible_distribution_major_version|int > 21
+
+- name: install needed packages
+  dnf: pkg={{ item }} state=present
+  with_items:
+  - policycoreutils-python-utils
+  tags:
+  - packages
+  - fedmsg/base
+  when: ansible_distribution_major_version|int > 22
+
+# We only need this on el6.  On el7, the fedmsg package uses systemd-tempfiles
+# to generate this effect for us.  Note that at the bottom of this role we add
+# the nrpe user to the fedmsg group so that it has *write* permissions to a unix
+# socket in this dir.
+- name: create a /var/run/fedmsg dir with setgid for monitoring.
+  file: >
+    dest=/var/run/fedmsg
+    mode=2775
+    owner=fedmsg
+    group=fedmsg
+    state=directory
+  when: ansible_distribution_major_version|int == 6
+  tags:
+  - fedmsg/base
+
+- name: setup /etc/fedmsg.d directory
+  file: path=/etc/fedmsg.d owner=root group=root mode=0755 state=directory
+  tags:
+  - config
+  - fedmsg/base
+
+- name: remove any old static endpoints files
+  file: dest="/etc/fedmsg.d/{{item}}" state=absent
+  with_items:
+  - endpoints-nuancier.py
+  - endpoints-kerneltest.py
+  - endpoints-github2fedmsg.py
+  - endpoints-elections.py
+  - endpoints-fmn-web.py
+  - pkgdb.py
+  tags:
+  - config
+  - fedmsgdconfig
+  - fedmsg/base
+
+# Any files that change need to restart any services that depend on them.  A
+# trick here is that some hosts have an httpd that uses fedmsg, while others do
+# not.  Some hosts have a fedmsg-hub that uses this config, while others do not.
+# Our handlers in handlers/restart_services.yml are smart enough to
+# *conditionally* restart these services, only if they are installed on the
+# system.
+- name: setup basic /etc/fedmsg.d/ contents for internal hosts
+  template: >
+    src="{{ item }}.j2"
+    dest="/etc/fedmsg.d/{{ item }}"
+    owner=root
+    group=root
+    mode=644
+  with_items:
+  - ssl.py
+  - endpoints.py
+  - endpoints-anitya.py
+  - endpoints-pagure.py
+  - endpoints-fedocal.py
+  - endpoints-fedbadges.py
+  - endpoints-fmn-backend.py
+  - endpoints-hotness.py
+  - endpoints-mailman.py
+  - endpoints-summershum.py
+  - endpoints-fedimg.py
+  - endpoints-bugzilla2fedmsg.py
+  - endpoints-bodhi.py
+  - endpoints-autocloud.py
+  - relay.py
+  - logging.py
+  - base.py
+  when: "'persistent-cloud' not in group_names and 'qa-isolated' not in group_names"
+  tags:
+  - config
+  - fedmsgdconfig
+  - fedmsg/base
+  notify:
+  - reload httpd
+  - restart fedmsg-gateway
+  - restart fedmsg-hub
+  - restart fedmsg-irc
+  - restart fedmsg-relay
+
+- name: dynamically generate policy from group/host vars.
+  template: >
+    src="{{ item }}.j2"
+    dest="/etc/fedmsg.d/{{ item }}"
+    owner=root
+    group=root
+    mode=644
+  with_items:
+  - policy.py
+  when: "'persistent-cloud' not in group_names"
+  tags:
+  - config
+  - fedmsgdconfig
+  - fedmsg/base
+  notify:
+  - reload httpd
+  - restart fedmsg-gateway
+  - restart fedmsg-hub
+  - restart fedmsg-irc
+  - restart fedmsg-relay
+
+- name: setup basic /etc/fedmsg.d/ contents for firewalled/external hosts
+  template: >
+    src="{{ item }}.j2"
+    dest="/etc/fedmsg.d/{{ item }}"
+    owner=root
+    group=root
+    mode=644
+  with_items:
+  - ssl.py
+  - endpoints-external.py
+  - relay.py
+  - logging.py
+  - base.py
+  when: "'persistent-cloud' in group_names or 'qa-isolated' in group_names"
+  tags:
+  - config
+  - fedmsgdconfig
+  - fedmsg/base
+  notify:
+  - reload httpd
+  - restart fedmsg-gateway
+  - restart fedmsg-hub
+  - restart fedmsg-irc
+  - restart fedmsg-relay
+
+- name: install fedmsg-relay in case we're in debug mode.
+  yum: name=fedmsg-relay state=present
+  when: fedmsg_debug_loopback == true and ansible_distribution_major_version|int < 22
+  tags:
+  - fedmsg_loopback
+  - fedmsg/base
+  notify:
+  - reload httpd
+  - restart fedmsg-gateway
+  - restart fedmsg-hub
+  - restart fedmsg-irc
+  - restart fedmsg-relay
+
+- name: install fedmsg-relay in case we're in debug mode.
+  dnf: name=fedmsg-relay state=present
+  when: fedmsg_debug_loopback == true and ansible_distribution_major_version|int > 21
+  tags:
+  - fedmsg_loopback
+  - fedmsg/base
+  notify:
+  - reload httpd
+  - restart fedmsg-gateway
+  - restart fedmsg-hub
+  - restart fedmsg-irc
+  - restart fedmsg-relay
+
+- name: destroy standard config to make way for debug loopback.
+  file: dest=/etc/fedmsg.d/{{item}} state=absent
+  with_items:
+  - relay.py
+  - policy.py
+  when: fedmsg_debug_loopback == true
+  tags:
+  - fedmsg_loopback
+  - fedmsg/base
+  notify:
+  - reload httpd
+  - restart fedmsg-gateway
+  - restart fedmsg-hub
+  - restart fedmsg-irc
+  - restart fedmsg-relay
+
+- name: overwrite standard config with local fedmsg debugging loopback
+  copy: src=relay-debug-loopback.py dest=/etc/fedmsg.d/relay.py
+  when: fedmsg_debug_loopback == true
+  tags:
+  - fedmsg_loopback
+  - fedmsg/base
+  notify:
+  - reload httpd
+  - restart fedmsg-gateway
+  - restart fedmsg-hub
+  - restart fedmsg-irc
+  - restart fedmsg-relay
+
+- name: start fedmsg-relay, only for loopback testing
+  service: name=fedmsg-relay state=started
+  when: fedmsg_debug_loopback == true
+  tags:
+  - fedmsg_loopback
+  - fedmsg/base
+
+- name: setup /etc/pki/fedmsg directory
+  file: path=/etc/pki/fedmsg owner=root group=root mode=0755 state=directory
+  tags:
+  - config
+  - fedmsg/base
+
+- name: install fedmsg ca.cert
+  copy: >
+    src="{{ private }}/files/fedmsg-certs/keys/ca.crt"
+    dest=/etc/pki/fedmsg/ca.crt
+    owner=root
+    group=root
+    mode=0644
+  tags:
+  - config
+  - fedmsg/base
+
+- name: fedmsg certs
+  copy: >
+    src="{{ private }}/files/fedmsg-certs/keys/{{item['service']}}-{{fedmsg_fqdn | default(ansible_fqdn)}}.crt"
+    dest=/etc/pki/fedmsg/
+    mode=644
+    owner={{item['owner']}}
+    group={{item['group']}}
+  with_items:
+  - "{{ fedmsg_certs }}"
+  when: fedmsg_certs != []
+  tags:
+  - config
+  - fedmsg/base
+
+- name: fedmsg keys
+  copy: >
+    src="{{ private }}/files/fedmsg-certs/keys/{{item['service']}}-{{fedmsg_fqdn | default(ansible_fqdn)}}.key"
+    dest=/etc/pki/fedmsg/
+    mode=0640
+    owner={{item['owner']}}
+    group={{item['group']}}
+  with_items:
+  - "{{ fedmsg_certs }}"
+  when: fedmsg_certs != []
+  tags:
+  - config
+  - fedmsg/base
+
+# Three tasks for handling our custom selinux module
+- name: ensure a directory exists for our custom selinux module
+  file: dest=/usr/local/share/fedmsg state=directory
+  tags:
+  - fedmsg/base
+
+- name: copy over our custom selinux module
+  copy: src=selinux/fedmsg.pp dest=/usr/local/share/fedmsg/fedmsg.pp
+  register: selinux_module
+  tags:
+  - fedmsg/base
+
+- name: install our custom selinux module
+  command: semodule -i /usr/local/share/fedmsg/fedmsg.pp
+  when: selinux_module|changed
+  tags:
+  - fedmsg/base
+
+# Also, label the ports that we commonly use for fedmsg under mod_wsgi
+# to be http_port_t so selinux lets apache bind there.
+- name: check semanage ports
+  command: semanage port -l
+  register: semanageoutput
+  always_run: yes
+  changed_when: "1 != 1"
+  tags:
+  - fedmsg/base
+
+- name: set ports so httpd can bind to fedmsg endpoints
+  command: semanage port -a -t http_port_t -p tcp 3000-3100
+  when: semanageoutput.stdout.find("3000-3100") == -1
+  tags:
+  - fedmsg/base
+
+- name: Check if the nrpe user exists
+  shell: /usr/bin/getent passwd nrpe | /usr/bin/wc -l | tr -d ' '
+  register: nrpe_exists
+  always_run: true
+  changed_when: "1 != 1"
+  tags:
+  - fedmsg/base
+
+- name: Add nrpe user to the fedmsg group if it exists
+  user: name=nrpe groups=fedmsg append=yes
+  when: nrpe_exists.stdout == "1"
+  tags:
+  - fedmsg/base

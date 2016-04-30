@@ -1,0 +1,201 @@
+# Setup fedmsg logging.
+
+# All of these modules are just used by the ContextInjector below.
+import inspect
+import hashlib
+import logging
+import os
+import socket
+import traceback
+
+psutil = None
+try:
+    import psutil
+except (OSError, ImportError):
+    # We run into issues when trying to import psutil from inside mod_wsgi on
+    # rhel7.  If we hit that here, then just fail quietly.
+    # https://github.com/jmflinuxtx/kerneltest-harness/pull/17#issuecomment-48007837
+    pass
+
+
+radio_silence = """
+*** %i instances of this error seen.  No more mail will be sent. ***
+""".strip()
+
+seen_errors = {}  # This could be a default dict.
+error_limit = 100
+
+
+class ContextInjector(logging.Filter):
+    """ Logging filter that adds context to log records.
+
+    Filters are typically used to "filter" log records.  They declare a filter
+    method that can return True or False.  Only records with 'True' will
+    actually be logged.
+
+    Here, we somewhat abuse the concept of a filter.  We for the most part
+    return true, but we use the opportunity to hang important contextual
+    information on the log record to later be used by the logging Formatter.  We
+    don't normally want to see all this stuff in normal log records, but we *do*
+    want to see it when we are emailed error messages.  Seeing an error, but not
+    knowing which host it comes from, is not that useful.
+
+    After we've seen an error ~100 times, we stop sending email to avoid choking
+    the world.
+
+    http://docs.python.org/2/howto/logging-cookbook.html#filters-contextual
+    """
+
+    def filter(self, record):
+        current_process = ContextInjector.get_current_process()
+        current_hostname = socket.gethostname()
+
+        record.host = current_hostname
+        record.proc = current_process
+        record.pid = current_process.pid
+        record.proc_name = current_process.name
+        record.command_line = current_process.cmdline
+        # These are callabls on more modern versions of psutil.
+        if callable(record.proc_name):
+            record.proc_name = record.proc_name()
+        if callable(record.command_line):
+            record.command_line = record.command_line()
+        record.command_line = " ".join(record.command_line)
+        record.callstack = self.format_callstack()
+        record.farewell = ""
+
+        key = hashlib.sha256(record.callstack).hexdigest()
+        if not key in seen_errors:
+            seen_errors[key] = 0
+
+        if seen_errors[key] > error_limit:
+            return False
+
+        seen_errors[key] += 1
+
+        if seen_errors[key] > error_limit:
+            record.farewell = radio_silence % error_limit
+
+        return True
+
+    @staticmethod
+    def format_callstack():
+        for i, frame in enumerate(f[0] for f in inspect.stack()):
+            if not '__name__' in frame.f_globals:
+                continue
+            modname = frame.f_globals['__name__'].split('.')[0]
+            if modname != "logging":
+                break
+
+        def _format_frame(frame):
+            return '  File "%s", line %i in %s\n    %s' % (frame)
+
+        stack = traceback.extract_stack()
+        stack = stack[:-i]
+        return "\n".join([_format_frame(frame) for frame in stack])
+
+    @staticmethod
+    def get_current_process():
+        mypid = os.getpid()
+
+        if not psutil:
+            raise OSError("Could not import psutil for %r" % mypid)
+
+        for proc in psutil.process_iter():
+            if proc.pid == mypid:
+                return proc
+
+        # This should be impossible.
+        raise ValueError("Could not find process %r" % mypid)
+
+    @classmethod
+    def __json__(cls):
+        """ We need to be jsonifiable for "fedmsg-config" """
+        return {'name': 'ContextInjector'}
+
+
+hefty_format = """Message
+-------
+[%(asctime)s][%(name)10s %(levelname)7s]
+%(message)s
+%(farewell)s
+
+Process Details
+---------------
+host:     %(host)s
+PID:      %(pid)s
+name:     %(proc_name)s
+command:  %(command_line)s
+
+Callstack that lead to the logging statement
+--------------------------------------------
+%(callstack)s
+"""
+
+
+# See the following for constraints on this format http://bit.ly/Xn1WDn
+config = dict(
+    logging=dict(
+        version=1,
+        formatters=dict(
+            bare={
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+                {% if inventory_hostname.startswith('bodhi-backend01') %}
+                # Here we use a different format just so we can include
+                # threadName.  We set the threadName in the bodhi masher to some
+                # useful strings that will tell us which branch is doing what.
+                # See https://github.com/fedora-infra/bodhi/commit/66d94094
+                "format": "[%(asctime)s][%(name)10s %(levelname)7s]%(threadName)s %(message)s"
+                {% else %}
+                "format": "[%(asctime)s][%(name)10s %(levelname)7s] %(message)s"
+                {% endif %}
+            },
+            hefty={
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+                "format": hefty_format,
+            },
+        ),
+        filters=dict(
+            context={
+                # This "()" syntax in the stdlib doesn't seem to be documented
+                # anywhere.  I had to read
+                # /usr/lib64/python2.7/logging/config.py to figure it out.
+                "()": ContextInjector,
+            },
+        ),
+        handlers=dict(
+            console={
+                "class": "logging.StreamHandler",
+                "formatter": "bare",
+                "level": "{{fedmsg_loglevel}}",
+                "stream": "ext://sys.stdout",
+            },
+            mailer={
+                "class": "logging.handlers.SMTPHandler",
+                "formatter": "hefty",
+                "filters": ["context"],
+                "level": "ERROR",
+                "mailhost": "bastion.online.rpmfusion.org",
+                "fromaddr": "fedmsg@rpmfusion.org",
+                "toaddrs": [
+                {% for recipient in fedmsg_error_recipients %}
+                    "{{recipient}}",
+                {% endfor %}
+                ],
+                "subject": "fedmsg error log %s" % socket.gethostname(),
+            },
+        ),
+        loggers=dict(
+            fedmsg={
+                "level": "{{fedmsg_loglevel}}",
+                "propagate": False,
+                "handlers": ["console", "mailer"],
+            },
+            moksha={
+                "level": "{{fedmsg_loglevel}}",
+                "propagate": False,
+                "handlers": ["console", "mailer"],
+            },
+        ),
+    ),
+)

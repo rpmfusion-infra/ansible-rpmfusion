@@ -1,0 +1,35 @@
+# This is a *very* simple role.  The config needed for fedmsg-relay to operate
+# correctly is actually included as part of the fedmsg/base role.
+
+- name: install fedmsg-relay (yum)
+  yum: pkg=fedmsg-relay state=present
+  tags:
+  - packages
+  - fedmsg/relay
+  when: ansible_distribution_major_version|int < 22
+
+- name: install fedmsg-relay (dnf)
+  dnf: pkg=fedmsg-relay state=present
+  tags:
+  - packages
+  - fedmsg/relay
+  when: ansible_distribution_major_version|int > 21
+
+- name: ensure that nrpe has rights to monitor us
+  file: >
+    dest=/var/run/fedmsg/monitoring-fedmsg-relay.socket
+    mode=0775
+    owner=fedmsg
+    group=nrpe
+    state=file
+  ignore_errors: true
+  tags:
+  - fedmsgmonitor
+
+- name: enable on boot and start fedmsg-relay
+  service: name=fedmsg-relay state=started enabled=true
+  tags:
+  - services
+  - fedmsg/relay
+  notify:
+  - restart fedmsg-relay

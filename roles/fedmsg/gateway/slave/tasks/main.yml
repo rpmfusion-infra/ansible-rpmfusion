@@ -1,0 +1,96 @@
+---
+# Tasks to set up fedmsg-gateway-slave
+
+- name: install needed packages
+  yum: pkg={{ item }} state=installed
+  with_items:
+  - fedmsg-gateway
+  - stunnel
+  tags:
+  - packages
+  - fedmsg/gateway
+  - fedmsg/gateway/slave
+
+- name: Copy in empty endpoints.py and gateway.py
+  copy: src={{item}} dest=/etc/fedmsg.d/{{item}}
+  with_items:
+  - endpoints.py
+  - gateway.py
+  tags:
+  - fedmsgdconfig
+  - fedmsg
+  - fedmsg/gateway
+  - fedmsg/gateway/slave
+
+- name: install /etc/fedmsg.d/fedmsg-gateway-slave.py
+  template: src={{ item.file }}
+            dest={{ item.dest }}
+            owner=root group=root mode=0644
+  with_items:
+  - { file: fedmsg-gateway-slave.py.j2, dest: /etc/fedmsg.d/fedmsg-gateway-slave.py }
+  tags:
+  - fedmsgdconfig
+  - fedmsg
+  - fedmsg/gateway
+  - fedmsg/gateway/slave
+
+
+# Stunnel specific bits
+
+- name: create directories
+  file: path=/etc/{{ item }} state=directory
+  with_items:
+  - stunnel
+  tags:
+  - fedmsg/gateway
+  - fedmsg/gateway/slave
+
+- name: install stunnel service definition
+  copy: src=stunnel.service
+        dest=/usr/lib/systemd/system/stunnel.service
+        owner=root group=root mode=0755
+  notify:
+  - reload systemd
+  - restart stunnel
+  tags:
+  - fedmsg/gateway
+  - fedmsg/gateway/slave
+
+- name: ensure old stunnel init file is gone
+  file: dest=/etc/init.d/stunnel/stunnel.init state=absent
+  tags:
+  - fedmsg/gateway
+  - fedmsg/gateway/slave
+
+- name: install stunnel.conf
+  template: src={{ item.file }}
+            dest={{ item.dest }}
+            owner=root group=root mode=0600
+  with_items:
+  - { file: stunnel-conf.j2, dest: /etc/stunnel/stunnel.conf }
+  notify: restart stunnel
+  tags:
+  - fedmsg/gateway
+  - fedmsg/gateway/slave
+
+- name: put our combined cert in place
+  copy: >
+    src={{private}}/files/httpd/wildcard-2014.fedoraproject.org.combined.cert
+    dest=/etc/pki/tls/certs/wildcard-2014.fedoraproject.org.combined.cert
+    owner=root group=root mode=0644
+  notify: restart stunnel
+  tags:
+  - fedmsg/gateway
+  - fedmsg/gateway/slave
+
+- name: start the gateway for raw zeromq traffic
+  service: name=fedmsg-gateway state=started enabled=yes
+  tags:
+  - fedmsg/gateway
+  - fedmsg/gateway/slave
+
+- name: start stunnel for websockets traffic
+  service: name=stunnel state=started enabled=yes
+  tags:
+  - fedmsg/gateway
+  - fedmsg/gateway/slave

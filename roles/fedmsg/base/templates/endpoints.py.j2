@@ -1,0 +1,82 @@
+{% if env == 'staging' %}
+suffix  = 'stg.online.rpmfusion.org'
+non_phx_suffix = 'stg.rpmfusion.org'
+{% else %}
+suffix = 'online.rpmfusion.org'
+non_phx_suffix = 'rpmfusion.org'
+vpn_suffix = 'vpn.rpmfusion.org'
+{% endif %}
+
+
+config = dict(
+    # This is a dict of possible addresses from which fedmsg can send
+    # messages.  fedmsg.init(...) requires that a 'name' argument be passed
+    # to it which corresponds with one of the keys in this dict.
+    endpoints = {
+        # For message producers, fedmsg will try to guess the
+        # name of it's calling module to determine which endpoint definition
+        # to use.  This can be overridden by explicitly providing the name in
+        # the initial call to fedmsg.init(...).
+        # This used to be on value01 and value03.. but now we just have one
+        "supybot.value01": [
+            "tcp://value01.%s:3000" % suffix,
+        ],
+
+        # Askbot runs as 6 processes with 1 thread each.
+        "askbot.ask01": [
+            "tcp://ask01.%s:30%02i" % (suffix, i)
+            for i in range(6)
+        ],
+
+{% if env != 'staging' %}
+        "askbot.ask02": [
+            "tcp://ask02.%s:30%02i" % (suffix, i)
+            for i in range(6)
+        ],
+{% endif %}
+
+        # The mirrormanager2 frontend runs as 2 processes with 1 thread each.
+        "mirrormanager2.mm-frontend01": [
+            "tcp://mm-frontend01.%s:30%02i" % (suffix, i)
+            for i in range(2)
+        ],
+{% if env != 'staging' %}
+        "mirrormanager2.mm-frontend02": [
+            "tcp://mm-frontend02.%s:30%02i" % (suffix, i)
+            for i in range(2)
+        ],
+{% endif %}
+
+        # mizdebsk says he thinks we'll need four sockets.  Two services
+        # (koschei-resolver and koschei-polling) are only sending messages, one
+        # service (koschei-watcher) can both send and receive them.  The wsgi
+        # webapp doesn't use fedmsg at all and all services are single-threaded
+        # koschei-watcher uses two endpoints
+{% if env != 'staging' %}
+        "koschei.koschei01": [
+            "tcp://koschei01.%s:30%02i" % (suffix, i)
+            for i in range(4)
+        ],
+{% else %}
+        "koschei.koschei-backend01": [
+            "tcp://koschei-backend01.%s:30%02i" % (suffix, i)
+            for i in range(4)
+        ],
+{% endif %}
+
+        # koji is not listed here since it publishes to the fedmsg-relay
+
+
+# Dynamically generate endpoint declarations from our wsgi app vars.
+# Eventually, replace *all* fedmsg endpoint definitions with this one loop
+{% for host in groups['all']|sort %}
+{% if 'wsgi_fedmsg_service' in hostvars[host] and env == hostvars[host]['env'] %}
+        "{{hostvars[host]['wsgi_fedmsg_service']}}.{{host.split('.')|first}}": [
+{% for i in range(hostvars[host]['wsgi_procs'] * hostvars[host]['wsgi_threads']) %}
+            "tcp://{{host}}:30{{'%02d' % i}}",
+{% endfor %}
+        ],
+{% endif %}
+{% endfor %}
+    },
+)
