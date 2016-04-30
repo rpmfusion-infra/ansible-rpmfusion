@@ -1,7 +1,7 @@
 - include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=pkgs-stg:pkgs02.rpmfusion.org"
 
 - name: make the box be real
-  hosts: pkgs-stg:pkgs02.rpmfusion.org
+  hosts: pkgs-stg:pkgs01.rpmfusion.org
   user: root
   gather_facts: True
 
@@ -40,7 +40,7 @@
   - include: "{{ handlers }}/restart_services.yml"
 
 - name: setup fedmsg on pkgs
-  hosts: pkgs-stg:pkgs02.rpmfusion.org
+  hosts: pkgs-stg:pkgs01.rpmfusion.org
   user: root
   gather_facts: True
 
