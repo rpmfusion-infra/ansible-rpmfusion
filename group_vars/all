@@ -148,6 +148,9 @@ become: false
 # This should be set for cloud instances in their host or group vars.
 root_auth_users: ''
 
+# default path for ansible-server
+ansible_base: /srv/web/infra
+
 # This vars get shoved into /etc/system_identification by the base role.
 # Groups and individual hosts should override them with specific info.
 # See http://infrastructure.fedoraproject.org/csi/security-policy/
