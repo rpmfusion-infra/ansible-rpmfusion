@@ -28,6 +28,16 @@
   - packages
   - fas_client
 
+- name: hotfix for fas-client bis
+  copy: >
+    src={{files}}/hotfix/python-fedora/fasClient
+    dest="/usr/bin/fasClient"
+    owner=root group=root mode=0755
+  tags:
+  - packages
+  - fas_client
+
+
 - name: install nss_db on rhel hosts only
   yum: state=present name=nss_db
   when: ansible_distribution_major_version|int == 6
