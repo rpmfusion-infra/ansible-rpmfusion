@@ -1,0 +1,49 @@
+---
+
+#
+# allow incoming openvpn and smtp
+#
+tcp_ports: [ 25, 1194 ]
+udp_ports: [ 1194 ]
+
+#
+# drop incoming traffic from less trusted vpn hosts
+# allow ntp from internal online 10 nets
+#
+custom_rules: [
+    '-A INPUT -s 192.168/16 -j REJECT --reject-with icmp-host-prohibited',
+    '-A INPUT -s 192.168/16 -p udp -m udp --dport 123 -j ACCEPT',
+]
+#
+# allow a bunch of sysadmin groups here so they can access internal stuff
+#
+fas_client_groups: sysadmin-main,sysadmin-git,sysadmin-build
+
+#
+# This is a postfix gateway. This will pick up gateway postfix config in base
+#
+postfix_group: gateway
+postfix_transport_filename: transports.gateway
+
+#
+# Set this to get fasclient cron to make the aliases file
+#
+fas_aliases: true
+
+#
+# Sometimes there are lots of postfix processes
+#
+nrpe_procs_warn: 1100
+nrpe_procs_crit: 1200
+
+# These variables are pushed into /etc/system_identification by the base role.
+# Groups and individual hosts should override them with specific info.
+# See http://infrastructure.fedoraproject.org/csi/security-policy/
+
+csi_security_category: High
+csi_purpose: SSH proxy to access infrastructure not exposed to the web
+csi_relationship: |
+  - Provides ssh access to all online/vpn connected servers.
+  - Bastion is the hub for all infrastructure's VPN connections.
+  - All incoming SMTP from online and VPN, as well as outgoing SMTP, pass or are filtered here.
+  - Bastion does not accept any mail outside online/vpn.
