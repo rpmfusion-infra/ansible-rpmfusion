@@ -18,6 +18,15 @@
   - fas_client
   when: ansible_cmdline.ostree is not defined
 
+- name: hotfix for fas-client
+  copy: >
+    src={{files}}/hotfix/python-fedora/fas2.py
+    dest="{{pythonsitelib}}/fedora/client/fas2.py
+    owner=root group=root mode=0644
+  tags:
+  - packages
+  - fas_client
+
 - name: install nss_db on rhel hosts only
   yum: state=present name=nss_db
   when: ansible_distribution_major_version|int == 6
