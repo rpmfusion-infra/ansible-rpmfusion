@@ -3,3 +3,7 @@
 
 # Puppet master
 188.165.226.50	puppet.rpmfusion.org puppet puppet.ovh.rpmfusion.lan
+
+# hv01 online
+195.154.185.75 hv01.online.rpmfusion.net hv01
+192.168.181.254 log01
