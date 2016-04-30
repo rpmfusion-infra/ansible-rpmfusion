@@ -1,7 +1,1 @@
----
-dist_tag: el{{ ansible_distribution_version[0] }}
-base_pkgs_inst: []
-base_pkgs_erase: ['firstboot-tui','bluez-utils', 'sendmail']
-service_disabled: []
-service_enabled: []
-is_rhel: True
+RedHat.yml
