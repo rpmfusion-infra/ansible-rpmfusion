@@ -1,0 +1,53 @@
+---
+# tasklist for setting up the virthost server.
+
+- name: set selinux to enforcing
+  selinux: policy=targeted state=enforcing
+
+- name: install libvirt packages on rhel7 virthosts
+  yum: pkg={{ item }} state=present
+  with_items:
+  - qemu-kvm
+  - qemu-kvm-tools
+  - qemu-img
+  - libvirt
+  - virt-install
+  tags:
+  - packages
+  when: ansible_distribution == 'CentOS' and ansible_distribution_major_version|int == 7
+
+# install libvirtd.conf 
+#
+# This provides us with the ability to use virt-manager from non root accounts. 
+#
+- name: install libvirtd.conf
+  copy: src="{{ files }}/virthost/libvirtd.conf" dest=/etc/libvirt/libvirtd.conf
+  notify:
+  - restart libvirtd
+  tags:
+  - config
+
+- name: enable libvirtd
+  service: name=libvirtd state=started enabled=yes
+
+#
+# Disable lvmetad as it causes lots of problems with iscsi shared lvm and caching. 
+#
+- name: disable lvmetad
+  lineinfile: dest=/etc/lvm/lvm.conf regexp="^    use_lvmetad = 1" line="    use_lvmetad = 0" backrefs=yes
+
+- name: set bridging to work right - 
+  copy: src="{{ files }}/virthost/99-bridge.rules" dest=/etc/udev/rules.d/99-bridge.rules
+  notify:
+  - restart bridge
+  tags:
+  - config
+  when: ansible_distribution == 'CentOS' and ansible_distribution_major_version|int == 7
+
+#
+# Some virthosts we want to use nested virt (a tech preview in rhel 7.2)
+# We need this module option set and then need to tweak the libvirt xml to enable it
+#
+- name: setup nested virt on virthosts with nested=true variable
+  copy: src=kvm_intel.conf dest=/etc/modprobe.d/kvm_intel.conf
+  when: nested == true
