@@ -1,0 +1,29 @@
+
+- name: make the box be real
+  hosts: hv01.online.rpmfusion.net
+  user: root
+  gather_facts: True
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+  - base
+  - rkhunter
+  - hosts
+  - fas_client
+  - ansible-server
+  - sudo
+  - collectd/base
+#  - rsyncd
+  - openvpn/server
+
+  
+  tasks:
+  - include: "{{ tasks }}/yumrepos.yml"
+  - include: "{{ tasks }}/motd.yml"
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
