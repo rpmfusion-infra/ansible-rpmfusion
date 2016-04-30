@@ -1,0 +1,36 @@
+---
+- name: apply interface-changes
+  command: nmcli con up {{ item.split()[1] }}
+  async: 1
+  poll: 0
+  with_items:
+  - "{{ if_uuid.stdout_lines }}"
+
+- name: restart iptables
+  service: name=iptables state=restarted
+
+- name: restart ip6tables
+  service: name=ip6tables state=restarted
+
+- name: restart NetworkManager
+  service: name=NetworkManager state=restarted
+
+- name: reload NetworkManager-connections
+  command: nmcli c reload
+
+- name: restart postfix
+  service: name=postfix state=restarted
+
+- name: restart rsyslog
+  service: name=rsyslog state=restarted
+
+- name: restart sshd
+  service: name=sshd state=restarted
+
+- name: restart watchdog
+  service: name=watchdog state=restarted
+
+- name: reload libvirtd
+  service: name=libvirtd state=reloaded
+  ignore_errors: true
+  when: ansible_virtualization_role == 'host'

@@ -1,0 +1,36 @@
+- name: See if theres a watchdog device
+  stat: path=/dev/watchdog
+  when: ansible_virtualization_role == 'guest'
+  always_run: true
+  failed_when: no
+  register: watchdog_dev
+
+- block:
+
+    - name: install watchdog
+      package: pkg={{ item }} state=present
+      with_items:
+      - watchdog
+      tags:
+      - packages
+      - watchdog
+      - base
+
+    - name: watchdog device configuration
+      copy: src=watchdog.conf dest=/etc/watchdog.conf owner=root group=root mode=644
+      tags:
+      - config
+      - watchdog
+      - base
+      notify: restart watchdog
+
+    - name: Set watchdog to run on boot
+      service: name=watchdog enabled=yes
+      ignore_errors: true
+      notify:
+      - restart watchdog
+      tags:
+      - service
+      - watchdog
+      - base
+  when: watchdog_dev is defined and ansible_virtualization_role == 'guest' and watchdog_dev.stat.exists

@@ -1,0 +1,4 @@
+search online.rpmfusion.net
+nameserver 62.210.16.6
+nameserver 62.210.16.7
+options rotate timeout:1
