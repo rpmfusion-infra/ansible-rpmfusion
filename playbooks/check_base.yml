@@ -1,0 +1,10 @@
+# requires --extra-vars="target='host1:host2:group etc'
+
+- name: check base tasks
+  hosts: "{{ target }}"
+  user: root
+
+  tasks:
+  - include: "{{ tasks }}/yumrepos.yml"
+  - include: "{{ tasks }}/motd.yml"
+  - include: "{{ tasks }}/2fa_client.yml"
