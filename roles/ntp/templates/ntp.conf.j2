@@ -1,0 +1,31 @@
+## Set up restrictions for services.
+restrict default kod nomodify notrap nopeer noquery
+restrict -6 default kod nomodify notrap nopeer noquery
+restrict 127.0.0.1 
+restrict -6 ::1
+
+# setup a set of servers that we all look at.
+# use servers from 1/2/3.rhel.pool.ntp.org as they are allowed out of the firewall
+# However, we need specific ip's to be allowed out from builders.
+{% if datacenter == 'online' and not inventory_hostname.startswith('hv0') %}
+#
+# in phx2 we want to use bastion01 and bastion02 for ntp service
+# Unless we are bastion01/02, then we want to use the normal pool
+#
+server 192.168.181.254
+{% else %}
+server 2.fedora.pool.ntp.org
+{% endif %}
+
+# [localhost]
+# Undisciplined Local Clock. This is a fake driver intended for backup
+# and when no outside source of synchronized time is available. 
+server 127.127.1.0     # local clock
+fudge  127.127.1.0 stratum 10  
+
+# Key file containing the keys and key identifiers used when operating
+# with symmetric key cryptography. 
+keys /etc/ntp/keys
+
+# Watch drift
+driftfile /var/lib/ntp/drift
