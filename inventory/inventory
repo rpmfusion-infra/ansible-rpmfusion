@@ -5,10 +5,10 @@ hv01.online.rpmfusion.net
 db02.rpmfusion.org
 
 [koji]
-koji01.rpmfusion.org
+koji01.online.rpmfusion.net
 
 [pkgs]
-pkgs01.rpmfusion.org
+pkgs01.online.rpmfusion.net
 
 [proxies]
 
