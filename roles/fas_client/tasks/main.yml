@@ -12,6 +12,7 @@
   package: state=present name={{ item }}
   with_items:
   - fas-clients
+  - python-bunch
   - cronie
   tags:
   - packages
