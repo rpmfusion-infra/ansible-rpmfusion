@@ -1,0 +1,19 @@
+---
+#
+# Setup ansible-server instance
+#
+- name: install needed packages
+  yum: pkg={{ item }} state=present
+  with_items:
+  - ansible
+  - git
+  tags:
+  - packages
+  - ansible-server
+
+- name: generate default ansible config
+  template: src=ansible.cfg.j2 dest=/etc/ansible/ansible.cfg owner=root group=root mode=0644
+  tags:
+  - ansible-server
+
+#
