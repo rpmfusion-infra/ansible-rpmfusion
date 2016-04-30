@@ -1,0 +1,42 @@
+---
+# tasklist for setting up git mail hooks
+
+- name: install needed packages
+  yum: pkg={{item}} state=present
+  with_items:
+  - git
+  - moreutils
+  - python-kitchen
+  tags:
+  - git
+  - git/hooks
+  - packages
+
+- name: install needed packages from epel testing
+  yum: pkg={{item}} state=present enablerepo=epel-testing
+  with_items:
+  - python-pygit2
+  tags:
+  - git
+  - git/hooks
+  - packages
+
+- name: install the git hooks
+  copy: src={{item}} dest=/usr/share/git-core/ mode=0755
+  with_items:
+  - post-receive-fedmsg
+  - post-receive-chained
+  - update-block-push-origin
+  tags:
+  - git
+  - git/hooks
+
+- name: install the git mail hooks
+  copy: src={{item}} dest=/usr/share/git-core/mail-hooks/ mode=0755
+  with_items:
+  - util.py
+  - git.py
+  - gnome-post-receive-email
+  tags:
+  - git
+  - git/hooks
