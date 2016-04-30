@@ -1,0 +1,95 @@
+# 
+# Install needed packages
+#
+- name: Install needed nfs packages
+  yum: pkg={{ item }} state=present
+  with_items: 
+  - nfs-utils
+  - rpcbind
+  tags:
+  - nfs/client
+  when: ansible_distribution_major_version|int < 22
+#
+- name: Install needed nfs packages
+  dnf: pkg={{ item }} state=present
+  with_items: 
+  - nfs-utils
+  - rpcbind
+  tags:
+  - nfs/client
+  when: ansible_distribution_major_version|int > 21
+
+- name: enable nfs-related services and run them (fedora20 only)
+  service: name={{ item }}  enabled=true state=started
+  with_items:
+  - rpcbind
+  - nfs-lock
+  when: ansible_distribution == 'Fedora' and ansible_distribution_major_version|int == 20
+  tags:
+  - nfs/client
+
+- name: enable nfs-related services and run them (rhel7)
+  service: name={{ item }}  enabled=true state=started
+  with_items:
+  - rpcbind
+  - nfs-lock
+  when: ansible_distribution == 'RedHat' and ansible_distribution_major_version|int == 7
+  tags:
+  - nfs/client
+
+- name: enable nfs-related services and run them (rhel6)
+  service: name={{ item }}  enabled=true state=started
+  with_items:
+  - rpcidmapd
+  - rpcbind
+  - nfs
+  - nfslock
+  when: ansible_distribution == 'RedHat' and ansible_distribution_major_version|int == 6
+  tags:
+  - nfs/client
+
+- name: nfs mount points (online)
+  mount: >
+        name={{ mnt_dir }} 
+        src=nfs-server.online.rpmfusion.net:/{{ nfs_src_dir }} 
+        fstype=nfs 
+        opts={{nfs_mount_opts}}
+        passno=0 
+        dump=0
+        state=mounted
+  tags:
+  - nfs/client
+
+#
+# In stg we need to mount the koji01.stg volume rw and the
+# production nfs volume ro. Since the setup here isn't good
+# for multiple nfs mounts, we just hard code needed staging bits
+# here. If it becomes more common to have multiple mounts, we
+# should revisit how this role works.
+#
+
+- name: nfs mount points (stg) staging koji
+  mount: >
+        name=/mnt/fedora_koji
+        src=nfs-server.online.rpmfusion.net:/mnt/fedora_koji
+        fstype=nfs4
+        opts={{nfs_mount_opts}}
+        passno=0
+        dump=0
+        state=mounted
+  when: datacenter == 'staging'
+  tags:
+  - nfs/client
+
+- name: nfs mount points (stg) production koji ro
+  mount: >
+        name=/mnt/fedora_koji_prod
+        src=nfs-server.online.rpmfusion.net:/fedora_koji
+        fstype=nfs
+        opts=ro,hard,bg,intr,noatime,nodev,nosuid,nfsvers=3
+        passno=0
+        dump=0
+        state=mounted
+  when: datacenter == 'staging'
+  tags:
+  - nfs/client
