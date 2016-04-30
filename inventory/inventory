@@ -1,3 +1,6 @@
+[bastion]
+hv01.online.rpmfusion.net
+
 [dbserver]
 db02.rpmfusion.org
 
