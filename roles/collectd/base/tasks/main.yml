@@ -1,0 +1,181 @@
+---
+# collectd client setup 
+
+# install pkg
+- name: install collectd
+  yum: name=collectd state=present
+  tags:
+  - collectd
+  when: ansible_distribution_major_version|int < 22
+
+# install pkg
+- name: install collectd
+  dnf: name=collectd state=present
+  tags:
+  - collectd
+  when: ansible_distribution_major_version|int > 21
+
+# enable collectd
+- name: enable collectd svc
+  service: state=running enabled=true name=collectd
+  tags:
+  - collectd
+
+# install collected.conf
+- name: /etc/collectd.conf
+  template: src=collectd.conf.j2 dest=/etc/collectd.conf
+  tags:
+  - collectd
+  notify:
+  - restart collectd
+
+# install collectd-network config
+- name: /etc/collectd.d/network.conf
+  template: src=network-client.conf.j2 dest=/etc/collectd.d/network.conf
+  tags:
+  - collectd
+  notify:
+  - restart collectd
+  when: not inventory_hostname.startswith('log')
+
+# install collectd-network config
+- name: /etc/collectd.d/network.conf
+  copy: src=network-server.conf dest=/etc/collectd.d/network.conf
+  tags:
+  - collectd
+  notify:
+  - restart collectd
+  when: inventory_hostname.startswith('log')
+
+# apache - localhost only - pretty much any apache server
+- name: install collectd-apache
+  yum: state=present name=collectd-apache
+  tags:
+  - collectd
+  notify:
+  - restart collectd
+  when: collectd_apache is defined and ansible_distribution_major_version|int < 22
+
+- name: /etc/collectd/apache.conf
+  copy: src=apache.conf dest=/etc/collectd.d/apache.conf
+  tags:
+  - collectd
+  notify:
+  - restart collectd
+  when: collectd_apache is defined
+
+- name: /etc/collectd/graphite.conf
+  template: src=graphite.conf dest=/etc/collectd.d/graphite.conf
+  tags:
+  - collectd
+  - graphite
+  - graphite-collectd
+  notify:
+  - restart collectd
+  when: collectd_graphite is defined and ansible_distribution_major_version != '6'
+
+- name: Install libsemanage-python so we can set an sebool below
+  yum: name=libsemanage-python state=present
+  tags:
+  - collectd
+  when: collectd_apache is defined and ansible_distribution_major_version|int < 22
+
+- name: Let collectd talk to things over tcp
+  seboolean: name=collectd_tcp_network_connect state=yes persistent=yes
+  tags:
+  - collectd
+  ignore_errors: True
+  notify:
+  - restart collectd
+  when: collectd_apache is defined or collectd_graphite is defined
+
+- name: enable collectd nfs module
+  copy: src=nfs.conf dest=/etc/collectd.d/nfs.conf
+  tags:
+  - collectd
+  notify:
+  - restart collectd
+
+# Three tasks for handling our (two) custom selinux modules.
+- name: ensure a directory exists for our custom selinux module
+  file: dest=/usr/share/collectd state=directory
+  tags:
+  - collectd
+  - selinux
+
+- name: copy over our general collectd selinux module
+  copy: src=selinux/fi-collectd.pp dest=/usr/share/collectd/fi-collectd.pp
+  register: ficgeneral_module
+  tags:
+  - collectd
+  - selinux
+
+- name: check to see if its even installed yet
+  shell: semodule -l | grep fi-collectd | wc -l
+  register: ficgeneral_grep
+  always_run: true
+  changed_when: "'0' in ficgeneral_grep.stdout"
+  tags:
+  - collectd
+  - selinux
+
+- name: install our general collectd selinux module
+  command: semodule -i /usr/share/collectd/fi-collectd.pp
+  when: ficgeneral_module|changed or ficgeneral_grep|changed
+  tags:
+  - collectd
+  - selinux
+
+- name: copy over our pstorefs/collectd selinux module (rhel6 has no pstorefs)
+  copy: src=selinux/fi-pstorefs.pp dest=/usr/share/collectd/fi-pstorefs.pp
+  when: ansible_distribution_major_version|int != 6
+  register: ficpstorefs_module
+  tags:
+  - collectd
+  - selinux
+
+- name: check to see if its even installed yet
+  shell: semodule -l | grep fi-pstorefs | wc -l
+  when: ansible_distribution_major_version|int != 6
+  register: ficpstorefs_grep
+  always_run: true
+  changed_when: "'0' in ficpstorefs_grep.stdout"
+  tags:
+  - collectd
+  - selinux
+
+- name: install our pstorefs/collectd selinux module
+  command: semodule -i /usr/share/collectd/fi-pstorefs.pp
+  when: ansible_distribution_major_version|int != 6 and (ficpstorefs_module|changed or ficpstorefs_grep|changed)
+  tags:
+  - collectd
+  - selinux
+
+
+  
+# each of the below should move to a separate task list
+# since they are odd-balls and one-offs
+
+# bind - localhost only - ns servers only
+
+# fedmsg - busgateway## only
+  # add /usr/share/collectd/fedmsg-types.db
+  
+# memcached - memcached only
+
+# postgres - this is a conn check
+## add /usr/share/collectd/pgconn-types.db 
+
+# openvpn - for bastion/openvpn gateways only
+
+# mysql
+## collectd-mysql
+
+# haproxy
+## add /usr/share/collectd/haproxy-types.db
+## add socat pkg
+## 
+
+# webproxy
+
+  
