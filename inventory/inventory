@@ -9,6 +9,10 @@ pkgs01.rpmfusion.org
 
 [proxies]
 
+[bvirthost]
+
+[buildvmhost]
+
 [virthost]
 hv01.online.rpmfusion.net
 
