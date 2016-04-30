@@ -1,0 +1,13 @@
+/var/log/httpd/*log {
+    daily
+    rotate 7
+    missingok
+    ifempty
+    compress
+    compresscmd /usr/bin/xz
+    uncompresscmd /usr/bin/xz
+    compressext .xz
+    dateext
+    sharedscripts
+    copytruncate
+}
