@@ -4,6 +4,13 @@
   hosts: "{{ target }}"
   user: root
 
+  vars_files:
+  - /srv/web/infra/ansible/vars/global.yml
+  - "/srv/private/ansible/vars.yml"
+  - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  tasks:
+
   - include: "{{ tasks }}/yumrepos.yml"
   - include: "{{ tasks }}/motd.yml"
   - include: "{{ tasks }}/2fa_client.yml"
