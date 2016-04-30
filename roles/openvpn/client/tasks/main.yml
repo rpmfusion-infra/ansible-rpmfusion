@@ -1,0 +1,64 @@
+---
+# OpenVpn server
+
+- name: Install needed packages
+  yum: pkg={{ item }} state=present
+  with_items:
+  - openvpn
+  tags:
+  - packages
+  - openvpn
+  when: ansible_distribution_major_version|int < 22
+
+- name: Install needed packages
+  dnf: pkg={{ item }} state=present
+  with_items:
+  - openvpn
+  tags:
+  - packages
+  - openvpn
+  when: ansible_distribution_major_version|int > 21 and ansible_cmdline.ostree is not defined
+
+- name: Install configuration files
+  copy: src={{ item.file }}
+        dest={{ item.dest }}
+        owner=root group=root mode={{ item.mode }}
+  with_items:
+  - { file: client.conf,
+      dest: /etc/openvpn/openvpn.conf,
+      mode: '0644' }
+  - { file: "{{ private }}/files/vpn/openvpn/keys/{{ inventory_hostname }}.crt",
+      dest: "/etc/openvpn/client.crt",
+      mode: '0600' }
+  - { file: "{{ private }}/files/vpn/openvpn/keys/{{ inventory_hostname }}.key",
+      dest: "/etc/openvpn/client.key",
+      mode: '0600' }
+  tags:
+  - install
+  - openvpn
+  notify:
+  - restart openvpn (Fedora)
+  - restart openvpn (RHEL7)
+  - restart openvpn (RHEL6)
+
+- name: enable openvpn service for rhel 6
+  service: name=openvpn state=running enabled=true
+  when: ansible_distribution_major_version|int == 6
+  tags:
+  - service
+  - openvpn
+
+- name: Make sure openvpn is running in rhel 7.1
+  service: name=openvpn@openvpn state=running enabled=true
+  when: ansible_distribution_major_version|int == 7
+  tags:
+  - service
+  - openvpn
+
+- name: enable openvpn service for Fedora
+  service: name=openvpn@openvpn state=running enabled=true
+  when: is_fedora is defined
+  tags:
+  - service
+  - openvpn
+

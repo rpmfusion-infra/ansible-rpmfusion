@@ -1,0 +1,51 @@
+---
+#
+# This task sets up /etc/sudoers.d/fedora on a machine. 
+#
+
+#
+# Put in place the default sysadmin-main sudoers file. 
+#
+- name: setup /etc/sudoers.d/01-sysadmin-main
+  copy: src="{{ private }}/files/sudo/sysadmin-main" dest=/etc/sudoers.d/01-sysadmin-main owner=root group=root mode=0600
+  when: sudoers_main is not defined
+  tags:
+  - config
+  - sudo
+  - sudoers
+
+#
+# Put in place the default sysadmin-main sudoers file. (nopasswd edition)
+#
+- name: setup /etc/sudoers.d/01-sysadmin-main (nopasswd)
+  copy: src="{{ private }}/files/sudo/sysadmin-main-nopasswd" dest=/etc/sudoers.d/01-sysadmin-main owner=root group=root mode=0600
+  when: sudoers_main is defined and sudoers_main == 'nopasswd'
+  tags:
+  - config
+  - sudo
+  - sudoers
+
+- name: remove old sysadmin-main file if its still around
+  file: dest=/etc/sudoers.d/sysadmin-main state=absent
+  tags:
+  - config
+  - sudo
+  - sudoers
+
+#
+# This will move a /etc/sudoers.d/ file in place 
+#
+- name: setup /etc/sudoers.d/sudoer file for client use
+  copy: src={{ item }} dest=/etc/sudoers.d/{{ item | basename | replace('.', '_') }}
+          owner=root group=root mode=0600
+  with_first_found:
+  - files:
+    - "{{ sudoers }}"
+    - "{{ private }}/files/sudo/{{ ansible_fqdn }}-sudoers"
+    - "{{ private }}/files/sudo/{{ ansible_hostname }}-sudoers"
+    - "{{ private }}/files/sudo/{{ ansible_domain }}-sudoers"
+    skip: true
+  tags:
+  - config
+  - sudo
+  - sudoers

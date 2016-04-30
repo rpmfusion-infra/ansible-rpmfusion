@@ -1,0 +1,35 @@
+---
+- name: install rkhunter (yum)
+  yum: name=rkhunter state=present
+  notify:
+  - run rkhunter
+  tags:
+  - rkhunter
+  - packages
+  when: ansible_distribution_major_version|int < 22
+
+- name: install rkhunter (dnf)
+  dnf: name=rkhunter state=present
+  notify:
+  - run rkhunter
+  tags:
+  - rkhunter
+  - packages
+  when: ansible_distribution_major_version|int > 21 and ansible_cmdline.ostree is not defined
+
+
+- name: rkhunter.conf
+  template: src=rkhunter.conf.j2 dest=/etc/rkhunter.conf mode=0640
+  notify:
+  - run rkhunter
+  tags:
+  - rkhunter
+  - config
+
+- name: rkhunter sysconfig
+  copy: src=rkhunter.sysconfig dest=/etc/sysconfig/rkhunter mode=0640
+  notify:
+  - run rkhunter
+  tags:
+  - rkhunter
+  - config
