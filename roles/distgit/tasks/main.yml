@@ -314,24 +314,8 @@
   - selinux
   - distgit
 
-- name: install the fedora-ca.cert
-  copy: src={{private}}/files/fedora-ca.cert dest=/etc/httpd/conf/cacert.pem
-  tags:
-  - distgit
-
-- name: install the pkgs cert
-  copy: src={{private}}/files/pkgs.rpmfusion.org_key_and_cert.pem
-        dest=/etc/httpd/conf/pkgs.rpmfusion.org_key_and_cert.pem
-        owner=apache mode=0400
-  when: env != "staging"
-  tags:
-  - distgit
-
-- name: install the pkgs.stg cert
-  copy: src={{private}}/files/pkgs.stg.fedoraproject.org_key_and_cert.pem
-        dest=/etc/httpd/conf/pkgs.rpmfusion.org_key_and_cert.pem
-        owner=apache mode=0400
-  when: env == "staging"
+- name: install the rpmfusion-ca.cert
+  copy: src={{private}}/files/rpmfusion-ca.cert dest=/etc/httpd/conf/cacert.pem
   tags:
   - distgit
 
