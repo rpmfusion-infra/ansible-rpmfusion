@@ -30,7 +30,7 @@ IGNORE=
 BRANCH=""
 PACKAGES=""
 SRC_BRANCH="master"
-AUTHOR="Fedora Release Engineering <rel-eng@lists.fedoraproject.org>"
+AUTHOR="RPM Fusion Release Engineering <sysadmin@lists.rpmfusion.org>"
 
 Usage() {
     cat <<EOF

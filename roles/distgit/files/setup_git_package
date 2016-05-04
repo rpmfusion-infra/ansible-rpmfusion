@@ -9,7 +9,7 @@
 
 
 # Figure out the environment we're running in
-GITROOT=/srv/git/repositories
+GITROOT=/srv/git/repositories/${GITTREE:-free}/rpms
 
 # check if a moron is driving me
 if [ ! -d $GITROOT ] ; then
@@ -23,7 +23,7 @@ fi
 VERBOSE=0
 TEST=
 IGNORE=
-AUTHOR="Fedora Release Engineering <rel-eng@lists.fedoraproject.org>"
+AUTHOR="RPM Fusion Release Engineering <sysadmin@lists.rpmfusion.org>"
 GIT_SSH_URL="ssh://localhost"
 
 Usage() {
@@ -95,8 +95,8 @@ mkdir -p $GITROOT/$PACKAGE.git
 pushd $GITROOT/$PACKAGE.git >/dev/null
 git init -q --shared --bare
 echo "$PACKAGE" > description # This is used to figure out who to send mail to.
-git config --add hooks.mailinglist "$PACKAGE-owner@fedoraproject.org,scm-commits@lists.fedoraproject.org"
-git config --add hooks.maildomain fedoraproject.org
+git config --add hooks.mailinglist "$PACKAGE-owner@rpmfusion.org,rpmfusion-commits@lists.rpmfusion.org"
+git config --add hooks.maildomain rpmfusion.org
 popd >/dev/null
 
 # Now clone that repo and create the .gitignore and sources file
