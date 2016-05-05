@@ -51,7 +51,7 @@
 - name: nfs mount points (online)
   mount: >
         name={{ mnt_dir }} 
-        src=nfs-server.online.rpmfusion.net:/{{ nfs_src_dir }} 
+        src=nfs-server.online.rpmfusion.net:/srv/nfs/{{ nfs_src_dir }}
         fstype=nfs 
         opts={{nfs_mount_opts}}
         passno=0 
