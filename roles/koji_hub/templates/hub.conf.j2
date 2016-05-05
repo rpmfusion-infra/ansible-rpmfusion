@@ -1,0 +1,120 @@
+[hub]
+
+## Basic options ##
+DBName = koji
+DBUser = koji
+{% if inventory_hostname.startswith('koji') %}
+DBHost = db-koji01
+DBPass = {{ kojiPassword }}
+{% elif inventory_hostname == 's390-koji01.qa.fedoraproject.org' %}
+DBHost = db-s390-koji01
+DBPass = {{ s390kojiPassword }}
+{% elif inventory_hostname == 'arm-koji01.qa.fedoraproject.org' %}
+DBHost = db-arm-koji01
+DBPass = {{ armkojiPassword }}
+{% endif %}
+KojiDir = /mnt/koji
+MemoryWarnThreshold = 10000
+MaxRequestLength = 83886080
+
+##  SSL client certificate auth configuration  ##
+#note: ssl auth may also require editing the httpd config (conf.d/kojihub.conf)
+
+## the client username is the common name of the subject of their client certificate
+DNUsernameComponent = CN
+{% if inventory_hostname.startswith('koji') %}
+## separate multiple DNs with |
+ProxyDNs = emailAddress=buildsys@fedoraproject.org,CN=kojiweb,OU=Fedora Builders,O=Fedora Project,ST=North Carolina,C=US|emailAddress=releng@fedoraproject.org,CN=sign-bridge1,OU=Package Signing,O=Fedora Project,ST=North Carolina,C=US
+{% elif inventory_hostname == 's390-koji01.qa.fedoraproject.org' %}
+ProxyDNs = /C=US/ST=North Carolina/O=Fedora Project/OU=Fedora Builders/CN=s390.koji.fedoraproject.org/emailAddress=buildsys@fedoraproject.org|emailAddress=buildsys@fedoraproject.org,CN=secondary-signer,OU=Fedora Builders,O=Fedora Project,ST=North Carolina,C=US
+{% elif inventory_hostname == 'arm-koji01.qa.fedoraproject.org' %}
+ProxyDNs = /C=US/ST=North Carolina/O=Fedora Project/OU=Fedora Builders/CN=arm.koji.fedoraproject.org/emailAddress=buildsys@fedoraproject.org|emailAddress=buildsys@fedoraproject.org,CN=secondary-signer,OU=Fedora Builders,O=Fedora Project,ST=North Carolina,C=US
+{% endif %}
+
+## end SSL client certificate auth configuration
+
+
+
+##  Other options  ##
+LoginCreatesUser = On
+{% if inventory_hostname.startswith('koji') %}
+KojiWebURL = http://koji.fedoraproject.org/koji
+{% elif inventory_hostname == 's390-koji01.qa.fedoraproject.org' %}
+KojiWebURL = http://s390.koji.fedoraproject.org/koji
+{% elif inventory_hostname == 'arm-koji01.qa.fedoraproject.org' %}
+KojiWebURL = http://arm.koji.fedoraproject.org/koji
+{% endif %}
+# The domain name that will be appended to Koji usernames
+# when creating email notifications
+EmailDomain = fedoraproject.org
+# Disable sending all notifications from koji, people need to use FMN now
+DisableNotifications = True
+
+## If KojiDebug is on, the hub will be /very/ verbose and will report exception
+## details to clients for anticipated errors (i.e. koji's own exceptions --
+## subclasses of koji.GenericError).
+# KojiDebug = On
+
+## Determines how much detail about exceptions is reported to the client (via faults)
+## Meaningful values:
+##   normal - a basic traceback (format_exception)
+##   extended - an extended traceback (format_exc_plus)
+##   anything else - no traceback, just the error message
+## The extended traceback is intended for debugging only and should NOT be
+## used in production, since it may contain sensitive information.
+# KojiTraceback = normal
+
+## These options are intended for planned outages
+#ServerOffline = True
+#OfflineMessage = Offline
+# LockOut = False
+## If ServerOffline is True, the server will always report a ServerOffline fault (with
+## OfflineMessage as the fault string).
+## If LockOut is True, the server will report a ServerOffline fault for all non-admin
+## requests.
+
+#Plugins = koji-disable-builds-plugin
+#Plugins = darkserver-plugin
+Plugins = fedmsg-koji-plugin runroot_hub hub_containerbuild
+
+{% if inventory_hostname.startswith('koji') %}
+[policy]
+
+
+tag =
+    has_perm secure-boot && package kernel shim grub2 fedora-release fedora-repos pesign :: allow
+    package kernel shim grub2 fedora-release fedora-repos pesign :: deny
+    all :: allow
+
+channel =
+    method createrepo :: use createrepo
+    has req_channel :: req
+    is_child_task :: parent
+#we want pesign-test-app to always go to the secure-boot channel even for scratch builds
+    source */pesign-test-app* && has_perm secure-boot :: use secure-boot
+#make sure all scratch builds go to default channel
+    method build && bool scratch :: use default
+
+#policys to deal with secure boot allowing only people in the secure-boot group to build the packages
+    source */kernel* && has_perm secure-boot :: use secure-boot
+    source */shim* && has_perm secure-boot :: use secure-boot
+    source */grub2* && has_perm secure-boot :: use secure-boot
+    source */fedora-release* && has_perm secure-boot :: use secure-boot
+    source */fedora-repos* && has_perm secure-boot :: use secure-boot
+    source */pesign* && has_perm secure-boot :: use secure-boot
+
+# we have some arm builders that have ssd's in them, eclipse is 7 hours faster building on them so lets
+# make sure that we always build eclipse on them.
+    source */eclipse* :: use eclipse
+    source */gcc* :: use eclipse
+
+    all :: use default
+
+
+
+build_from_srpm =
+    has_perm admin :: allow
+    tag el6-docs && has_perm docs :: allow
+    all :: deny
+
+{% endif %}

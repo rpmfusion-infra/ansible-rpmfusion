@@ -1,0 +1,97 @@
+RewriteEngine On
+RewriteRule ^/$ /koji/  [R,L]
+KeepAlive On
+
+#We use wsgi by default
+Alias /koji "/usr/share/koji-web/scripts/wsgi_publisher.py"
+#(configuration goes in /etc/kojiweb/web.conf)
+
+Alias /robots.txt /var/www/html/robots.txt
+
+<Directory "/var/www/html">
+    Options None
+    AllowOverride None
+    Require all granted
+</Directory>
+
+<Directory "/usr/share/koji-web/scripts/">
+    Options ExecCGI
+    SetHandler wsgi-script
+    Require all granted
+</Directory>
+
+<Location /koji/login>
+    SSLVerifyClient require
+    SSLVerifyDepth  10
+    SSLOptions +StdEnvVars
+</Location>
+
+
+Alias /koji-static/ "/usr/share/koji-web/static/"
+
+<Directory "/usr/share/koji-web/static/">
+    Options None
+    AllowOverride None
+    Require all granted
+</Directory>
+
+Alias /repos "/mnt/koji/repos/"
+
+<Directory "/mnt/koji/repos/">
+    Options Indexes FollowSymLinks
+    Require all granted
+</Directory>
+
+Alias /scratch "/mnt/koji/scratch/"
+
+<Directory "/mnt/koji/scratch/">
+    Options Indexes
+    Require all granted
+</Directory>
+
+Alias /work "/mnt/koji/work/"
+
+<Directory "/mnt/koji/work/">
+    Options Indexes FollowSymLinks
+    Require all granted
+</Directory>
+
+Alias /buildgroups "/mnt/koji/buildgroups/"
+
+<Directory "/mnt/koji/buildgroups/">
+    Options Indexes FollowSymLinks
+    Require all granted
+</Directory>
+
+{% if inventory_hostname.startswith('koji') %}
+# use redirects for compose and packages locations
+RewriteRule ^/compose(.+) https://kojipkgs.fedoraproject.org/compose$1  [R=301,L]
+RewriteRule ^/packages(.+) https://kojipkgs.fedoraproject.org/packages$1  [R=301,L]
+{% else %}
+Alias /compose "/mnt/koji/compose/"
+
+<Directory "/mnt/koji/compose/">
+    Options Indexes FollowSymLinks
+    Require all granted
+</Directory>
+
+Alias /packages "/mnt/koji/packages/"
+
+<Directory "/mnt/koji/packages/">
+    Options Indexes FollowSymLinks
+    Require all granted
+</Directory>
+
+# use redirects for compose and packages locations to be consistent with primary hub
+{% if inventory_hostname == 's390-koji01.qa.fedoraproject.org' %}
+#
+# Disable these for now since there's a cert issue and no virtual host definition to redirect to
+# We need to either add a apache virthost and a proper cert or a seperate vm for packages.
+#
+#RewriteRule ^/compose(.+) https://s390pkgs.fedoraproject.org/compose$1  [R=301,L]
+#RewriteRule ^/packages(.+) https://s390pkgs.fedoraproject.org/packages$1  [R=301,L]
+{% elif inventory_hostname == 'arm-koji01.qa.fedoraproject.org' %}
+#RewriteRule ^/compose(.+) http://arm.koji.fedoraproject.org/compose$1  [R=301,L]
+#RewriteRule ^/packages(.+) http://arm.koji.fedoraproject.org/packages$1  [R=301,L]
+{% endif %}
+{% endif %}

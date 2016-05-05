@@ -1,0 +1,40 @@
+#
+# koji-hub is an xmlrpc interface to the Koji database
+#
+
+KeepAlive On
+
+Alias /kojihub /usr/share/koji-hub/kojixmlrpc.py
+
+<Directory "/usr/share/koji-hub">
+    Options ExecCGI
+    SetHandler wsgi-script
+    Require all granted
+</Directory>
+
+{% if inventory_hostname == 'arm-koji01.qa.fedoraproject.org' %}
+# Also serve /mnt/koji
+Alias /kojifiles "/mnt/koji/"
+
+<Directory "/mnt/koji">
+   Options Indexes FollowSymLinks
+   AllowOverride None
+   Order allow,deny
+   Allow from all
+</Directory>
+{% endif %}
+
+<Location /kojihub/ssllogin>
+         SSLVerifyClient require
+         SSLVerifyDepth  10
+         SSLOptions +StdEnvVars
+</Location>
+
+# uncomment this to enable authentication via SSL client certificates
+#<Location /kojihub>
+#        SSLOptions +StdEnvVars
+#</Location>
+# these options must be enabled globally (in ssl.conf)
+# SSLVerifyClient require
+# SSLVerifyDepth  10
+
