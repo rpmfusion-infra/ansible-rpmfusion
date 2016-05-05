@@ -345,13 +345,13 @@
   when: env != 'staging' and ansible_hostname.startswith('koji')
 
 - name: install serverca cert for oscar (garbage collector) user
-  copy: src={{ private }}/files/fedora-ca.cert dest=/etc/koji-gc/serverca.crt
+  copy: src={{ private }}/files/rpmfusion-ca.cert dest=/etc/koji-gc/serverca.crt
   tags:
   - koji_hub
   when: env != 'staging' and ansible_hostname.startswith('koji')
 
 - name: install clientca cert for oscar (garbage collector) user
-  copy: src={{ private }}/files/fedora-ca.cert dest=/etc/koji-gc/clientca.crt
+  copy: src={{ private }}/files/rpmfusion-ca.cert dest=/etc/koji-gc/clientca.crt
   tags:
   - koji_hub
   when: env != 'staging' and ansible_hostname.startswith('koji')
