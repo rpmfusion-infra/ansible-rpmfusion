@@ -2,7 +2,7 @@
 hv01.online.rpmfusion.net
 
 [dbserver]
-db02.rpmfusion.org
+db02.online.rpmfusion.net
 
 [koji]
 koji01.online.rpmfusion.net

@@ -1,8 +1,8 @@
 ---
 # common items for the releng-* boxes
-lvm_size: 50000
-mem_size: 8192
-num_cpus: 4
+lvm_size: 20000
+mem_size: 2048
+num_cpus: 1
 # for systems that do not match the above - specify the same parameter in
 # the host_vars/$hostname file
 

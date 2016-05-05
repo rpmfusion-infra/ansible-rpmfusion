@@ -23,9 +23,9 @@ dbs_to_backup:
 - koji
 
 # These are normally group variables, but in this case db servers are often different
-lvm_size: 8192
+lvm_size: 10240
 mem_size: 2048
-num_cpus: 2
+num_cpus: 1
 fas_client_groups: sysadmin-db,sysadmin
 
 #
