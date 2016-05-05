@@ -4,7 +4,7 @@
 DBName = koji
 DBUser = koji
 {% if inventory_hostname.startswith('koji') %}
-DBHost = db-koji01
+DBHost = db02
 DBPass = {{ kojiPassword }}
 {% elif inventory_hostname == 's390-koji01.qa.fedoraproject.org' %}
 DBHost = db-s390-koji01
