@@ -15,6 +15,11 @@
   tags:
   - nfs/server
 
+- name: setup /etc/sysconfig/nfs
+  copy: src={{ ansible_fqdn }}-sysconfig-nfs dest=/etc/sysconfig/nfs
+  tags:
+  - nfs/server
+
 - name: enable nfs-related services and run them (fedora)
   service: name={{ item }}  enabled=true state=started
   with_items:
