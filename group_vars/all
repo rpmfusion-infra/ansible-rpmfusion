@@ -29,7 +29,7 @@ custom6_rules: []
 
 # defaults for virt installs
 ks_url: http://infrastructure.rpmfusion.org/repo/rhel/ks/kvm-rhel-7
-ks_repo: http://infrastructure.rpmfusion.org/repo/rhel/RHEL7-x86_64/
+ks_repo: http://mirror.centos.org/centos/7/os/x86_64/
 mem_size: 2048
 num_cpus: 2
 lvm_size: 20000
@@ -58,7 +58,7 @@ virt_install_command_one_nic: virt-install -n {{ inventory_hostname }}
                  'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyS0
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
-                 --network bridge={{ main_bridge }},model=virtio
+                 --network bridge=br1,model=virtio
                  --autostart --noautoconsole --watchdog default
 
 virt_install_command_two_nic: virt-install -n {{ inventory_hostname }} 
