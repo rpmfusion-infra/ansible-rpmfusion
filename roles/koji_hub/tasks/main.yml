@@ -284,21 +284,21 @@
   - config
   - koji_hub
 
-- name: make an empty /mnt/fedora_koji for stg.
-  file: state=directory path=/mnt/fedora_koji/koji owner=root group=root
+- name: make an empty /mnt/rpmfusion_koji for stg.
+  file: state=directory path=/mnt/rpmfusion_koji/koji owner=root group=root
   tags:
   - koji_hub
   when: env == "staging" and ansible_hostname.startswith('koji')
 
 - name: make mnt/koji directory
-  file: state=link src=/mnt/fedora_koji/koji dest=/mnt/koji owner=root group=root
+  file: state=link src=/mnt/rpmfusion_koji/koji dest=/mnt/koji owner=root group=root
   tags:
   - koji_hub
   when: ansible_hostname.startswith('koji')
 
-- name: check selinux default context for /mnt/fedora_koji in staging
-  command: matchpathcon /mnt/fedora_koji
-  register: mnt_fedora_koji_context
+- name: check selinux default context for /mnt/rpmfusion_koji in staging
+  command: matchpathcon /mnt/rpmfusion_koji
+  register: mnt_rpmfusion_koji_context
   when: env == "staging"
   always_run: yes
   changed_when: "1 != 1"
@@ -306,10 +306,10 @@
   - koji_hub
   - selinux
 
-- name: /mnt/fedora_koji selinux file context
-  command: semanage fcontext -a -t httpd_sys_rw_content_t "/mnt/fedora_koji(/.*)?"
+- name: /mnt/rpmfusion_koji selinux file context
+  command: semanage fcontext -a -t httpd_sys_rw_content_t "/mnt/rpmfusion_koji(/.*)?"
   when: env == "staging" and
-        mnt_fedora_koji_context.stdout.find('httpd_sys_rw_content_t') == -1
+        mnt_rpmfusion_koji_context.stdout.find('httpd_sys_rw_content_t') == -1
   tags:
   - koji_hub
   - selinux
@@ -321,18 +321,11 @@
   - koji_hub
 
 - name: set sebooleans so koji can anon write
-  seboolean: name=allow_httpd_anon_write state=true persistent=true
-  tags:
-  - selinux
-  - koji_hub
-  when: ansible_distribution == "RedHat" and ansible_distribution_major_version|int == 6
-
-- name: set sebooleans so koji can anon write
   seboolean: name=httpd_anon_write state=true persistent=true
   tags:
   - selinux
   - koji_hub
-  when: ansible_distribution == "RedHat" and ansible_distribution_major_version|int == 7
+  when: ansible_distribution == "CentOS" and ansible_distribution_major_version|int == 7
 
 - name: Set httpd to run on boot
   service: name=httpd enabled=yes
