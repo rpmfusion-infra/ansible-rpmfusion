@@ -8,7 +8,7 @@ vmhost: hv01.online.rpmfusion.net
 datacenter: online
 
 ks_url: http://192.168.181.254/install/ks/db02.ks
-ks_repo: http://dl.kwizart.net/db02.ks
+ks_repo: http://mirror.centos.org/centos/7/os/x86_64/
 
 # This is a generic list, monitored by collectd
 databases:
