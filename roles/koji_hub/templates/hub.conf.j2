@@ -19,12 +19,8 @@ MaxRequestLength = 83886080
 
 ## the client username is the common name of the subject of their client certificate
 DNUsernameComponent = CN
-{% if inventory_hostname.startswith('koji') %}
 ## separate multiple DNs with |
-ProxyDNs = emailAddress=buildsys@fedoraproject.org,CN=kojiweb,OU=Fedora Builders,O=Fedora Project,ST=North Carolina,C=US|emailAddress=releng@fedoraproject.org,CN=sign-bridge1,OU=Package Signing,O=Fedora Project,ST=North Carolina,C=US
-{% elif inventory_hostname.startwith('arm-koji01.qa.fedoraproject.org') %}
-ProxyDNs = /C=US/ST=North Carolina/O=Fedora Project/OU=Fedora Builders/CN=arm.koji.fedoraproject.org/emailAddress=buildsys@fedoraproject.org|emailAddress=buildsys@fedoraproject.org,CN=secondary-signer,OU=Fedora Builders,O=Fedora Project,ST=North Carolina,C=US
-{% endif %}
+ProxyDNs = emailAddress=buildsys@rpmfusion.org,CN=kojiweb,O=RPM Fusion,ST=Province,C=EU|emailAddress=buildsys@rpmfusion.org,CN=sign-bridge1,O=RPM Fusion,ST=Provine,C=EU
 
 ## end SSL client certificate auth configuration
 
