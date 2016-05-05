@@ -8,7 +8,7 @@
 195.154.185.75 hv01.online.rpmfusion.net hv01
 
 # hv01 lan
-192.168.181.254 nfs-server.rpmfusion.org nfs-server log01.rpmfusion.org log01 proxy.online.rpmfusion.net
+192.168.181.254 nfs-server.online.rpmfusion.net nfs-server log01.rpmfusion.org log01 proxy.online.rpmfusion.net
 192.168.181.130 db02.online.rpmfusion.net db02
 
 # hv01 vpn
