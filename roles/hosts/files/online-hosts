@@ -6,10 +6,12 @@
 
 # hv01 online
 195.154.185.75 hv01.online.rpmfusion.net hv01
+212.83.132.100 koji.rpmfusion.org koji
 
 # hv01 lan
 192.168.181.254 nfs-server.online.rpmfusion.net nfs-server log01.rpmfusion.org log01 proxy.online.rpmfusion.net
 192.168.181.130 db02.online.rpmfusion.net db02
+192.168.181.135 koji01.online.rpmfusion.net koji01
 
 # hv01 vpn
 192.168.182.1 hv01.vpn.rpmfusion.net proxy.vpn.rpmfusion.net
