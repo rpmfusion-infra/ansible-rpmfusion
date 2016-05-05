@@ -140,7 +140,8 @@
     mode=644
   with_items:
   - policy.py
-  when: "'persistent-cloud' not in group_names"
+  #when: "'persistent-cloud' not in group_names"
+  when: "ansible_distribution == 'Disabled'"
   tags:
   - config
   - fedmsgdconfig
