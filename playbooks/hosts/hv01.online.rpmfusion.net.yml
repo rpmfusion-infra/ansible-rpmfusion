@@ -23,6 +23,7 @@
   - collectd/base
 #  - rsyncd
   - openvpn/server
+  - nfs/server
 
   
   tasks:

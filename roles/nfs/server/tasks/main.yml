@@ -30,7 +30,7 @@
   - rpcbind
   - nfs-server
   - nfs-lock
-  when: ansible_distribution == 'RedHat'
+  when: (ansible_distribution == 'CentOS' or ansible_distribution == 'RedHat')
   tags:
   - nfs/server
 
