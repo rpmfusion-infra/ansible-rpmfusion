@@ -28,6 +28,8 @@ mem_size: 2048
 num_cpus: 1
 fas_client_groups: sysadmin-db,sysadmin
 
+is_kojidb: True
+
 #
 # We should narrow this down at some point
 #
