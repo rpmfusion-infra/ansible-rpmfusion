@@ -30,9 +30,6 @@
   - collectd/base
   - apache
   - fedmsg/base
-  - koji_hub
-  - { role: rsyncd, when: not inventory_hostname.startswith('koji') }
-  - { role: koji_builder, when: env == "staging" or inventory_hostname.startswith('s390') or inventory_hostname.startswith('arm') }
   - { role: nfs/server, when: env == "staging" }
 #  - { role: keepalived, when: env == "production" and inventory_hostname.startswith('koji') }
   - role: nfs/client
@@ -48,6 +45,9 @@
     mnt_dir: '/mnt/fedora_koji_prod'
     nfs_src_dir: 'fedora_koji'
     when: env == 'staging' and inventory_hostname.startswith('koji')
+  - koji_hub
+  - { role: rsyncd, when: not inventory_hostname.startswith('koji') }
+  - { role: koji_builder, when: env == "staging" or inventory_hostname.startswith('s390') or inventory_hostname.startswith('arm') }
   - sudo
 
   tasks:

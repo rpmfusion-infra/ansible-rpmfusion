@@ -187,8 +187,8 @@
   - koji_hub
   when: env == 'staging'
 
-- name: instaall fedora-ca.cert in various places
-  copy: src={{ private }}/files/fedora-ca.cert dest={{ item }} owner=apache
+- name: instaall rpmfusion-ca.cert in various places
+  copy: src={{ private }}/files/rpmfusion-ca.cert dest={{ item }} owner=apache
   with_items:
   - /etc/kojira/extras_cacert.pem
   - /etc/pki/tls/certs/extras_cacert.pem

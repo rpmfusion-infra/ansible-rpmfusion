@@ -1,7 +1,7 @@
 #- include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=log01.rpmfusion.org"
 
 - name: make the box be real
-  hosts: log01.rpmfusion.org
+  hosts: hv01.online.rpmfusion.org
   user: root
   gather_facts: True
 
@@ -21,7 +21,6 @@
   - collectd/server
   - sudo
   - epylog
-  - openvpn/client
   - awstats
 
   tasks:
