@@ -290,11 +290,6 @@
   - koji_hub
   when: env == "staging" and ansible_hostname.startswith('koji')
 
-- name: make mnt/koji directory
-  file: state=link src=/mnt/rpmfusion_koji/koji dest=/mnt/koji owner=root group=root
-  tags:
-  - koji_hub
-  when: ansible_hostname.startswith('koji')
 
 - name: check selinux default context for /mnt/rpmfusion_koji in staging
   command: matchpathcon /mnt/rpmfusion_koji
