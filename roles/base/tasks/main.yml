@@ -234,6 +234,7 @@
   - ip6tables
   - service
   - base
+  when: not inventory_hostname.startswith('arm-build')
 
 - name: enable journald persistence
   file: path=/var/log/journal state=directory
