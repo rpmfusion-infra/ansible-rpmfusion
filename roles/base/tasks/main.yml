@@ -219,7 +219,7 @@
    - iptables/ip6tables.{{ host_group }}
    - iptables/ip6tables.{{ env }}
    - iptables/ip6tables
-  when: not inventory_hostname.startswith('fed-cloud09')
+  when: not inventory_hostname.startswith('arm-build')
   notify:
   - restart ip6tables
   - reload libvirtd
