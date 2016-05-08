@@ -1,7 +1,7 @@
 
 [buildvm]
-buildvm-01.online.rpmfusion.org
-buildvm-02.online.rpmfusion.org
+buildvm-01.online.rpmfusion.net
+buildvm-02.online.rpmfusion.net
 
 [buildvmhost]
 
@@ -11,8 +11,8 @@ buildvm-02.online.rpmfusion.org
 scaleway-c1
 
 [scaleway-c1]
-arm-builder01.scaleway.rpmfusion.org
-arm-builder02.scaleway.rpmfusion.org
+arm-builder01.scaleway.rpmfusion.net
+arm-builder02.scaleway.rpmfusion.net
 
 [builders:children]
 buildhw
