@@ -50,7 +50,7 @@
   file: state=directory path={{ item }}
   with_items:
     - /pub
-    - /mnt/fedora_koji
+    - /mnt/rpmfusion_koji
     - /pub/fedora
     - /pub/epel
   tags:
