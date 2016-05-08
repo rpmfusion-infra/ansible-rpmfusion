@@ -17,6 +17,7 @@
 
   roles:
   - base
+  - hosts
   - { role: openvpn/client, when: datacenter != "online" }
   - { role: nfs/client, mnt_dir: '/mnt/rpmfusion_koji',  nfs_src_dir: "{{ koji_hub_nfs }}", when: koji_hub_nfs is defined }
   - koji_builder
