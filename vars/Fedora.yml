@@ -5,3 +5,4 @@ base_pkgs_erase: ['firewalld', 'PackageKit*', 'sendmail', 'at']
 service_disabled: [ ]
 service_enabled: ['auditd']
 is_fedora: True
+pythonsitelib: /usr/lib/python2.7/site-packages
