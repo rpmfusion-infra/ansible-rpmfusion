@@ -1,0 +1,38 @@
+# create a new koji builder on raw hw
+# NOTE: should be used with --limit most of the time
+# NOTE: most of these vars_path come from group_vars/buildhw or from hostvars
+
+- name: make koji builder(s) on raw hw
+  hosts: buildhw:buildppc:buildarm:buildaarch64:buildppc64:bkernel
+  remote_user: root
+  gather_facts: True
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  pre_tasks:
+  - include: "{{ tasks }}/yumrepos.yml"
+
+  roles:
+  - base
+  - { role: openvpn/client, when: datacenter != "online" }
+  - { role: nfs/client, mnt_dir: '/mnt/rpmfusion_koji',  nfs_src_dir: "{{ koji_hub_nfs }}", when: koji_hub_nfs is defined }
+  - koji_builder
+  - { role: bkernel, when: inventory_hostname.startswith('bkernel') }
+  - hosts
+  - { role: fas_client, when: not inventory_hostname.startswith('bkernel') }
+  - { role: sudo, when: not inventory_hostname.startswith('bkernel') }
+
+  tasks:
+  - include: "{{ tasks }}/2fa_client.yml"
+    when: not inventory_hostname.startswith('bkernel')
+  - include: "{{ tasks }}/motd.yml"
+    when: not inventory_hostname.startswith('bkernel')
+
+  - name: make sure kojid is running
+    service: name=kojid state=running enabled=yes
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
