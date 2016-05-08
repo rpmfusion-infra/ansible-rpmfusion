@@ -13,6 +13,8 @@ scaleway-c1
 [scaleway-c1]
 arm-builder01.scaleway.rpmfusion.net
 arm-builder02.scaleway.rpmfusion.net
+arm-builder03.scaleway.rpmfusion.net
+arm-builder04.scaleway.rpmfusion.net
 
 [builders:children]
 buildhw
