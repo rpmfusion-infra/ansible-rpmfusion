@@ -77,3 +77,11 @@ Alias /packages "/mnt/koji/packages/"
     Require all granted
 </Directory>
 
+# from kojipkgs
+Alias /kojifiles "/mnt/koji/"
+
+<Directory "/mnt/koji/">
+    Options Indexes FollowSymLinks
+    Require all granted
+</Directory>
+
