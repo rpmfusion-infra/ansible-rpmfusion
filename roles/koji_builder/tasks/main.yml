@@ -100,7 +100,7 @@
     - rsyslog
     - audit
     - pycdio
-    - python-kickstart
+#    - python-kickstart
     - oz
     - imagefactory
     - imagefactory-plugins-TinMan
