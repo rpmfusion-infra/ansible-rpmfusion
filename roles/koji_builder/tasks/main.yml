@@ -156,7 +156,7 @@
 # done oz/imagefactory
 
 - name: copy over koji ca cert
-  copy: src="{{ private }}/files/koji/buildercerts/fedora-ca.cert" dest=/etc/kojid/cacert.pem
+  copy: src="{{ private }}/files/koji/buildercerts/rpmfusion-ca.cert" dest=/etc/kojid/cacert.pem
 
 - name: copy over /etc/security/limits.conf
   copy: src=limits.conf dest=/etc/security/limits.conf
