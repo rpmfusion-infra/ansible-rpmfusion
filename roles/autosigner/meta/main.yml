@@ -1,0 +1,4 @@
+---
+dependencies:
+    - { role: builder_repo }
+    - { role: hosts }
