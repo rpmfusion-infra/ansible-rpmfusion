@@ -8,12 +8,10 @@
 newfile=`mktemp`
 target=/srv/git/repositories
 
-for d in `ls $target`; do
-  if [ ! -L $target/$d ] && [ -d $target/$d ]; then
-    for f in `ls $target/$d/`; do
-     echo "$d/$f" >> $newfile;
-    done;
-  fi;
+for i in free nonfree ; do
+  for d in `ls $target/$i/rpms`; do
+     echo "$i/rpms/$d" >> $newfile;
+  done;
 done;
 
 mv -Z $newfile /srv/git/pkgs-git-repos-list
