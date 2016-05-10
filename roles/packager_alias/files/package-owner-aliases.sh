@@ -1,5 +1,5 @@
 #!/bin/bash
-
+exit 0
 output=`mktemp`
 dest=/etc/postfix/package-owner
 /usr/local/bin/owner-email.py >> $output
