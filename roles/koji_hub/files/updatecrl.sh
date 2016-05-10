@@ -1,5 +1,7 @@
 #!/bin/bash
 
+exit 0
+
 URL=https://admin.rpmfusion.org/ca/crl.pem
 OLD=/etc/pki/tls/crl.pem
 NEW=`mktemp`
