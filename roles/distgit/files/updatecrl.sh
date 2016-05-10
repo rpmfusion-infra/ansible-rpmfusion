@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Until there is a crl
+exit 0
+
 URL=http://admin.rpmfusion.org/ca/crl.pem
 OLD=/etc/pki/tls/crl.pem
 NEW=/tmp/crl.pem
