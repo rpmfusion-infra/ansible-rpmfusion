@@ -33,10 +33,20 @@
     src={{files}}/hotfix/python-fedora/fasClient
     dest="/usr/bin/fasClient"
     owner=root group=root mode=0755
+  when: ansible_os_family == "RedHat" or and ansible_distribution_major_version <= 6
   tags:
   - packages
   - fas_client
 
+- name: deploy hotfix on fasclient for rhel-based OS
+  copy: >
+    src={{files}}/hotfix/python-fedora/fasClient-init_groups_support
+    dest="/usr/bin/fasclient"
+    owner=root group=root mode=0755
+  when: ansible_os_family == "RedHat" or and ansible_distribution_major_version >= 7
+  tags:
+  - fas_client
+  - accounts
 
 - name: install nss_db on rhel hosts only
   yum: state=present name=nss_db
