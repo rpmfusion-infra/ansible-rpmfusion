@@ -59,11 +59,11 @@
   - selinux
 
 - name: create the distgit root directory (/srv/git/repositories)
-  file: dest=/srv/git/repositories state=directory mode=2775 group=packager
+  file: dest=/srv/git/repositories state=directory mode=2775 group=cvsextras
 
 # These should all map to pkgdb namespaces
 - name: create our namespace directories inside there..
-  file: dest=/srv/git/repositories/{{item}} state=directory mode=2775 group=packager
+  file: dest=/srv/git/repositories/{{item}} state=directory mode=2775 group=cvsextras
   with_items:
   - free/rpms
   - nonfree/rpms
@@ -107,7 +107,7 @@
 # -- Gitolite --------------------------------------------
 # This is the permission management for package maintainers, using Gitolite.
 - name: create the /var/log/gitolite directory
-  file: path=/var/log/gitolite owner=root group=packager state=directory mode=2775
+  file: path=/var/log/gitolite owner=root group=cvsextras state=directory mode=2775
 
 - name: create the gen-acls group
   group: name=gen-acls gid=417 state=present
@@ -118,7 +118,7 @@
         comment="dummy system account for the gen-acls fedmsg job"
         uid=417
         group=gen-acls
-        groups=packager
+        groups=cvsextras
         shell=/bin/bash
         home=/srv/git
 
@@ -126,11 +126,11 @@
   file: path=/etc/gitolite/conf owner=gen-acls group=gen-acls state=directory mode=0755
 
 - name: create the /etc/gitolite/logs directory
-  file: path=/etc/gitolite/logs owner=gen-acls group=packager
+  file: path=/etc/gitolite/logs owner=gen-acls group=cvsextras
         state=directory mode=0775
 
 - name: create the /etc/gitolite/local/VREF directory
-  file: path=/etc/gitolite/local/VREF owner=gen-acls group=packager
+  file: path=/etc/gitolite/local/VREF owner=gen-acls group=cvsextras
         state=directory mode=0775
 
 - name: create /etc/gitolite/gitolite.rc
@@ -210,19 +210,19 @@
 
 - name: Save the list the users having a shell access
   template: src=gitolite_admins dest=/etc/gitolite/admins
-            owner=gen-acls group=packager mode=660
+            owner=gen-acls group=cvsextras mode=660
   tags:
   - config
   - distgit
 
 - name: Fix permissions on the Gitolite stuff
-  file: dest={{ item.name }} group=packager mode={{ item.mode }} state={{ item.state }}
+  file: dest={{ item.name }} group=cvsextras mode={{ item.mode }} state={{ item.state }}
   with_items:
     - {name: /etc/gitolite/hooks, mode: 770, state: directory}
     - {name: /etc/gitolite/hooks/common, mode: 770, state: directory}
 
 - name: Fix permissions on the Gitolite stuff (touch update if it does not exist)
-  copy: content="" dest=/etc/gitolite/hooks/common/update force=no owner=root group=packager mode=0755
+  copy: content="" dest=/etc/gitolite/hooks/common/update force=no owner=root group=cvsextras mode=0755
   tags:
   - distgit
   - config
