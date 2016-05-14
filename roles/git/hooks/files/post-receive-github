@@ -1,0 +1,3 @@
+#!/bin/sh
+
+/usr/bin/git push --mirror github -f
