@@ -1,3 +1,3 @@
 #!/bin/bash
 
-GITTREE=nonfree; mkbranch
+GITTREE=nonfree mkbranch "$@"

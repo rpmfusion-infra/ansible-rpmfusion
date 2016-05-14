@@ -174,7 +174,6 @@ for NAME in $PACKAGES ; do
     git branch --no-track $BRANCH $SRC_BRANCH && \
     popd >/dev/null) || {
 	echo "ERROR: Branch $NAME $BRANCH could not be created" >&2
-        popd >/dev/null
 	exit -2
     }
 done
