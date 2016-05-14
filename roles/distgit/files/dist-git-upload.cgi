@@ -28,7 +28,7 @@ GITREPO = '/srv/git/repositories'
 CACHE_DIR = '/srv/cache/lookaside/pkgs'
 
 # Fedora Packager Group
-PACKAGER_GROUP = 'packager'
+PACKAGER_GROUP = 'cvsextras'
 
 def send_error(text, status='500 Internal Server Error'):
     """Send an error back to the client
