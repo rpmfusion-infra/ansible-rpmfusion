@@ -25,6 +25,7 @@
   copy: src={{item}} dest=/usr/share/git-core/ mode=0755
   with_items:
   - post-receive-fedmsg
+  - post-receive-github
   - post-receive-chained
   - update-block-push-origin
   tags:
