@@ -314,7 +314,7 @@ mynetworks = 192.168.181.0/24, 192.168.182.0/24, 127.0.0.0/8
 #relayhost = [mailserver.isp.tld]
 #relayhost = uucphost
 #relayhost = [an.ip.add.ress]
-relayhost =  [mx1.rpmfusion.net]
+relayhost =  [46.105.55.71]
 
 
 # REJECTING UNKNOWN RELAY USERS
