@@ -33,7 +33,7 @@
     src={{files}}/hotfix/python-fedora/fasClient
     dest="/usr/bin/fasClient"
     owner=root group=root mode=0755
-  when: ansible_os_family == "RedHat" or and ansible_distribution_major_version <= 6
+  when: ansible_os_family == "RedHat" and ansible_distribution_major_version|int <= 6
   tags:
   - packages
   - fas_client
@@ -43,7 +43,7 @@
     src={{files}}/hotfix/python-fedora/fasClient-init_groups_support
     dest="/usr/bin/fasclient"
     owner=root group=root mode=0755
-  when: ansible_os_family == "RedHat" or and ansible_distribution_major_version >= 7
+  when: ansible_os_family == "RedHat" and ansible_distribution_major_version|int >= 7
   tags:
   - fas_client
   - accounts
