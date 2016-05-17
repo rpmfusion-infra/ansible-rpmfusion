@@ -1,0 +1,401 @@
+---
+# tasklist for setting up bodhi/masher (requires bodhi/base)
+# This is the base set of files needed for bodhi/masher
+
+- name: add ftpsync group
+  group: name=ftpsync gid=263 system=yes state=present
+  tags:
+  - bodhi
+
+- name: add ftpsync user
+  user: name=ftpsync uid=263 group=ftpsync createhome=yes system=yes state=present
+  tags:
+  - bodhi
+
+- name: install needed packages
+  yum: pkg={{ item }} state=present
+  with_items:
+  - mock
+  - mash
+  - fedmsg-hub
+  - fedmsg-relay
+  - fedmsg-atomic-composer
+  - python-mock
+  - sigul
+  - python-alembic
+  tags:
+  - packages
+  - bodhi
+
+- name: hotfix /usr/bin/alembic to use our webob forward compat package
+  copy: src=alembic dest=/usr/bin/alembic
+  tags:
+  - hotfix
+  - bodhi
+
+- name: add masher group
+  group: name=masher gid=751 system=yes state=present
+  tags:
+  - bodhi
+
+# masher user 751
+- name: add masher user as 751 - and group
+  user: name=masher uid=751 group=masher home=/home/masher groups=mock,ftpsync,bodhi
+  tags:
+  - bodhi
+
+- name: add apache user to the masher group so it can talk to the monitoring socket
+  user: name=apache groups=mock,ftpsync,masher append=yes
+  tags:
+  - bodhi
+
+- name: add nrpe to the apache group so it can talk to the monitoring socket
+  user: name=nrpe groups=apache append=yes
+  tags:
+  - fedmsgmonitor
+  - nagios/client
+
+- name: install bodhi.pem file
+  copy: >
+    src="{{ private }}/files/bodhi_key_and_cert.pem"
+    dest="/etc/pki/bodhi/bodhi.pem"
+    owner=bodhi
+    group=bodhi
+    mode=0400
+  when: inventory_hostname.startswith('bodhi-backend')
+  tags:
+  - config
+  - bodhi
+
+- name: change owner and group attributes of bodhi.pem file
+  file: >
+    path="/etc/pki/bodhi/bodhi.pem"
+    owner=apache
+    group=apache
+  when: inventory_hostname.startswith('bodhi-backend')
+  tags:
+  - bodhi
+  - config
+
+- name: change owner and group attributes of /var/log/bodhi directory
+  file: path=/var/log/bodhi owner=apache group=apache
+  when: inventory_hostname.startswith('bodhi-backend')
+  tags:
+  - bodhi
+  - config
+  
+- name: setup /etc/bodhi/mash.conf file...
+  template: >
+    src=mash.conf
+    dest=/etc/bodhi/mash.conf
+    owner=apache
+    group=apache
+    mode=0640
+  tags:
+  - config
+  - bodhi
+
+- name: install /etc/bodhi/*.mash files
+  copy: >
+    src="{{ item }}"
+    dest="/etc/bodhi/{{ item }}"
+    owner=apache
+    mode=0640
+  with_items:
+  - f21-updates.mash
+  - f21-updates-testing.mash
+  - f22-updates.mash
+  - f22-updates-testing.mash
+  - f23-updates.mash
+  - f23-updates-testing.mash
+  - f24-updates.mash
+  - f24-updates-testing.mash
+  - dist-5E-epel.mash
+  - dist-5E-epel-testing.mash
+  - dist-6E-epel.mash
+  - dist-6E-epel-testing.mash
+  - epel7.mash
+  - epel7-testing.mash
+  tags:
+  - config
+  - bodhi
+
+# tasks for setting up epelmasher
+
+- name: install needed packages
+  yum: pkg={{ item }} state=present
+  with_items:
+  - repoview
+  tags:
+  - packages
+  - bodhi
+
+#
+# koji ssl cert for owner sync jobs below
+#
+- name: create pki dir
+  file: path=/etc/pki/pkgdb mode=700 state=directory
+
+- name: copy koji ssl cert for owner sync
+  copy: src="{{ private }}/files/pkgdb_key_and_cert.pem" dest=/etc/pki/pkgdb/pkgdb.pem mode=600
+  tags:
+  - config
+
+- name: install /etc/pki/fas/fedora-server-ca.cert file
+  copy: >
+    src="{{ private }}/files/fedora-ca.cert"
+    dest="/etc/pki/pkgdb/fedora-server-ca.cert"
+    mode=0644
+  tags:
+  - config
+
+- name: create pki dir
+  file: path=/root/.koji mode=700 state=directory
+
+- name: install koji config for root to run owner-sync
+  copy: >
+    src=koji-config
+    dest=/root/.koji/config
+    mode=0644
+  tags:
+  - config
+
+#
+# cron job that syncs packages to koji
+#
+- name: put owner-sync-pkgdb in place
+  template: src=owner-sync-pkgdb.j2 dest=/usr/local/bin/owner-sync-pkgdb mode=0755
+  tags:
+  - config
+  - bodhi
+
+- name: sync packages from pkgdb2 to koji (el5)
+  cron: name="owner-sync-el5" minute="7,17,27,37,47,57" user="root" 
+        job="/usr/local/bin/owner-sync-pkgdb dist-5E-epel"
+        cron_file=update-koji-owner-EL-5
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  tags:
+  - bodhi
+
+- name: sync packages from pkgdb2 to koji (el6)
+  cron: name="owner-sync-el6" minute="7,17,27,37,47,57" user="root" 
+        job="/usr/local/bin/owner-sync-pkgdb dist-6E-epel"
+        cron_file=update-koji-owner-EL-6
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  tags:
+  - bodhi
+  
+- name: sync packages from pkgdb2 to koji (epel7)
+  cron: name="owner-sync-epel7" minute="7,17,27,37,47,57" user="root" 
+        job="/usr/local/bin/owner-sync-pkgdb epel7"
+        cron_file=update-koji-owner-epel7
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  tags:
+  - bodhi
+  
+- name: sync packages from pkgdb2 to koji fedora
+  cron: name="owner-sync-fedora" minute="7,17,27,37,47,57" user="root" 
+        job="/usr/local/bin/owner-sync-pkgdb f22;/usr/local/bin/owner-sync-pkgdb f23;/usr/local/bin/owner-sync-pkgdb f24;/usr/local/bin/owner-sync-pkgdb f25"
+        cron_file=update-koji-owner-fedora
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  tags:
+  - bodhi
+#
+# cron job that syncs updates to master mirror
+#
+
+- name: put fedora-updates-push in place
+  copy: src=fedora-updates-push dest=/usr/local/bin/fedora-updates-push mode=0755
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  tags:
+  - config
+  - bodhi
+  - cron
+
+- name: put fedora-epel-push in place
+  copy: src=fedora-epel-push dest=/usr/local/bin/fedora-epel-push mode=0755
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  tags:
+  - config
+  - bodhi
+  - cron
+
+- name: put update-fullfilelist in place
+  copy: src=update-fullfilelist dest=/usr/local/bin/update-fullfilelist mode=0755
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  tags:
+  - config
+  - bodhi
+  - cron
+
+- name: Updates sync cron job. 
+  cron: name="updates-sync" minute="15,45" user="ftpsync"
+        job="/usr/local/bin/lock-wrapper fedora-updates-push '/usr/local/bin/fedora-updates-push && /usr/local/bin/update-fullfilelist fedora'"
+        cron_file=updates-sync
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  tags:
+  - config
+  - bodhi
+  - cron
+
+- name: epel Updates sync cron job. 
+  cron: name="epel-updates-sync" minute="15,45" user="ftpsync"
+        job="/usr/local/bin/lock-wrapper fedora-epel-push '/usr/local/bin/fedora-epel-push && /usr/local/bin/update-fullfilelist epel'"
+        cron_file=updates-sync
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  tags:
+  - config
+  - bodhi
+  - cron
+
+- name: directory sizes update cron job. 
+  cron: name="directory-sizes-update" minute="30" hour="19" user="ftpsync"
+        job="/usr/bin/find /pub/alt/ /pub/archive/ /pub/fedora-secondary/ /pub/fedora/ /pub/epel/ -type d ! -path '/pub/fedora/.snapshot*' ! -path '/pub/epel/.snapshot*' ! -path '/pub/alt/.snapshot*' ! -path '/pub/archive/.snapshot*' ! -path '/pub/fedora-secondary/.snapshot*' ! -path '/pub/alt/stage*' ! -path '/pub/alt/tmp' ! -path '/pub/alt/screenshots/f21/source' | grep -v snapshot | /usr/bin/xargs -n 1 /usr/bin/du --exclude=.snapshot --exclude=stage -sh > /tmp/DIRECTORY_SIZES.txt 2> /dev/null; cp /tmp/DIRECTORY_SIZES.txt /pub/"
+        cron_file=directory-sizes-update
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  tags:
+  - config
+  - bodhi
+  - cron
+
+# bodhi jobs, previously run by the TurboGears scheduler.
+
+- name: bodhi-approve-testing cron job.
+  cron: name="bodhi-approve-testing" hour="*/6" minute=0 user="apache"
+        job="/usr/bin/bodhi-approve-testing /etc/bodhi/production.ini 2> /dev/null"
+        cron_file=bodhi-approve-testing-job
+  when: inventory_hostname.startswith('bodhi-backend02') and env == "production"
+  tags:
+  - config
+  - bodhi
+  - cron
+
+- name: bodhi-expire-overrides cron job.
+  cron: name="bodhi-expire-overrides" hour="*" minute=0 user="apache"
+        job="/usr/bin/bodhi-expire-overrides /etc/bodhi/production.ini 2> /dev/null"
+        cron_file=bodhi-expire-overrides-job
+  when: inventory_hostname.startswith('bodhi-backend02') and env == "production"
+  tags:
+  - config
+  - bodhi
+  - cron
+
+- name: have the apache own the bodhi config
+  file: >
+    path="/etc/bodhi/production.ini"
+    owner=apache
+    group=apache
+  when: inventory_hostname.startswith('bodhi')
+  tags:
+  - config
+  - bodhi
+
+- name: make a mnt/koji link
+  file: state=link src=/mnt/fedora_koji/koji dest=/mnt/koji
+  when: env != 'staging'
+  tags:
+  - bodhi
+
+- name: create the /usr/lib/systemd/system/fedmsg-hub.service.d drop-in directory
+  file: path=/usr/lib/systemd/system/fedmsg-hub.service.d state=directory mode=0755
+  tags:
+  - config
+  - bodhi
+
+- name: install a femdsg-hub.service drop-in to run it as the apache
+  copy: >
+    src="fedmsg-hub.conf"
+    dest="/usr/lib/systemd/system/fedmsg-hub.service.d/fedmsg-hub.conf"
+    owner=root
+    group=root
+    mode=0644
+  notify:
+  - reload systemd
+  - restart fedmsg-hub
+  tags:
+  - bodhi
+  - config
+
+- name: have the apache own /var/cache/mash
+  file: >
+    path="/var/cache/mash"
+    owner=apache
+    group=apache
+  when: inventory_hostname.startswith('bodhi-backend')
+  tags:
+  - config
+  - bodhi
+
+- name: have the apache own /var/cache/bodhi because of course..
+  file: >
+    path="/var/cache/bodhi"
+    owner=apache
+    group=apache
+  when: inventory_hostname.startswith('bodhi-backend')
+  tags:
+  - config
+  - bodhi
+
+- name: have the apache own /var/cache/fedmsg because of course..
+  file: >
+    path="/var/cache/fedmsg"
+    owner=apache
+    group=apache
+    state=directory
+  when: inventory_hostname.startswith('bodhi-backend')
+  tags:
+  - config
+  - bodhi
+
+- name: ensure that nrpe has rights to monitor us (dir), including setgid bit.
+  file: >
+    dest=/var/run/fedmsg
+    mode=2775
+    owner=apache
+    group=nrpe
+    state=directory
+    recurse=yes
+  ignore_errors: true
+  notify:
+  - restart fedmsg-hub
+  tags:
+  - fedmsgmonitor
+  - bodhi
+
+- name: ensure that nrpe has rights to monitor us (file)
+  file: >
+    dest=/var/run/fedmsg/monitoring-fedmsg-hub.socket
+    mode=0775
+    owner=apache
+    group=nrpe
+    state=file
+  ignore_errors: true
+  tags:
+  - fedmsgmonitor
+  - bodhi
+
+- name: install our atomic composer config
+  template: >
+    src=atomic-config.py.j2
+    dest=/usr/lib/python2.7/site-packages/fedmsg_atomic_composer/config.py
+    owner=apache
+    mode=0644
+  tags:
+  - config
+  - bodhi
+  - atomic
+
+- name: ensure apache is disabled on the backend
+  service: name=httpd enabled=no state=stopped
+  tags:
+  - bodhi
+
+#- name: have apache own /mnt/koji/mash/updates
+#  file: path=/mnt/koji/mash/updates state=directory recurse=yes owner=apache group=apache
+#  tags:
+#  - bodhi
+#
+#- name: have apache own /mnt/koji/mash/atomic
+#  file: path=/mnt/koji/mash/atomic state=directory recurse=yes owner=apache group=apache
+#  tags:
+#  - bodhi

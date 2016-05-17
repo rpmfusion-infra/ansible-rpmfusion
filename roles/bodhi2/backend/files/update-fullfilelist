@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# currently runs on bodhi-backend01 after updates pushes
+
+MOD=$1
+[ -z "$MOD" ] && {
+	echo "usage: $0 <module>"
+	exit 1
+}
+
+# This is the old traditional fullfilelist with no timestamps
+
+TMPFILE=$(mktemp -p /tmp/)
+pushd /pub/$MOD > /dev/null
+find * -print > $TMPFILE
+if diff $TMPFILE fullfilelist > /dev/null; then
+	rm -f $TMPFILE
+else
+	mv $TMPFILE fullfilelist
+fi
+chmod 0644 fullfilelist
+popd > /dev/null
+
+# This is the new list with timestamps
+
+TMPFILE=$(mktemp -p /tmp/)
+pushd /pub/$MOD > /dev/null
+/usr/bin/rsync --no-h --list-only -r . > $TMPFILE
+if diff $TMPFILE fullfiletimelist > /dev/null; then
+	rm -f $TMPFILE
+else
+	mv $TMPFILE fullfiletimelist
+fi
+chmod 0644 fullfiletimelist
+popd > /dev/null
