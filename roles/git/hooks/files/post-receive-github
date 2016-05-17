@@ -1,3 +1,9 @@
 #!/bin/sh
 
-/usr/bin/git push --mirror github -f
+if [ -p /run/rpmfusion-github-mirror ]  ; then
+  echo "$PWD" > /run/rpmfusion-github-mirror
+else
+  echo "Sync with github disabled"
+fi
+
+exit 0

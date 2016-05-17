@@ -10,4 +10,5 @@
 # fedmsg which routes to FMN which routes to packagers and the mailing list.
 pee \
     $GIT_DIR/hooks/post-receive-chained.d/post-receive-email \
+    $GIT_DIR/hooks/post-receive-chained.d/post-receive-github \
 
