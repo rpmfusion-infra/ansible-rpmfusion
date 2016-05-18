@@ -7,6 +7,9 @@ db02.online.rpmfusion.net
 [koji]
 koji01.online.rpmfusion.net
 
+[pkgdb]
+pkgdb02.online.rpmfusion.net
+
 [pkgs]
 pkgs01.online.rpmfusion.net
 
