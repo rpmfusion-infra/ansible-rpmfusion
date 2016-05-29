@@ -62,7 +62,7 @@
     owner=bodhi
     group=bodhi
     mode=0400
-  when: inventory_hostname.startswith('bodhi-backend')
+  when: inventory_hostname.startswith('bodhi01')
   tags:
   - config
   - bodhi
@@ -72,14 +72,14 @@
     path="/etc/pki/bodhi/bodhi.pem"
     owner=apache
     group=apache
-  when: inventory_hostname.startswith('bodhi-backend')
+  when: inventory_hostname.startswith('bodhi01')
   tags:
   - bodhi
   - config
 
 - name: change owner and group attributes of /var/log/bodhi directory
   file: path=/var/log/bodhi owner=apache group=apache
-  when: inventory_hostname.startswith('bodhi-backend')
+  when: inventory_hostname.startswith('bodhi01')
   tags:
   - bodhi
   - config
@@ -173,7 +173,7 @@
   cron: name="owner-sync-el5" minute="7,17,27,37,47,57" user="root" 
         job="/usr/local/bin/owner-sync-pkgdb dist-5E-epel"
         cron_file=update-koji-owner-EL-5
-  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - bodhi
 
@@ -181,7 +181,7 @@
   cron: name="owner-sync-el6" minute="7,17,27,37,47,57" user="root" 
         job="/usr/local/bin/owner-sync-pkgdb dist-6E-epel"
         cron_file=update-koji-owner-EL-6
-  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - bodhi
   
@@ -189,7 +189,7 @@
   cron: name="owner-sync-epel7" minute="7,17,27,37,47,57" user="root" 
         job="/usr/local/bin/owner-sync-pkgdb epel7"
         cron_file=update-koji-owner-epel7
-  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - bodhi
   
@@ -197,7 +197,7 @@
   cron: name="owner-sync-fedora" minute="7,17,27,37,47,57" user="root" 
         job="/usr/local/bin/owner-sync-pkgdb f22;/usr/local/bin/owner-sync-pkgdb f23;/usr/local/bin/owner-sync-pkgdb f24;/usr/local/bin/owner-sync-pkgdb f25"
         cron_file=update-koji-owner-fedora
-  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - bodhi
 #
@@ -206,7 +206,7 @@
 
 - name: put fedora-updates-push in place
   copy: src=fedora-updates-push dest=/usr/local/bin/fedora-updates-push mode=0755
-  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - config
   - bodhi
@@ -214,7 +214,7 @@
 
 - name: put fedora-epel-push in place
   copy: src=fedora-epel-push dest=/usr/local/bin/fedora-epel-push mode=0755
-  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - config
   - bodhi
@@ -222,7 +222,7 @@
 
 - name: put update-fullfilelist in place
   copy: src=update-fullfilelist dest=/usr/local/bin/update-fullfilelist mode=0755
-  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - config
   - bodhi
@@ -232,7 +232,7 @@
   cron: name="updates-sync" minute="15,45" user="ftpsync"
         job="/usr/local/bin/lock-wrapper fedora-updates-push '/usr/local/bin/fedora-updates-push && /usr/local/bin/update-fullfilelist fedora'"
         cron_file=updates-sync
-  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - config
   - bodhi
@@ -242,7 +242,7 @@
   cron: name="epel-updates-sync" minute="15,45" user="ftpsync"
         job="/usr/local/bin/lock-wrapper fedora-epel-push '/usr/local/bin/fedora-epel-push && /usr/local/bin/update-fullfilelist epel'"
         cron_file=updates-sync
-  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - config
   - bodhi
@@ -252,7 +252,7 @@
   cron: name="directory-sizes-update" minute="30" hour="19" user="ftpsync"
         job="/usr/bin/find /pub/alt/ /pub/archive/ /pub/fedora-secondary/ /pub/fedora/ /pub/epel/ -type d ! -path '/pub/fedora/.snapshot*' ! -path '/pub/epel/.snapshot*' ! -path '/pub/alt/.snapshot*' ! -path '/pub/archive/.snapshot*' ! -path '/pub/fedora-secondary/.snapshot*' ! -path '/pub/alt/stage*' ! -path '/pub/alt/tmp' ! -path '/pub/alt/screenshots/f21/source' | grep -v snapshot | /usr/bin/xargs -n 1 /usr/bin/du --exclude=.snapshot --exclude=stage -sh > /tmp/DIRECTORY_SIZES.txt 2> /dev/null; cp /tmp/DIRECTORY_SIZES.txt /pub/"
         cron_file=directory-sizes-update
-  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - config
   - bodhi
@@ -264,7 +264,7 @@
   cron: name="bodhi-approve-testing" hour="*/6" minute=0 user="apache"
         job="/usr/bin/bodhi-approve-testing /etc/bodhi/production.ini 2> /dev/null"
         cron_file=bodhi-approve-testing-job
-  when: inventory_hostname.startswith('bodhi-backend02') and env == "production"
+  when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - config
   - bodhi
@@ -274,7 +274,7 @@
   cron: name="bodhi-expire-overrides" hour="*" minute=0 user="apache"
         job="/usr/bin/bodhi-expire-overrides /etc/bodhi/production.ini 2> /dev/null"
         cron_file=bodhi-expire-overrides-job
-  when: inventory_hostname.startswith('bodhi-backend02') and env == "production"
+  when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - config
   - bodhi
@@ -291,7 +291,7 @@
   - bodhi
 
 - name: make a mnt/koji link
-  file: state=link src=/mnt/fedora_koji/koji dest=/mnt/koji
+  file: state=link src=/mnt/rpmfusion_koji/koji dest=/mnt/koji
   when: env != 'staging'
   tags:
   - bodhi
@@ -321,7 +321,7 @@
     path="/var/cache/mash"
     owner=apache
     group=apache
-  when: inventory_hostname.startswith('bodhi-backend')
+  when: inventory_hostname.startswith('bodhi01')
   tags:
   - config
   - bodhi
@@ -331,7 +331,7 @@
     path="/var/cache/bodhi"
     owner=apache
     group=apache
-  when: inventory_hostname.startswith('bodhi-backend')
+  when: inventory_hostname.startswith('bodhi01')
   tags:
   - config
   - bodhi
@@ -342,7 +342,7 @@
     owner=apache
     group=apache
     state=directory
-  when: inventory_hostname.startswith('bodhi-backend')
+  when: inventory_hostname.startswith('bodhi01')
   tags:
   - config
   - bodhi
