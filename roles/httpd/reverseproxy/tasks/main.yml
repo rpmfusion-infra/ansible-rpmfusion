@@ -1,0 +1,24 @@
+# Expected vars
+# - website...
+# - localpath..
+# - remotepath..
+# - proxyurl
+# - rewrite
+# - keephost
+
+- name: Copy in ProxyPassReverse for {{destname}} ({{website}}{{remotepath}})
+  template: >
+    src={{item}}
+    dest=/etc/httpd/conf.d/{{website}}/{{destname}}.conf
+    owner=root
+    group=root
+    mode=0644
+  with_first_found:
+  - "{{roles}}/httpd/reverseproxy/templates/reversepassproxy.{{destname}}.conf"
+  - "{{roles}}/httpd/reverseproxy/templates/reversepassproxy.conf"
+  notify:
+  - reload httpd
+  tags:
+  - httpd
+  - httpd/reverseproxy
+  - httpd/reversepassproxy

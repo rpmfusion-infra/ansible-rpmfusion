@@ -1,0 +1,19 @@
+- copy: src=fingerprints.html dest=/srv/web/fingerprints.html
+  notify:
+  - reload httpd
+  tags:
+  - fingerprints
+  - httpd
+  - httpd/fingerprints
+
+- copy: src=fingerprints.conf dest=/etc/httpd/conf.d/{{website}}/fingerprints.conf
+  notify:
+  - reload httpd
+  tags:
+  - fingerprints
+  - httpd
+  - httpd/fingerprints
+
+- copy: src=/etc/ssh/ssh_known_hosts dest=/etc/ssh/ssh_known_hosts
+  tags:
+  - fingerprints

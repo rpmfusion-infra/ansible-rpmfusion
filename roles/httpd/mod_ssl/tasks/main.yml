@@ -1,0 +1,33 @@
+- name: Install mod_ssl
+  yum: name=mod_ssl state=installed
+  notify:
+  - reload httpd
+  tags:
+  - httpd
+  - httpd/mod_ssl
+
+- name: Copy over SSLCertificateChainFile if defined
+  copy: >
+    src=ssl.conf
+    dest=/etc/httpd/conf.d/ssl.conf
+    owner=root
+    group=root
+    mode=0644
+  notify:
+  - reload httpd
+  tags:
+  - httpd
+  - httpd/certificate
+
+- name: Install haveged for entropy
+  yum: name=haveged state=installed
+  tags:
+  - httpd
+  - httpd/proxy
+
+- name: Set haveged running/enabled
+  service: name=haveged enabled=yes state=started
+  tags:
+  - service
+  - httpd
+  - httpd/proxy
