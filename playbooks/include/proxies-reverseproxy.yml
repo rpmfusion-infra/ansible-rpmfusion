@@ -1,0 +1,51 @@
+- name: Set up those ProxyPassReverse statements.  Somebody get me a cup of coffee..
+  hosts: proxies-stg:proxies
+  user: root
+  gather_facts: True
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
+
+  vars:
+  - varnish_url: http://localhost:6081
+
+  roles:
+
+  - role: httpd/reverseproxy
+    website: admin.rpmfusion.org
+    destname: nagios
+    localpath: /nagios
+    remotepath: /nagios
+    proxyurl: http://noc0
+
+  - role: httpd/reverseproxy
+    website: id.rpmfusion.org
+    destname: id
+    proxyurl: http://localhost:10020
+
+  - role: httpd/reverseproxy
+    website: admin.rpmfusion.org
+    destname: pkgdb02
+    remotepath: /pkgdb
+    localpath: /pkgdb
+    proxyurl: httpd://pkgdb02
+
+  - role: httpd/reverseproxy
+    website: admin.rpmfusion.org
+    destname: bodhi01
+    remotepath: /bodhi
+    localpath: /bodhi
+    proxyurl: httpd://bodhi01
+
+  - role: httpd/reverseproxy
+    website: admin.rpmfusion.org
+    destname: collectd
+    localpath: /collectd
+    remotepath: /collectd
+    proxyurl: http://log01
+
