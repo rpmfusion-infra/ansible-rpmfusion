@@ -33,7 +33,7 @@
   with_items:
   - rpcbind
   - nfs-lock
-  when: ansible_distribution == 'RedHat' and ansible_distribution_major_version|int == 7
+  when: is_rhel is defined and ansible_distribution_major_version|int == 7
   tags:
   - nfs/client
 
@@ -44,7 +44,7 @@
   - rpcbind
   - nfs
   - nfslock
-  when: ansible_distribution == 'RedHat' and ansible_distribution_major_version|int == 6
+  when: is_rhel is defined and ansible_distribution_major_version|int == 6
   tags:
   - nfs/client
 
