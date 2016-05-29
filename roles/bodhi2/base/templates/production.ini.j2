@@ -172,13 +172,13 @@ bodhi_password = {{ bodhiBugzillaPassword }}
 release_team_address = bodhiadmin-members@rpmfusion.org
 
 # The address to notify when security updates are initially added to bodhi
-security_team = security_respons-members@fedoraproject.org
+security_team = security_respons-members@rpmfusion.org
 
 # Public announcement lists
-fedora_announce_list = package-announce@lists.fedoraproject.org
-fedora_test_announce_list = test@lists.fedoraproject.org
-fedora_epel_announce_list = epel-package-announce@lists.fedoraproject.org
-fedora_epel_test_announce_list = epel-devel@lists.fedoraproject.org
+fedora_announce_list = rpmfusion-developers@lists.rpmfusion.org
+fedora_test_announce_list = rpmfusion-users@lists.rpmfusion.org
+fedora_epel_announce_list = rpmfusion-developers@lists.rpmfusion.org
+fedora_epel_test_announce_list = rpmfusion-users@lists.rpmfusion.org
 
 # Superuser groups
 admin_groups = proventesters security_respons bodhiadmin sysadmin-main
@@ -196,7 +196,7 @@ max_update_length_for_ui = 70
 top_testers_timeframe = 900
 
 # The email address of the proventesters
-proventesters_email = proventesters-members@fedoraproject.org
+proventesters_email = rpmfusion-developers@lists.rpmfusion.org
 
 # Disabled for the initial release.
 stacks_enabled = False
@@ -234,17 +234,17 @@ exclude_mail = autoqa taskotron
 buildsystem = koji
 
 # Koji's XML-RPC hub
-koji_hub = https://koji.fedoraproject.org/kojihub
+koji_hub = https://koji.rpmfusion.org/kojihub
 
 # Root url of the Koji instance to point to. No trailing slash
-koji_url = http://koji.fedoraproject.org
+koji_url = http://koji.rpmfusion.org
 
 # URL of where users should go to set up their notifications
-fmn_url = https://apps.fedoraproject.org/notifications/
+#fmn_url = https://apps.rpmfusion.org/notifications/
 
 # URL of the resultsdb for integrating checks and stuff
-resultsdb_url = https://taskotron.fedoraproject.org/resultsdb/
-resultsdb_api_url = https://taskotron.fedoraproject.org/resultsdb_api/
+resultsdb_url = https://taskotron.rpmfusion.org/resultsdb/
+resultsdb_api_url = https://taskotron.rpmfusion.org/resultsdb_api/
 
 fedmenu.url = https://apps.fedoraproject.org/fedmenu
 fedmenu.data_url = https://apps.fedoraproject.org/js/data.js
@@ -265,11 +265,11 @@ acl_system = pkgdb
 ##
 ## Package DB
 ##
-pkgdb_url = https://admin.fedoraproject.org/pkgdb
+pkgdb_url = https://admin.rpmfusion.org/pkgdb
 
 # We used to get our package tags from pkgdb, but they come from tagger now.
 # https://github.com/fedora-infra/fedora-tagger/pull/74
-#pkgtags_url = https://apps.fedoraproject.org/tagger/api/v1/tag/sqlitebuildtags/
+#pkgtags_url = https://apps.rpmfusion.org/tagger/api/v1/tag/sqlitebuildtags/
 
 ##
 ## Bug tracker settings
