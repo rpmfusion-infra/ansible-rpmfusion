@@ -14,4 +14,5 @@ bodhi_masher_enabled: True
 bodhi_updates_handler_enabled: True
 
 wsgi_procs: 2
+wsgi_threads: 15
 
