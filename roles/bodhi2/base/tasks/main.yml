@@ -111,7 +111,7 @@
 
 - name: install bodhi certificates
   copy: >
-    src="{{ private }}/files/fedora-ca.cert"
+    src="{{ private }}/files/rpmfusion-ca.cert"
     dest="/etc/pki/bodhi/{{ item }}"
     owner=root
     group=root
