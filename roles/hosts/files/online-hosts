@@ -15,6 +15,8 @@
 192.168.181.130 db02.online.rpmfusion.net db02
 192.168.181.135 koji01.online.rpmfusion.net koji01
 192.168.181.137 pkgs01.online.rpmfusion.net pkgs01
+192.168.181.138 pkgdb02.online.rpmfusion.net pkgdb02
+192.168.181.141 bodhi01.online.rpmfusion.net bodhi01
 
 # hv01 online - vpn
 192.168.182.1 hv01.vpn.rpmfusion.net proxy.vpn.rpmfusion.net
