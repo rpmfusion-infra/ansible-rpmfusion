@@ -31,18 +31,13 @@
 
   - role: nfs/client
     mnt_dir: '/pub/'
-    nfs_src_dir: 'fedora_ftp/fedora.redhat.com/pub/'
+    nfs_src_dir: 'rpmfusion_ftp/download0.rpmfusion.org/pub/'
 
   - role: nfs/client
-    mnt_dir: '/mnt/fedora_koji'
-    nfs_src_dir: 'fedora_koji'
+    mnt_dir: '/mnt/rpmfusion_koji'
+    nfs_src_dir: 'rpmfusion_koji'
     when: env != 'staging'
 
-    # In staging, we mount fedora_koji as read only (see nfs_mount_opts)
-  - role: nfs/client
-    mnt_dir: '/mnt/fedora_koji_prod'
-    nfs_src_dir: 'fedora_koji'
-    when: env == 'staging'
 
   - bodhi2/backend
   - fedmsg/base
