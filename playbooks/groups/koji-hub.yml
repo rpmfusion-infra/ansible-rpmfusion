@@ -33,7 +33,7 @@
   - { role: nfs/server, when: env == "staging" }
 #  - { role: keepalived, when: env == "production" and inventory_hostname.startswith('koji') }
   - role: nfs/client
-    mnt_dir: '/mnt/koji'
+    mnt_dir: '/mnt'
     nfs_src_dir: 'rpmfusion_koji'
     when: env == 'production' and inventory_hostname.startswith('koji')
   - role: nfs/client
