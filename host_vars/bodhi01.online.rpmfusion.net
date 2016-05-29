@@ -13,4 +13,5 @@ nrpe_procs_crit: 1000
 bodhi_masher_enabled: True
 bodhi_updates_handler_enabled: True
 
+wsgi_procs: 2
 
