@@ -22,8 +22,6 @@
   - fas_client
   - collectd/base
   - sudo
-  - { role: openvpn/client,
-      when: env != "staging" }
   - apache
 
   tasks:
