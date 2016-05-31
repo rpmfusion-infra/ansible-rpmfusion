@@ -16,16 +16,6 @@
   - packages
   - pkgdb
 
-# HOTFIX: adjust bugzilla overrides
-- name: HOTFIX - adjust bugzilla overrides
-  copy: src=fas2.py dest=/usr/lib/python2.7/site-packages/fedora/client/fas2.py
-  tags:
-  - config
-  - pkgdb
-  - fas
-  - hotfix
-  - hotfixfas
-
 - name: copy sundry pkgdb configuration
   template: src={{ item.file }}
             dest={{ item.location }}/{{ item.dest }}
@@ -72,12 +62,6 @@
   - config
   - pkgdb
 
-- name: update the base_url in update_package_info
-  command: sed -i -e 's|https://dl.fedoraproject.org|http://dl.phx2.fedoraproject.org|' /usr/bin/update_package_info.py
-  changed_when: "1 != 1"
-  tags:
-  - config
-  - pkgdb
 
 - name: set sebooleans so pkgdb2 can talk to the db
   seboolean: name=httpd_can_network_connect_db
