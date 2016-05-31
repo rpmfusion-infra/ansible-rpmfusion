@@ -39,6 +39,9 @@
   handlers:
   - include: "{{ handlers }}/restart_services.yml"
 
+# setup minimal proxy includes
+- include: /srv/web/infra/ansible/playbooks/include/proxies-reverseproxy.yml
+
 - name: setup fedmsg on pkgs
   hosts: pkgs-stg:pkgs01.online.rpmfusion.net
   user: root

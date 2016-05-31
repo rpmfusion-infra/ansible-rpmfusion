@@ -17,6 +17,7 @@ pkgdb02.online.rpmfusion.net
 pkgs01.online.rpmfusion.net
 
 [proxies]
+pkgs01.online.rpmfusion.net
 
 [bvirthost]
 
