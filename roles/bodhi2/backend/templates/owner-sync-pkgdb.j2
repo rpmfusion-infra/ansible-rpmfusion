@@ -17,9 +17,9 @@ import requests
 DEBUG=False
 VERIFY=True
 {% if env == 'staging' %}
-BASEURL = os.environ.get('PACKAGEDBURL') or 'https://admin.stg.fedoraproject.org/pkgdb/'
+BASEURL = os.environ.get('PACKAGEDBURL') or 'https://admin.rpmfusion.org/pkgdb/'
 {% else %}
-BASEURL = os.environ.get('PACKAGEDBURL') or 'https://admin.fedoraproject.org/pkgdb/'
+BASEURL = os.environ.get('PACKAGEDBURL') or 'https://admin.rpmfusion.org/pkgdb/'
 {% endif %}
 if not BASEURL.endswith('/'):
     BASEURL = BASEURL + '/'
@@ -47,11 +47,11 @@ def get_options():
     # shamelessly stolen from koji CLI
     opts = {
 {% if env == 'staging' %}
-        'server': 'http://koji.stg.fedoraproject.org/kojihub',
-        'weburl': 'http://koji.stg.fedoraproject.org/koji',
+        'server': 'http://koji.stg.rpmfusion.org/kojihub',
+        'weburl': 'http://koji.stg.rpmfusion.org/koji',
 {% else %}
-        'server': 'http://koji.fedoraproject.org/kojihub',
-        'weburl': 'http://koji.fedoraproject.org/koji',
+        'server': 'http://koji.rpmfusion.org/kojihub',
+        'weburl': 'http://koji.rpmfusion.org/koji',
 {% endif %}
         'cert': '/etc/pki/pkgdb/pkgdb.pem',
         'ca': '/etc/pki/pkgdb/fedora-server-ca.cert',
@@ -142,12 +142,12 @@ if __name__ == '__main__':
     for arch in arches:
         if arch == "primary":
 {% if env == 'staging' %}
-            session = koji.ClientSession("http://koji.stg.fedoraproject.org/kojihub")
+            session = koji.ClientSession("http://koji.stg.rpmfusion.org/kojihub")
 {% else %}
-            session = koji.ClientSession("http://koji.fedoraproject.org/kojihub")
+            session = koji.ClientSession("http://koji.rpmfusion.org/kojihub")
 {% endif %}
         else:
-            session = koji.ClientSession("http://%s.koji.fedoraproject.org/kojihub" % arch)
+            session = koji.ClientSession("http://%s.koji.rpmfusion.org/kojihub" % arch)
         try:
             session.ssl_login(options['cert'], options['ca'], options['serverca'])
         except:
