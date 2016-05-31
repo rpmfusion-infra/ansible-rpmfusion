@@ -102,20 +102,12 @@
     owner=apache
     mode=0640
   with_items:
-  - f21-updates.mash
-  - f21-updates-testing.mash
-  - f22-updates.mash
-  - f22-updates-testing.mash
-  - f23-updates.mash
-  - f23-updates-testing.mash
-  - f24-updates.mash
-  - f24-updates-testing.mash
-  - dist-5E-epel.mash
-  - dist-5E-epel-testing.mash
-  - dist-6E-epel.mash
-  - dist-6E-epel-testing.mash
-  - epel7.mash
-  - epel7-testing.mash
+  - f23-free-updates.mash
+  - f23-nonfree-updates.mash
+  - f23-free-updates-testing.mash
+  - f23-nonfree-updates-testing.mash
+  - f24-free-updates-testing.mash
+  - f24-nonfree-updates-testing.mash
   tags:
   - config
   - bodhi
