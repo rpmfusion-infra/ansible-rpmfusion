@@ -1,0 +1,17 @@
+[f24-free-updates-testing]
+rpm_path = %(arch)s/
+source_path = SRPMS/
+debuginfo = True
+multilib = True 
+multilib_method = devel
+tag = f24-free-updates-testing
+inherit = False
+strict_keys = True
+keys = B7546F06
+repoviewurl = http://download1.rpmfusion.org/free/fedora/updates/testing/24/%(arch)s/
+repoviewtitle = "RPM Fusion Fedora free 24 Updates testing - %(arch)s"
+arches = armhfp i386 x86_64
+hash_packages = True
+delta = False
+#delta_dirs = /pub/fedora/linux/releases/24/Everything/%(arch)s/os/,/mnt/koji/mash/updates/f24-updates/%(arch)s/
+parent_repos = http://download1.rpmfusion.org/free/fedora/releases/24/Everything/%(arch)s/os
