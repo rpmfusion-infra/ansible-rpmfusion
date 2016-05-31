@@ -205,8 +205,12 @@
 #
 
 - name: put fedora-updates-push in place
-  copy: src=fedora-updates-push dest=/usr/local/bin/fedora-updates-push mode=0755
+  copy: src= dest=/usr/local/bin/{{ item }} mode=0755
   when: inventory_hostname.startswith('bodhi01') and env == "production"
+  with_items:
+  - fedora-updates-push
+  - fedora-free-updates-push
+  - fedora-nonfree-updates-push
   tags:
   - config
   - bodhi

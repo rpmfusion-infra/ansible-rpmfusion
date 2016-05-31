@@ -1,13 +1,13 @@
 #!/bin/sh
 
-SOURCE=/mnt/koji/mash/updates
-DEST=/pub/fedora/linux/updates/
-ATOMICSOURCE=/mnt/koji/mash/atomic/
-ATOMICDEST=/pub/fedora/linux/atomic/
+SOURCE=/mnt/koji/mash/${1:-free}/updates
+DEST=/pub/${1:-free}/fedora/updates/
+#ATOMICSOURCE=/mnt/koji/mash/atomic/
+#ATOMICDEST=/pub/fedora/linux/atomic/
 
 OPTIONS="-rlptDvHh --stats --delay-updates $RSYNC_OPTS"
 
-for rel in 22 23 24; do
+for rel in 23 24; do
 
     OUTPUT1=$(rsync $OPTIONS --exclude "repodata/*" \
             $SOURCE/f$rel-updates/ $DEST/$rel/ --link-dest $DEST/testing/$rel/)
@@ -28,7 +28,7 @@ for rel in 22 23 24; do
     fi
 
 done
-for rel in 22 23 24; do
+for rel in 23 24; do
 
     OUTPUT1=$(rsync $OPTIONS --exclude "repodata/*" \
             $SOURCE/f$rel-updates-testing/ $DEST/testing/$rel/)
@@ -49,7 +49,7 @@ for rel in 22 23 24; do
     fi
 
 done
-for rel in 22 23; do
+for rel in ; do
 
     OUTPUT1=$(rsync $OPTIONS --ignore-existing \
             $ATOMICSOURCE/$rel/objects/ $ATOMICDEST/$rel/objects/)
