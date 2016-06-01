@@ -4,6 +4,9 @@ hv01.online.rpmfusion.net
 [bodhi-backend]
 bodhi01.online.rpmfusion.net
 
+[bugzilla]
+bugzilla02.online.rpmfusion.net
+
 [dbserver]
 db02.online.rpmfusion.net
 
