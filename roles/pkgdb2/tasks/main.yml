@@ -16,6 +16,12 @@
   - packages
   - pkgdb
 
+- name: install the project logo
+  copy: src={{ files }}/files/common/logo.png dest=/usr/lib/python2.7/site-packages/pkgdb2/static/packagedb-logo.png owner=root mode=644
+  tags:
+  - config
+  - pkgdb
+
 - name: copy sundry pkgdb configuration
   template: src={{ item.file }}
             dest={{ item.location }}/{{ item.dest }}
