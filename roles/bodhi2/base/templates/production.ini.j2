@@ -129,15 +129,15 @@ comps_url = https://git.rpmfusion.org/comps.git
 ##
 ## Mirror settings
 ##
-file_url = http://download1.rpmfusion.org/pub/fedora/linux/updates
-master_repomd = http://download01.phx2.fedoraproject.org/pub/fedora/linux/updates/%s/%s/repodata/repomd.xml
-fedora_master_repomd = http://download01.phx2.fedoraproject.org/pub/fedora/linux/updates/%s/%s/repodata/repomd.xml
-fedora_epel_master_repomd = http://download01.phx2.fedoraproject.org/pub/epel/%s/%s/repodata/repomd.xml
+file_url = http://download1.rpmfusion.org/fedora/updates
+master_repomd = http://download1.rpmfusion.org/fedora/updates/%s/%s/repodata/repomd.xml
+fedora_master_repomd = http://download1.rpmfusion.org/fedora/updates/%s/%s/repodata/repomd.xml
+fedora_epel_master_repomd = http://download1.rpmfusion.org/pub/epel/%s/%s/repodata/repomd.xml
 
-fedora_stable_master_repomd = http://download01.phx2.fedoraproject.org/pub/fedora/linux/updates/%s/%s/repodata/repomd.xml
-fedora_testing_master_repomd = http://download01.phx2.fedoraproject.org/pub/fedora/linux/updates/testing/%s/%s/repodata/repomd.xml
-fedora_epel_stable_master_repomd = http://download01.phx2.fedoraproject.org/pub/epel/%s/%s/repodata/repomd.xml
-fedora_epel_testing_master_repomd = http://download01.phx2.fedoraproject.org/pub/epel/testing/%s/%s/repodata/repomd.xml
+fedora_stable_master_repomd = http://download1.rpmfusion.org/fedora/updates/%s/%s/repodata/repomd.xml
+fedora_testing_master_repomd = http://download1.rpmfusion.org/fedora/updates/testing/%s/%s/repodata/repomd.xml
+fedora_epel_stable_master_repomd = http://download1.rpmfusion.org/pub/epel/%s/%s/repodata/repomd.xml
+fedora_epel_testing_master_repomd = http://download1.rpmfusion.org/pub/epel/testing/%s/%s/repodata/repomd.xml
 
 ## The base url of this application
 base_address = https://admin.rpmfusion.org/
@@ -169,10 +169,10 @@ bodhi_email = updates@rpmfusion.org
 bodhi_password = {{ bodhiBugzillaPassword }}
 
 # The address that gets the requests
-release_team_address = bodhiadmin-members@rpmfusion.org
+release_team_address = sysadmin@lists.rpmfusion.org
 
 # The address to notify when security updates are initially added to bodhi
-security_team = security_respons-members@rpmfusion.org
+security_team = sysadmin@lists.rpmfusion.org
 
 # Public announcement lists
 fedora_announce_list = rpmfusion-developers@lists.rpmfusion.org
@@ -374,10 +374,11 @@ buildroot_overrides.expire_after = 1
 important_groups = proventesters provenpackager releng security_respons packager bodhiadmin virtmaint-sig kde-sig eclipse-sig infra-sig gnome-sig python-sig robotics-sig
 
 # Groups that can push updates for any package
-admin_packager_groups = provenpackager releng security_respons
+admin_packager_groups = provenpackager releng
 
 # User must be a member of this group to submit updates
-mandatory_packager_groups = packager
+#mandatory_packager_groups = packager
+mandatory_packager_groups = cvsextras
 
 ##
 ## updateinfo.xml configuraiton
@@ -399,7 +400,7 @@ openid.sreg_required = email
 # This can be wide-open.  read-only, we don't care as much about.
 cors_origins_ro = *
 # This should be more locked down to avoid cross-site request forgery.
-cors_origins_rw = https://bodhi.fedoraproject.org
+cors_origins_rw = https://admin.rpmfusion.org
 cors_connect_src = https://*.rpmfusion.org/ wss://hub.rpmfusion.org:9939/
 
 
