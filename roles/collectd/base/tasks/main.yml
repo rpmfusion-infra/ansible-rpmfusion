@@ -36,7 +36,7 @@
   - collectd
   notify:
   - restart collectd
-  when: not inventory_hostname.startswith('log')
+  when: not inventory_hostname.startswith('hv01')
 
 # install collectd-network config
 - name: /etc/collectd.d/network.conf
@@ -45,7 +45,7 @@
   - collectd
   notify:
   - restart collectd
-  when: inventory_hostname.startswith('log')
+  when: inventory_hostname.startswith('hv01')
 
 # apache - localhost only - pretty much any apache server
 - name: install collectd-apache
