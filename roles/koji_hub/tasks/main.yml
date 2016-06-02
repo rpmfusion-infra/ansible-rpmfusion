@@ -19,6 +19,12 @@
   - packages
   - koji_hub
 
+- name: install the project logo
+  copy: src={{ files }}/files/common/logo.png dest=/usr/share/koji-themes/fedora-koji/images/fedora-koji.png owner=root mode=644
+  tags:
+  - config
+  - koji_hub
+
 - name: make koji pki directory
   file: state=directory path=/etc/pki/koji/ owner=root group=root
 
