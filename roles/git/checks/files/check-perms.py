@@ -159,7 +159,7 @@ def set_post_receive_hook_version2(gitdir):
 
     # Set hooks.maildomain
     cmd = ['git', '--git-dir', gitdir, 'config', 'hooks.maildomain',
-            'fedoraproject.org']
+            'rpmfusion.org']
     p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode:
