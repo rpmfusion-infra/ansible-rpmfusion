@@ -165,7 +165,7 @@
   cron: name="owner-sync-el5" minute="7,17,27,37,47,57" user="root" 
         job="/usr/local/bin/owner-sync-pkgdb dist-5E-epel"
         cron_file=update-koji-owner-EL-5
-  when: inventory_hostname.startswith('bodhi01') and env == "production-epel"
+  when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - bodhi
 
@@ -173,7 +173,7 @@
   cron: name="owner-sync-el6" minute="7,17,27,37,47,57" user="root" 
         job="/usr/local/bin/owner-sync-pkgdb dist-6E-epel"
         cron_file=update-koji-owner-EL-6
-  when: inventory_hostname.startswith('bodhi01') and env == "production-epel"
+  when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - bodhi
   
@@ -181,7 +181,7 @@
   cron: name="owner-sync-epel7" minute="7,17,27,37,47,57" user="root" 
         job="/usr/local/bin/owner-sync-pkgdb epel7"
         cron_file=update-koji-owner-epel7
-  when: inventory_hostname.startswith('bodhi01') and env == "production-epel"
+  when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - bodhi
   
