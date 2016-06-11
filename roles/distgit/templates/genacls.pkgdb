@@ -10,13 +10,8 @@ import grp
 import sys
 
 import requests
-{% if env == 'staging' %}
-VCS_URL = 'https://admin.stg.rpmfusion.org/pkgdb/api/vcs?format=json'
-GRP_URL = 'https://admin.stg.rpmfusion.org/pkgdb/api/groups?format=json'
-{% else %}
 VCS_URL = 'https://admin.rpmfusion.org/pkgdb/api/vcs?format=json'
 GRP_URL = 'https://admin.rpmfusion.org/pkgdb/api/groups?format=json'
-{% endif %}
 
 
 if __name__ == '__main__':
@@ -32,9 +27,8 @@ if __name__ == '__main__':
     # Set the active branches to create ACLs for
     # Give them the git branch eqiv until pkgdb follows suite
     ACTIVE = {
-        'OLPC-2': 'olpc2', 'OLPC-3': 'olpc3', 'EL-4': 'el4',
         'EL-5': 'el5', 'el5': 'el5', 'el6': 'el6', 'EL-6': 'el6',
-        'epel7': 'epel7',
+        'el7': 'el7',
         'F-11': 'f11', 'F-12': 'f12', 'F-13': 'f13', 'f14': 'f14', 'f15':
         'f15', 'f16': 'f16', 'f17': 'f17', 'f18': 'f18', 'f19': 'f19',
         'f20': 'f20', 'f21': 'f21', 'f22': 'f22', 'f23': 'f23', 'f24': 'f24',
@@ -42,8 +36,7 @@ if __name__ == '__main__':
 
     # Create a "regex"ish list 0f the reserved branches
     RESERVED = [
-        'f[0-9][0-9]', 'epel[0-9]', 'epel[0-9][0-9]', 'el[0-9]',
-        'olpc[0-9]']
+        'f[0-9][0-9]', 'el[0-9][0-9]', 'el[0-9]']
 
     # Read the ACL information from the packageDB
     data = requests.get(VCS_URL).json()
@@ -74,7 +67,7 @@ if __name__ == '__main__':
     # by pkgdb.  We want to create a mirror of rpms/PKG in rpms-checks/PKG
     # This hack occurs in two places.  Here, and in the branch-creation script.
     # https://github.com/fedora-infra/pkgdb2/issues/329#issuecomment-207050233
-    data['rpms-checks'] = copy.copy(data['rpms'])
+    #data['rpms-checks'] = copy.copy(data['rpms'])
 
     # Get a list of all the packages
     for key in data:
