@@ -9,8 +9,8 @@ newfile=`mktemp`
 target=/srv/git/repositories
 
 for i in free nonfree ; do
-  for d in `ls $target/$i/rpms`; do
-     echo "$i/rpms/$d" >> $newfile;
+  for d in `ls $target/$i`; do
+     echo "$i/$d" >> $newfile;
   done;
 done;
 
