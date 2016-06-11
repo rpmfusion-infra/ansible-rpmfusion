@@ -72,11 +72,7 @@
   copy: src={{item}} dest=/usr/local/bin/{{item}} owner=root group=root mode=0755
   with_items:
     - setup_git_package
-    - setup_git_package-free
-    - setup_git_package-nonfree
     - mkbranch
-    - mkbranch-free
-    - mkbranch-nonfree
     - pkgdb2-clone
   tags:
   - config
