@@ -47,7 +47,7 @@ import time
 
 import requests
 
-import fedmsg
+#import fedmsg
 
 # Do some off-the-bat configuration of fedmsg.
 #   1) since this is a one-off script and not a daemon, it needs to connect
@@ -57,24 +57,19 @@ import fedmsg
 #      read access to.  Contrast that with the 'scm' certificate which
 #      everyone in the 'packager' group has access to.
 
-config = fedmsg.config.load_config([], None)
-config['active'] = True
-config['endpoints']['relay_inbound'] = config['relay_inbound']
-fedmsg.init(name='relay_inbound', cert_prefix='shell', **config)
+#config = fedmsg.config.load_config([], None)
+#config['active'] = True
+#config['endpoints']['relay_inbound'] = config['relay_inbound']
+#fedmsg.init(name='relay_inbound', cert_prefix='shell', **config)
 
-{% if env == 'staging' -%}
-PKGDB_URL = 'https://admin.stg.rpmfusion.org/pkgdb'
-{%- else -%}
 PKGDB_URL = 'https://admin.rpmfusion.org/pkgdb'
-{%- endif %}
-
 GIT_FOLDER = '/srv/git/repositories/'
 
 MKBRANCH = '/usr/local/bin/mkbranch'
 SETUP_PACKAGE = '/usr/local/bin/setup_git_package'
 
 THREADS = 20
-VERBOSE = False
+VERBOSE = True
 TEST_ONLY = False
 
 
@@ -143,16 +138,16 @@ def _create_branch(ns, pkgname, branch, existing_branches):
 
         if not TEST_ONLY:
             _invoke(MKBRANCH, [branch, os.path.join(ns, pkgname)])
-            fedmsg.publish(
-                topic='branch',
-                modname='git',
-                msg=dict(
-                    agent='pkgdb',
-                    name=pkgname,
-                    branch=branch,
-                    namespace=ns,
-                ),
-            )
+            #fedmsg.publish(
+            #    topic='branch',
+            #    modname='git',
+            #    msg=dict(
+            #        agent='pkgdb',
+            #        name=pkgname,
+            #        branch=branch,
+            #        namespace=ns,
+            #    ),
+            #)
     except ProcessError, e:
         if e.returnCode == 255:
             # This is a warning, not an error
@@ -219,23 +214,23 @@ def branch_package(ns, pkgname, requested_branches, existing_branches):
     if not exists or 'master' not in existing_branches:
         if not TEST_ONLY:
             _invoke(SETUP_PACKAGE, [os.path.join(ns, pkgname)])
-            if ns == 'rpms':
+            if ns == 'free' or ns == 'nonfree' :
                 old_place = os.path.join(GIT_FOLDER, '%s.git' % pkgname)
                 if not os.path.exists(old_place):
                     os.symlink(new_place, old_place)
             # SETUP_PACKAGE creates master
             if 'master' in requested_branches:
                 requested_branches.remove('master')
-            fedmsg.publish(
-                topic='branch',
-                modname='git',
-                msg=dict(
-                    agent='pkgdb',
-                    name=pkgname,
-                    branch='master',
-                    namespace=ns,
-                ),
-            )
+            #fedmsg.publish(
+            #    topic='branch',
+            #    modname='git',
+            #    msg=dict(
+            #        agent='pkgdb',
+            #        name=pkgname,
+            #        branch='master',
+            #        namespace=ns,
+            #    ),
+            #)
 
     # Create all the required branches for the package
     # Use the translated branch name until pkgdb falls inline
@@ -254,7 +249,7 @@ def main():
     # by pkgdb.  We want to create a mirror of rpms/PKG in rpms-checks/PKG
     # This hack occurs in two places.  Here, and in genacls.pkgdb.
     # https://github.com/fedora-infra/pkgdb2/issues/329#issuecomment-207050233
-    pkgdb_info['rpms-checks'] = copy.copy(pkgdb_info['rpms'])
+    #pkgdb_info['rpms-checks'] = copy.copy(pkgdb_info['rpms'])
 
     for ns in pkgdb_info:
         namespace = ns
