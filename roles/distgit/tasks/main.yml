@@ -65,8 +65,8 @@
 - name: create our namespace directories inside there..
   file: dest=/srv/git/repositories/{{item}} state=directory mode=2775 group=cvsextras
   with_items:
-  - free/rpms
-  - nonfree/rpms
+  - free
+  - nonfree
 
 - name: install the distgit scripts
   copy: src={{item}} dest=/usr/local/bin/{{item}} owner=root group=root mode=0755
