@@ -163,31 +163,31 @@
 
 - name: sync packages from pkgdb2 to koji (el5)
   cron: name="owner-sync-el5" minute="7,17,27,37,47,57" user="root" 
-        job="/usr/local/bin/owner-sync-pkgdb dist-5E-epel"
-        cron_file=update-koji-owner-EL-5
+        job="/usr/local/bin/owner-sync-pkgdb el5-free ; /usr/local/bin/owner-sync-pkgdb el5-nonfree"
+        cron_file=update-koji-owner-el5
   when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - bodhi
 
 - name: sync packages from pkgdb2 to koji (el6)
   cron: name="owner-sync-el6" minute="7,17,27,37,47,57" user="root" 
-        job="/usr/local/bin/owner-sync-pkgdb dist-6E-epel"
-        cron_file=update-koji-owner-EL-6
+        job="/usr/local/bin/owner-sync-pkgdb el6-free ; /usr/local/bin/owner-sync-pkgdb el6-nonfree"
+        cron_file=update-koji-owner-el6
   when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - bodhi
   
 - name: sync packages from pkgdb2 to koji (epel7)
   cron: name="owner-sync-epel7" minute="7,17,27,37,47,57" user="root" 
-        job="/usr/local/bin/owner-sync-pkgdb epel7"
-        cron_file=update-koji-owner-epel7
+        job="/usr/local/bin/owner-sync-pkgdb el7-free;  /usr/local/bin/owner-sync-pkgdb el7-nonfree"
+        cron_file=update-koji-owner-el7
   when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
   - bodhi
   
 - name: sync packages from pkgdb2 to koji fedora
   cron: name="owner-sync-fedora" minute="7,17,27,37,47,57" user="root" 
-        job="/usr/local/bin/owner-sync-pkgdb f23-free; /usr/local/bin/owner-sync-pkgdb f23-nonfree; /usr/local/bin/owner-sync-pkgdb f24-free; /usr/local/bin/owner-sync-pkgdb f24-nonfree"
+        job="/usr/local/bin/owner-sync-pkgdb f23-free; /usr/local/bin/owner-sync-pkgdb f23-nonfree; /usr/local/bin/owner-sync-pkgdb f24-free; /usr/local/bin/owner-sync-pkgdb f24-nonfree; /usr/local/bin/owner-sync-pkgdb f25-free; /usr/local/bin/owner-sync-pkgdb f25-nonfree"
         cron_file=update-koji-owner-fedora
   when: inventory_hostname.startswith('bodhi01') and env == "production"
   tags:
