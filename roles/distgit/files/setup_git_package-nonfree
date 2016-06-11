@@ -1,3 +1,0 @@
-#!/bin/bash
-
-GITTREE=nonfree; setup_git_package

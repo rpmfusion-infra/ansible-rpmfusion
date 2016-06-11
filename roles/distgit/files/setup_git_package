@@ -9,7 +9,7 @@
 
 
 # Figure out the environment we're running in
-GITROOT=/srv/git/repositories/${GITTREE:-free}/rpms
+GITROOT=/srv/git/repositories
 
 # check if a moron is driving me
 if [ ! -d $GITROOT ] ; then
