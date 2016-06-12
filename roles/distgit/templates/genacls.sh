@@ -13,9 +13,13 @@ python /usr/local/bin/pkgdb_sync_git_branches.py
 # Leverage gitolite's Alias.pm feature to build backwards compat links
 cat /etc/gitolite/RepoAliases.header > RepoAliases.pm
 # Get all repos.  Strip off 'rpms/'.  Convert to perl mapping.  Tack it on.
-grep rpms/ ./gitolite.conf | \
-        sed 's/repo rpms\///g' | \
-        sed "s/.*/'&' => 'rpms\/&',/g" \
+grep "repo free/" ./gitolite.conf | \
+        sed 's/repo free\///g' | \
+        sed "s/.*/'&' => 'free\/&',/g" \
+        >> RepoAliases.pm
+grep "repo nonfree/" ./gitolite.conf | \
+        sed 's/repo nonfree\///g' | \
+        sed "s/.*/'&' => 'nonfree\/&',/g" \
         >> RepoAliases.pm
 echo "};}1;" >> RepoAliases.pm
 
