@@ -1,0 +1,8 @@
+*-devel
+gstreamer-.*
+alsa-plugins-freeworld-.*
+libtxc_dxtn
+libva-intel-driver
+mupen64
+xine-lib-extras-freeworld
+zsnes

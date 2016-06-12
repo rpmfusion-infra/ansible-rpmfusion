@@ -1,0 +1,10 @@
+*-devel
+gens-*
+gstreamer-.*
+-xorg-x11-drv-nvidia-340xx-kmodsrc
+-xorg-x11-drv-nvidia-304xx-kmodsrc
+-xorg-x11-drv-nvidia-kmodsrc
+libCg
+steam
+pcsx2
+lpf-skype
