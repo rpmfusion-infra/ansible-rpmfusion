@@ -102,6 +102,8 @@
     owner=apache
     mode=0640
   with_items:
+  - rpmfusion-free.file
+  - rpmfusion-nonfree.file
   - f23-free-updates.mash
   - f23-nonfree-updates.mash
   - f23-free-updates-testing.mash
