@@ -1,18 +1,18 @@
-[f23-free-updates]
+[f23-free-updates-testing]
 rpm_path = %(arch)s/
 source_path = SRPMS/
 debuginfo = True
 multilib = True 
 multilib_method = file
 multilib_file  = /etc/mash/rpmfusion-free.file
-tag = f23-free-updates
+tag = f23-free-updates-testing
 inherit = False
 strict_keys = True
 keys = E051B67E
-repoviewurl = http://download1.rpmfusion.org/free/fedora/updates/23/%(arch)s/
-repoviewtitle = "RPM Fusion Fedora free 23 Updates - %(arch)s"
+repoviewurl = http://download1.rpmfusion.org/free/fedora/updates/testing/23/%(arch)s/
+repoviewtitle = "RPM Fusion Fedora free 23 Updates testing - %(arch)s"
 arches = armhfp i386 x86_64
 hash_packages = True
 delta = False
 #delta_dirs = /pub/fedora/linux/releases/23/Everything/%(arch)s/os/,/mnt/koji/mash/updates/f23-updates/%(arch)s/
-parent_repos = http://download1.rpmfusion.org/free/fedora/releases/23/Everything/%(arch)s/os
+#parent_repos = http://download1.rpmfusion.org/free/fedora/releases/23/Everything/%(arch)s/os

@@ -15,4 +15,4 @@ arches = armhfp i386 x86_64
 hash_packages = True
 delta = False
 #delta_dirs = /pub/fedora/linux/releases/23/Everything/%(arch)s/os/,/mnt/koji/mash/updates/f23-updates/%(arch)s/
-parent_repos = http://download1.rpmfusion.org/nonfree/fedora/releases/23/Everything/%(arch)s/os
+#parent_repos = http://download1.rpmfusion.org/nonfree/fedora/releases/23/Everything/%(arch)s/os
