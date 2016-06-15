@@ -1,5 +1,7 @@
 *-devel
-gens-*
+gens
+gens-gs
+gens-gs-doc
 gstreamer-.*
 -xorg-x11-drv-nvidia-340xx-kmodsrc
 -xorg-x11-drv-nvidia-304xx-kmodsrc
