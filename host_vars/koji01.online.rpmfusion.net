@@ -5,7 +5,7 @@ ks_url: http://192.168.181.254/install/ks/koji01.ks
 ks_repo: http://192.168.181.254/repo/redhat/el7Server/x86_64/os/
 volgroup: /dev/vg_hv03_virt
 eth0_ip: 212.83.132.100
-eth1_ip: 192.168.181.128
+eth1_ip: 192.168.181.135
 vmhost: hv01.online.rpmfusion.org
 datacenter: online
 
