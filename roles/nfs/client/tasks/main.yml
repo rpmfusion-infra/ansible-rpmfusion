@@ -51,7 +51,7 @@
 - name: nfs mount points (online)
   mount: >
         name={{ mnt_dir }} 
-        src=nfs-server.online.rpmfusion.net:/srv/nfs/{{ nfs_src_dir }}
+        src=nfs-server:/srv/nfs/{{ nfs_src_dir }}
         fstype=nfs 
         opts={{nfs_mount_opts}}
         passno=0 
@@ -71,7 +71,7 @@
 - name: nfs mount points (stg) staging koji
   mount: >
         name=/mnt/fedora_koji
-        src=nfs-server.online.rpmfusion.net:/mnt/fedora_koji
+        src=nfs-server:/mnt/rpmfusion_koji
         fstype=nfs4
         opts={{nfs_mount_opts}}
         passno=0
@@ -84,7 +84,7 @@
 - name: nfs mount points (stg) production koji ro
   mount: >
         name=/mnt/fedora_koji_prod
-        src=nfs-server.online.rpmfusion.net:/fedora_koji
+        src=nfs-server:/rpmfusion_koji
         fstype=nfs
         opts=ro,hard,bg,intr,noatime,nodev,nosuid,nfsvers=3
         passno=0
