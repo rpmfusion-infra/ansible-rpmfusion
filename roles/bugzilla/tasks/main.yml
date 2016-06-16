@@ -7,6 +7,9 @@
   with_items:
   - bugzilla
   - bugzilla-contrib
+  - perl-DBD-Pg
+  - perl-Test-Taint
+  - perl-XMLRPC-Lite
   tags:
   - packages
   - bugzilla
