@@ -3,6 +3,10 @@
 #
 - name: install eseyman bugzilla 4.4 copr repo
   file: src=eseyman-bugzilla-4.4-epel-7.repo dest=/etc/yum.repos.d/eseyman-bugzilla-4.4-epel-7.repo owner=root group=root
+  tags:
+  - config
+  - packages
+  - yumrepos
 
 - name: install needed packages for bugzilla
   yum: pkg={{ item }} state=present
