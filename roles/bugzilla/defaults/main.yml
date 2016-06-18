@@ -1,0 +1,8 @@
+---
+# defaults file for bugzilla
+#
+
+bugzilla_db_host: localhost
+bugzilla_db_user: bugs
+bugzilla_db_name: bugs
+bugzilla_db_padd: changeme
