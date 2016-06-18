@@ -72,7 +72,7 @@ $db_sock = '';
 # Should checksetup.pl try to verify that your database setup is correct?
 # (with some combinations of database servers/Perl modules/moonphase this
 # doesn't work)
-$db_check = 1;
+$db_check = 0;
 
 # With the introduction of a configurable index page using the
 # template toolkit, Bugzilla's main index page is now index.cgi.
