@@ -20,8 +20,8 @@
   - packages
   - bugzilla
 
-- name: put owner-sync-pkgdb in place
-  template: src=localconfig dest=/etc/bugzilla/localconfig mode=0640 user=root group=apache
+- name: bugzilla localconfig in place
+  template: src=localconfig dest=/etc/bugzilla/localconfig mode=0640 owner=root group=apache
   tags:
   - config
   - bugzilla
