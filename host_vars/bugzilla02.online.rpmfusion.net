@@ -11,3 +11,4 @@ nrpe_procs_warn: 900
 nrpe_procs_crit: 1000
 
 bugzilla_db_host: db02
+bugzilla_db_driver: Pg
