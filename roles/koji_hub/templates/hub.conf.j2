@@ -81,7 +81,7 @@ channel =
     has req_channel :: req
     is_child_task :: parent
 #make sure all scratch builds are disabled
-    method build && bool scratch :: deny
+    method build && bool scratch :: use default
 
     all :: use default
 
@@ -89,7 +89,6 @@ channel =
 
 build_from_srpm =
     has_perm admin :: allow
-    tag el6-docs && has_perm docs :: allow
     all :: deny
 
 {% endif %}
