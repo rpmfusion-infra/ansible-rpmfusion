@@ -148,16 +148,20 @@ def main():
                        status='400 Bad Request')
         print >> sys.stderr, '[username=%s] Processing upload request: NAME=%s FILENAME=%s %sSUM=%s' % (username, name, filename, hash_type.upper(), checksum)
 
-    module_dir = os.path.join(CACHE_DIR, name)
+    # first test if the module really exists
+    section = 'free'
+    git_dir = os.path.join(GITREPO, section , '%s.git' %  name)
+    if not os.path.isdir(git_dir):
+        section = 'nonfree'
+        git_dir = os.path.join(GITREPO, section , '%s.git' %  name)
+        if not os.path.isdir(git_dir):
+             print >> sys.stderr, '[username=%s] Unknown module: %s' % (username, name)
+             send_error('Module "%s" does not exist!' % name,
+                       status='404 Not Found')
+
+    module_dir = os.path.join(CACHE_DIR, section, name)
     hash_dir = os.path.join(module_dir, filename, hash_type, checksum)
     msgpath = os.path.join(name, filename, hash_type, checksum, filename)
-
-    # first test if the module really exists
-    git_dir = os.path.join(GITREPO, '%s.git' %  name)
-    if not os.path.isdir(git_dir):
-        print >> sys.stderr, '[username=%s] Unknown module: %s' % (username, name)
-        send_error('Module "%s" does not exist!' % name,
-                   status='404 Not Found')
 
     # try to see if we already have this file...
     dest_file = os.path.join(hash_dir, filename)
