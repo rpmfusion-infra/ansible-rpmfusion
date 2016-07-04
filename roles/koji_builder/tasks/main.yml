@@ -65,6 +65,7 @@
     - strace
     - mock
     - kernel-firmware
+    - nosync
     - ntp
     - ntpdate
     - rsyslog
