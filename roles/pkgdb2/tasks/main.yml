@@ -8,6 +8,7 @@
   - python-psycopg2
   - python-openid-cla
   - python-openid-teams
+  - python-flask-openid
   - python-memcached
   - libsemanage-python
   - pyliblzma
