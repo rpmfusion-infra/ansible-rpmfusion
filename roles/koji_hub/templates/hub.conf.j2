@@ -70,24 +70,28 @@ DisableNotifications = False
 {% if inventory_hostname.startswith('koji') %}
 [policy]
 
-
 tag =
     has_perm secure-boot && package kernel shim grub2 fedora-release fedora-repos pesign :: allow
     package kernel shim grub2 fedora-release fedora-repos pesign :: deny
-    all :: allow
+    has_perm admin :: allow
+    tag *-candidate :: allow
+    tag *-free :: allow
+    tag *-nonfree :: allow
+    all :: deny
 
 channel =
     method createrepo :: use createrepo
     has req_channel :: req
     is_child_task :: parent
-#make sure all scratch builds are disabled
     method build && bool scratch :: use default
 
     all :: use default
 
-
-
 build_from_srpm =
+    has_perm admin :: allow
+    all :: deny
+
+build_from_repo_id=
     has_perm admin :: allow
     all :: deny
 
