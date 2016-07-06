@@ -31,6 +31,8 @@
     when: not inventory_hostname.startswith('bkernel')
   - include: "{{ tasks }}/motd.yml"
     when: not inventory_hostname.startswith('bkernel')
+  - include: "{{ tasks }}/create_swap_file.yml swap_file_path=/var/swap-file swap_file_bs=1M swap_file_count=4096"
+    when: inventory_hostname.endswith('scaleway.rpmfusion.net')
 
   - name: make sure kojid is running
     service: name=kojid state=running enabled=yes
