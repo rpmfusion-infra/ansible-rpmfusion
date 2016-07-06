@@ -6,16 +6,16 @@
 
 # hv01 online - public
 #195.154.185.75 hv01.online.rpmfusion.net hv01
-#212.83.132.100 koji.rpmfusion.org koji
-#212.129.31.198 pkgs.rpmfusion.org pkgs
+212.83.132.100 koji.rpmfusion.org koji
+212.129.31.198 pkgs.rpmfusion.org pkgs
 
 # hv01 online - lan
 192.168.181.254 hv01.online.rpmfusion.net hv01 nfs-server.online.rpmfusion.net log01.online.rpmfusion.net log01 proxy.online.rpmfusion.net hub.online.rpmfusion.net
 192.168.181.101 buildvm-01.online.rpmfusion.net buildvm-01
 192.168.181.102 buildvm-02.online.rpmfusion.net buildvm-02
 192.168.181.130 db02.online.rpmfusion.net db02
-192.168.181.135 koji01.online.rpmfusion.net koji01 koji.rpmfusion.org koji
-192.168.181.137 pkgs01.online.rpmfusion.net pkgs01 pkgs.rpmfusion.org pkgs
+192.168.181.135 koji01.online.rpmfusion.net koji01
+192.168.181.137 pkgs01.online.rpmfusion.net pkgs01
 192.168.181.138 pkgdb02.online.rpmfusion.net pkgdb02
 192.168.181.141 bodhi01.online.rpmfusion.net bodhi01
 
