@@ -40,3 +40,9 @@ hv01.online.rpmfusion.net
 virthost
 bvirthost
 buildvmhost
+
+[mirrorlist2]
+mirrorlist01.uase.rpmfusion.net
+mirrorlist02.mv.rpmfusion.net
+mirrorlist03.scaleway.rpmfusion.net
+mirrorlist04.mv.rpmfusion.net
