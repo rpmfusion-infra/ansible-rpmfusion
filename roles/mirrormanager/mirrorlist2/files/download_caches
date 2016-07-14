@@ -1,0 +1,31 @@
+#!/bin/bash
+
+CACHE=/var/lib/mirrormanager/
+
+FILES="global_netblocks.txt i2_netblocks.txt mirrorlist_cache.pkl GeoIP.dat GeoIPv6.dat"
+
+cd $CACHE
+
+SUM_BEFORE=`cat ${FILES} | md5sum`
+
+for i in ${FILES}; do
+        wget -q -N http://hv01.uase.rpmfusion.net/.cache/$i
+done
+
+SUM_AFTER=`cat ${FILES} | md5sum`
+
+if [[ "${SUM_AFTER}" != "${SUM_BEFORE}" ]]; then
+	pkill -1 -f mirrorlist_server
+fi
+
+FILES="pl.tar.gz"
+
+cd /var/www/mirrors.rpmfusion.org
+
+SUM_BEFORE=`cat ${FILES} | md5sum`
+wget -q -N http://hv01.uase.rpmfusion.net/.cache/${FILES}
+SUM_AFTER=`cat ${FILES} | md5sum`
+
+if [[ "${SUM_AFTER}" != "${SUM_BEFORE}" ]]; then
+	tar xf ${FILES}
+fi

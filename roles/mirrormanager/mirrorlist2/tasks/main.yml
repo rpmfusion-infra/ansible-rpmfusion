@@ -1,0 +1,131 @@
+---
+# tasklist for setting up the mirrorlist app components
+# create mirrormanager user
+# create mirrormanager user
+- name: add mirrormanager user - uid {{ mirrormanager_uid }}
+  user: name=mirrormanager uid={{ mirrormanager_uid }} state=present home=/home/mirrormanager createhome=yes
+  tags:
+  - mirrorlist2
+
+- name: make a /var/lib/mirrormanager dir for data
+  file: dest=/var/lib/mirrormanager/ state=directory owner=mirrormanager group=mirrormanager mode=0755
+  tags:
+  - mirrorlist2
+
+- name: install packages for mirrorlist
+  yum: pkg={{ item }} state=present enablerepo=epel-testing
+  with_items:
+  - mirrormanager2-mirrorlist
+  - python-IPy
+  tags:
+  - packages
+  - mirrorlist2
+
+- name: make sure mirrorlist-server is enabled (but not started yet in case we do not have pkl)
+  service: name=mirrorlist-server enabled=yes
+  tags:
+  - mirrorlist2
+
+# install mirrorlist-server.conf apache config
+- name: mirrorlist-server apache conf
+  template: src=mirrorlist-server.conf dest=/etc/httpd/conf.d/mirrorlist-server.conf
+  notify:
+  - restart apache
+  tags:
+  - config
+  - mirrorlist2
+
+# Three tasks for handling our (two) custom selinux modules.
+- name: ensure a directory exists for our custom selinux module
+  file: dest=/usr/share/mirrorlist2 state=directory
+  tags:
+  - mirrorlist2
+  - selinux
+
+- name: copy over our general mirrorlist2 selinux module
+  copy: src=selinux/mirrorlist2.pp dest=/usr/share/mirrorlist2/mirrorlist2.pp
+  register: ficgeneral_module
+  tags:
+  - mirrorlist2
+  - selinux
+
+#- name: check to see if its even installed yet
+#  shell: semodule -l | grep mirrorlist2 | wc -l
+#  register: ficgeneral_grep
+#  always_run: true
+#  changed_when: "'0' in ficgeneral_grep.stdout"
+#  tags:
+#  - mirrorlist2
+#  - selinux
+
+#- name: install our general mirrorlist2 selinux module
+#  command: semodule -i /usr/share/mirrorlist2/mirrorlist2.pp
+#  when: ficgeneral_module|changed or ficgeneral_grep|changed
+#  tags:
+#  - mirrorlist2
+#  - selinux
+
+
+- name: make a /var/log/mirrormanager dir for logs
+  file: dest=/var/log/mirrormanager/ state=directory owner=mirrormanager group=mirrormanager mode=0755
+  tags:
+  - mirrorlist2
+
+- name: copy systemd service file in for mirrorlist-server
+  copy: src=mirrorlist-server.service dest=/etc/systemd/system/mirrorlist-server.service
+  notify:
+  - reload systemd service files
+  - restart mirrorlist-server
+  tags:
+  - mirrorlist2
+
+# Copy the mirrorlist log file every hour to be ready to be processed
+- name: mirrorlist copy cron
+  cron: name="copy-mirrorlist" minute="50" hour="*/2" user="mirrormanager"
+        job="cp /var/log/mirrormanager/mirrorlist.log /var/log/mirrormanager/mirrorlist.log.`date +\%Y-\%m-\%d`"
+        cron_file=copy-mirrorlist
+  tags:
+  - mirrorlist2
+
+# At the start of the day the mirrorlist log file is moved
+- name: mirrorlist move cron
+  cron: name="move-mirrorlist" minute="1" hour="0" user="mirrormanager"
+        job="mv /var/log/mirrormanager/mirrorlist.log /var/log/mirrormanager/mirrorlist.log.`date +\%Y-\%m-\%d --date='yesterday'`"
+        cron_file=move-mirrorlist
+  tags:
+  - mirrorlist2
+
+# Cleanup old mirrorlist logfile
+- name: mirrorlist clean cron
+  cron: name="clean-mirrorlist" minute="13" hour="13" user="mirrormanager"
+        job="/usr/sbin/tmpwatch --mtime 7d /var/log/mirrormanager"
+        cron_file=clean-mirrorlist
+  tags:
+  - mirrorlist2
+
+- name: copy download_caches
+  copy: src=download_caches dest=/home/mirrormanager owner=mirrormanager group=mirrormanager mode=0755
+  tags:
+  - mirrorlist2
+
+- name: make a /var/www/mirrors.rpmfusion.org directory
+  file: dest=/var/www/mirrors.rpmfusion.org state=directory owner=mirrormanager group=mirrormanager mode=0755
+  tags:
+  - mirrorlist2
+
+- name: download caches cron
+  cron: name="download_caches" minute="*/5" user="mirrormanager"
+        job="/home/mirrormanager/download_caches"
+        cron_file=download_caches
+  tags:
+  - mirrorlist2
+
+- name: GeoIP v4 link
+  file: dest=/usr/share/GeoIP/GeoIP.dat src=/var/lib/mirrormanager/GeoIP.dat owner=mirrormanager group=mirrormanager state=link force=yes
+  tags:
+  - mirrorlist2
+
+- name: GeoIP v6 link
+  file: dest=/usr/share/GeoIP/GeoIPv6.dat src=/var/lib/mirrormanager/GeoIPv6.dat owner=mirrormanager group=mirrormanager state=link force=yes
+  tags:
+  - mirrorlist2
