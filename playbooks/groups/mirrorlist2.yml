@@ -3,19 +3,29 @@
 # NOTE: make sure there is room/space for this server on the vmhost
 # NOTE: most of these vars_path come from group_vars/mirrorlist or from hostvars
 
-- include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=mirrorlist2:mirrorlist2-stg"
+#- include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=mirrorlist2:mirrorlist2-stg"
 
 - name: make the box be real
   hosts: mirrorlist2:mirrorlist2-stg
   user: root
   gather_facts: True
 
-  vars_files: 
+  vars_files:
    - /srv/web/infra/ansible/vars/global.yml
-   - "/srv/private/ansible/vars.yml"
    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
 
   pre_tasks:
+  - name: global default packages to install (yum)
+    yum: state=present name={{ item }}
+    with_items:
+    - wget
+    - epel-release
+    - libselinux-python
+    tags:
+    - packages
+    - base
+  - include: "{{ tasks }}/yumrepos.yml"
+  - include: "{{ tasks }}/mod_wsgi.yml"
   - name: Install policycoreutils-python
     yum: pkg=policycoreutils-python state=present
 
@@ -27,76 +37,17 @@
     - httpd
     - httpd/website
 
-  - name: check the selinux context of webdir
-    command: matchpathcon /srv/web
-    register: webdir
-    always_run: yes
-    changed_when: "1 != 1"
-    tags:
-    - config
-    - selinux
-    - httpd
-    - httpd/website
 
-  - name: /srv/web file contexts
-    command: semanage fcontext -a -t httpd_sys_content_t "/srv/web(/.*)?"
-    when: webdir.stdout.find('httpd_sys_content_t') == -1
-    tags:
-    - config
-    - selinux
-    - httpd
-    - httpd/website
-
-  roles:
-  - base
-  - rkhunter
-  - nagios/client
-  - geoip
-  - hosts
-  - fas_client
-  - collectd/base
-  - apache
-  - httpd/mod_ssl
-
-  - role: httpd/certificate
-    name: wildcard-2014.stg.rpmfusion.org
-    SSLCertificateChainFile: wildcard-2014.stg.rpmfusion.org.intermediate.cert
-    when: env == "staging"
-
-  - role: httpd/website
-    name: mirrorlist-online.stg.rpmfusion.org
-    cert_name: wildcard-2014.stg.rpmfusion.org
-    SSLCertificateChainFile: wildcard-2014.stg.rpmfusion.org.intermediate.cert
-    when: env == "staging"
-
-  - role: httpd/certificate
-    name: wildcard-2014.rpmfusion.org
-    SSLCertificateChainFile: wildcard-2014.rpmfusion.org.intermediate.cert
-    when: env != "staging"
-
-  - role: httpd/website
-    name: mirrorlist-rpmfusion.org
-    cert_name: wildcard-2014.rpmfusion.org
-    server_aliases:
-    - mirrorlist-dedicatedsolutions.rpmfusion.org
-    - mirrorlist-host1plus.rpmfusion.org
-    - mirrorlist-ibiblio.rpmfusion.org
-    - mirrorlist-ibiblio02.rpmfusion.org
-    - mirrorlist-osuosl.rpmfusion.org
-    when: env != "staging"
-
-  - mirrormanager/mirrorlist2
-  - sudo
-  - { role: openvpn/client,
-      when: env != "staging" }
+  - debug: msg="{{ansible_nodename}}  {{inventory_hostname}} {{ansible_distribution_major_version|int}}"
 
   tasks:
   # this is how you include other task lists
-  - include: "{{ tasks }}/yumrepos.yml"
-  - include: "{{ tasks }}/2fa_client.yml"
   - include: "{{ tasks }}/motd.yml"
-  - include: "{{ tasks }}/mod_wsgi.yml"
 
+  roles:
+  - hosts
+  - apache
+  - mirrormanager/mirrorlist2
 
   handlers:
   - include: "{{ handlers }}/restart_services.yml"
