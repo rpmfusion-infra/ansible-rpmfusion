@@ -90,10 +90,11 @@
     cert_name: "{{wildcard_cert_name}}"
 
 
-  - role: httpd/website
-    name: pkgs.rpmfusion.org
-    sslonly: false
-    cert_name: pkgs.rpmfusion.org
-    SSLCertificateChainFile : pkgs.rpmfusion.org-intermediate.cert
+# Overrided in distgit role
+#  - role: httpd/website
+#    name: pkgs.rpmfusion.org
+#    sslonly: false
+#    cert_name: pkgs.rpmfusion.org
+#    SSLCertificateChainFile : pkgs.rpmfusion.org-intermediate.cert
 
 
