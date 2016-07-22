@@ -56,7 +56,7 @@
     name: admin.rpmfusion.org
     sslonly: true
     cert_name: admin.rpmfusion.org
-    SSLCertificateChainFile : admin.rpmfusion.org-intermediate
+    SSLCertificateChainFile : admin.rpmfusion.org-intermediate.cert
 
   - role: httpd/website
     name: bugzilla.rpmfusion.org
@@ -94,6 +94,6 @@
     name: pkgs.rpmfusion.org
     sslonly: false
     cert_name: pkgs.rpmfusion.org
-    SSLCertificateChainFile : pkgs.rpmfusion.org-intermediate
+    SSLCertificateChainFile : pkgs.rpmfusion.org-intermediate.cert
 
 
