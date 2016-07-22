@@ -16,9 +16,6 @@ ipsilon01.scaleway.rpmfusion.net
 [koji]
 koji01.online.rpmfusion.net
 
-[mirrormanager]
-mirrorlist03.scaleway.rpmfusion.net
-
 [pkgdb]
 pkgdb02.online.rpmfusion.net
 
