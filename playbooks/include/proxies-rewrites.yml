@@ -16,7 +16,7 @@
   - role: httpd/domainrewrite
     destname: admin
     website: admin.rpmfusion.org
-    target: https://admin.rpmfusion.org/account
+    target: https://admin.rpmfusion.org/accounts
 
   - role: httpd/domainrewrite
     destname: apache-status
