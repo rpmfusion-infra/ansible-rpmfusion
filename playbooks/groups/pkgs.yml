@@ -40,7 +40,12 @@
   - include: "{{ handlers }}/restart_services.yml"
 
 # setup minimal proxy includes
+- include: /srv/web/infra/ansible/playbooks/include/proxies-certificates.yml
+- include: /srv/web/infra/ansible/playbooks/include/proxies-websites.yml
 - include: /srv/web/infra/ansible/playbooks/include/proxies-reverseproxy.yml
+- include: /srv/web/infra/ansible/playbooks/include/proxies-rewrites.yml
+- include: /srv/web/infra/ansible/playbooks/include/proxies-redirects.yml
+- include: /srv/web/infra/ansible/playbooks/include/proxies-fedora-web.yml
 
 - name: setup fedmsg on pkgs
   hosts: pkgs-stg:pkgs01.online.rpmfusion.net
