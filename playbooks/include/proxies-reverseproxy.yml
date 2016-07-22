@@ -18,3 +18,8 @@
 #    destname: id
 #    proxyurl: http://localhost:10020
 
+  - role: httpd/reverseproxy
+    website: bugzilla.rpmfusion.org
+    destname: bugzilla02
+    proxyurl: http://bugzilla02
+
