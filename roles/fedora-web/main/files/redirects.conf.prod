@@ -1,0 +1,23 @@
+RewriteEngine On
+
+
+# Drop distributed web referrer hits
+RewriteCond %{HTTP_REFERER} ^http://.*/feed/index\.php\?pid2=.*&sid2=.*&mb2=.*&partnerid2=.*&redir=.*&multi=.*&aff_id=.*$
+RewriteCond %{HTTP_REFERER} ^http://playdot.net/.*$
+RewriteCond %{HTTP_REFERER} ^http://www.mailbait.info.*$
+RewriteRule .* - [F]
+
+# Drop connections from .ru site thats spawning thousands of connections at a time. 
+RewriteCond %{REMOTE_ADDR} ^95\.24\.237\.122$
+RewriteRule .* - [F]
+
+# Sponsor links should go to the specific sponsor page
+RewriteRule  ^(/.*)?/sponsors.*$ https://getfedora.org/sponsors [R=301,L]
+
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^/([^/]+/)?(keys|verify)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+
+RewriteCond %{HTTP_REFERER} .*fedorproject.*
+RewriteRule .* http://mmcgrath.fedorapeople.org/spam.html [R=301,L]

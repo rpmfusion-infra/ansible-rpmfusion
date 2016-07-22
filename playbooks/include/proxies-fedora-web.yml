@@ -1,0 +1,18 @@
+- name: Set up all that fedora-web goodness.  What a wonder!
+  hosts: proxies-stg:proxies
+  user: root
+  gather_facts: True
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
+
+  roles:
+
+  - role: fedora-web/main
+    website: rpmfusion.org
+

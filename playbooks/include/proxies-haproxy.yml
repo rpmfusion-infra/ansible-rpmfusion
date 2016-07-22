@@ -1,0 +1,22 @@
+- name: Set up all the haproxy stuff.
+  hosts: proxies-stg:proxies
+  user: root
+  gather_facts: True
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
+
+  roles:
+
+  # The base haproxy role that sets it all up
+  - role: haproxy
+
+  # And an additional apache rewrite so we can access the web stats
+  - role: haproxy/rewrite
+    website: admin.rpmfusion.org
+    path: /haproxy
