@@ -13,13 +13,6 @@
 
   roles:
 
-  # Various app redirects
-  - role: httpd/redirect
-    name: community
-    website: admin.rpmfusion.org
-    path: /community
-    target: https://apps.fedoraproject.org/packages
-
 #  - role: httpd/redirect
 #    name: fas
 #    website: fas.rpmfusion.org
