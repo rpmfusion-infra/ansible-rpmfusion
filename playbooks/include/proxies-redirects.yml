@@ -29,7 +29,7 @@
     name: fas
     website: admin.rpmfusion.org
     path: /accounts
-    target: https://fas.rpmfusion.org
+    target: https://fas.rpmfusion.org/
 
   - role: httpd/redirectmatch
     name: mailman
