@@ -84,7 +84,7 @@
 
   - role: httpd/website
     name: lists.rpmfusion.org
-    #sslonly: true
+    sslonly: true
     #cert_name: lists.rpmfusion.org
     cert_name: "{{wildcard_cert_name}}"
 
