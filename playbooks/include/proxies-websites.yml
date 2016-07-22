@@ -67,15 +67,21 @@
     cert_name: fas.rpmfusion.org
 
   - role: httpd/website
-    name: lists.rpmfusion.org
-    sslonly: true
-    cert_name: lists.rpmfusion.org
-
-  - role: httpd/website
     name: id.rpmfusion.org
     server_aliases:
     - "*.id.rpmfusion.org"
     # Must not be sslonly, because example.id.fedoraproject.org must be reachable
     # via plain http for openid identity support
+    sslonly: false
     cert_name: id.rpmfusion.org
+
+  - role: httpd/website
+    name: lists.rpmfusion.org
+    #sslonly: true
+    cert_name: lists.rpmfusion.org
+
+  - role: httpd/website
+    name: pkgs.rpmfusion.org
+    sslonly: false
+    cert_name: pkgs.rpmfusion.org
 
