@@ -39,10 +39,3 @@
     localpath: /bodhi
     proxyurl: http://bodhi01
 
-  - role: httpd/reverseproxy
-    website: admin.rpmfusion.org
-    destname: collectd
-    localpath: /collectd
-    remotepath: /collectd
-    proxyurl: http://log01
-
