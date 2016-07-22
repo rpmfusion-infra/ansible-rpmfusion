@@ -153,6 +153,7 @@ ansible_base: /srv/web/infra
 
 # for httpd/website
 server_admin: root@rpmfusion.org
+SSLCertificateChainFile: wildcard-2016.rpmfusion.org.intermediate.cert
 
 # This vars get shoved into /etc/system_identification by the base role.
 # Groups and individual hosts should override them with specific info.
