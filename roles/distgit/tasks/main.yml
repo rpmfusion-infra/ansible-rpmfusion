@@ -24,11 +24,6 @@
   notify:
   - reload httpd
 
-- name: install the mod_ssl configuration
-  copy: src=ssl.conf dest=/etc/httpd/conf.d/ssl.conf
-  notify:
-  - reload httpd
-
 - name: allow httpd to access the files on NFS
   seboolean: name=httpd_use_nfs state=yes persistent=yes
 
