@@ -13,29 +13,8 @@
 
   roles:
 
-#  - role: httpd/reverseproxy
-#    website: admin.rpmfusion.org
-#    destname: nagios
-#    localpath: /nagios
-#    remotepath: /nagios
-#    proxyurl: http://noc0
-
   - role: httpd/reverseproxy
     website: id.rpmfusion.org
     destname: id
     proxyurl: http://localhost:10020
-
-  - role: httpd/reverseproxy
-    website: admin.rpmfusion.org
-    destname: pkgdb02
-    remotepath: /pkgdb
-    localpath: /pkgdb
-    proxyurl: http://pkgdb02
-
-  - role: httpd/reverseproxy
-    website: admin.rpmfusion.org
-    destname: bodhi01
-    remotepath: /bodhi
-    localpath: /bodhi
-    proxyurl: http://bodhi01
 
