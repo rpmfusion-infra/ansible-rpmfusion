@@ -1,9 +1,3 @@
-- name: Copy in the sync-fedora-web cronjob
-  copy: src=cron-sync-fedora-web dest=/etc/cron.d/sync-fedora-web
-  tags:
-  - fedora-web
-  - fedora-web/main
-
 - name: Copy some config files for {{website}}
   copy: >
     src={{item}} dest=/etc/httpd/conf.d/{{website}}/{{item}}
@@ -31,6 +25,7 @@
   - sponsor.conf
   notify:
   - reload httpd
+  when: sponsor is defined
   tags:
   - fedora-web
   - fedora-web/main
