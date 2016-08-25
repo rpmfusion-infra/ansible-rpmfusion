@@ -94,10 +94,10 @@ TMPDIR=$(mktemp -d /tmp/tmpXXXXXX)
 mkdir -p $GITROOT/$PACKAGE.git
 pushd $GITROOT/$PACKAGE.git >/dev/null
 git init -q --shared --bare
-echo "$PACKAGE" > description # This is used to figure out who to send mail to.
-git config --add hooks.mailinglist "$PACKAGE-owner@rpmfusion.org,rpmfusion-commits@lists.rpmfusion.org"
+echo "${PACKAGE#*/}" > description # This is used to figure out who to send mail to.
+git config --add hooks.mailinglist "${PACKAGE#*/}-owner@rpmfusion.org,rpmfusion-commits@lists.rpmfusion.org"
 git config --add hooks.maildomain rpmfusion.org
-git remote add github git@github.com:rpmfusion/${PACKAGE}.git
+git remote add github git@github.com:rpmfusion/${PACKAGE#*/}.git
 popd >/dev/null
 
 # Now clone that repo and create the .gitignore and sources file
