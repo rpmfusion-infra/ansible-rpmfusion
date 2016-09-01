@@ -13,9 +13,22 @@
   with_items:
   - bugzilla
   - bugzilla-contrib
-  - perl-DBD-Pg
   - perl-Test-Taint
   - perl-XMLRPC-Lite
+  tags:
+  - packages
+  - bugzilla
+
+- name: install perl-DBD-MySQL if needed by bugzilla
+  yum: pkg=perl-DBD-MySQL state=present
+  when: bugzilla_db_driver == 'MySQL'
+  tags:
+  - packages
+  - bugzilla
+
+- name: install perl-DBD-Pg if needed by bugzilla
+  yum: pkg=perl-DBD-Pg state=present
+  when: bugzilla_db_driver == 'Pg'
   tags:
   - packages
   - bugzilla
