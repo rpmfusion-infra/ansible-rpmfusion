@@ -1,0 +1,57 @@
+- name: ensure packages required for mariadb are installed
+  yum: name={{ item }} state=present enablerepo={{ extra_enablerepos }}
+  with_items:
+    - mariadb-server
+    - MySQL-python
+  when: ansible_distribution_major_version|int < 22
+
+- name: ensure packages required for mariadb are installed
+  dnf: name={{ item }} state=present enablerepo={{ extra_enablerepos }}
+  with_items:
+    - mariadb-server
+    - MySQL-python
+  when: ansible_distribution_major_version|int > 21 and ansible_cmdline.ostree is not defined
+
+- name: copy my.cnf
+  copy: src={{ item }} dest=/etc/my.cnf owner=root group=root mode=0644
+  with_first_found:
+    - "{{ mariadb_config }}"
+    - my.cnf.{{ inventory_hostname }}
+    - my.cnf.{{ host_group }}
+    - my.cnf.{{ dist_tag }}
+    - my.cnf.{{ ansible_distribution }}
+    - my.cnf.{{ ansible_distribution_version }}
+    - my.cnf.default
+  notify:
+    - restart mariadb
+
+- name: enable and start mariadb database
+  service: name=mariadb enabled=yes state=started
+
+- name: set mariaddb root user password
+  no_log: True
+  mysql_user: name=root password={{ mariadb_root_password }} check_implicit_admin=true
+
+- name: create .my.cnf file for future logins
+  template: src=dotmy.cnf.j2 dest=/root/.my.cnf owner=root group=root mode=0700
+
+- name: Ensure mariadb has a place to backup to
+  file: dest=/backups state=directory owner=mysql
+  tags:
+  - mariadb-server
+
+- name: Copy over backup scriplet
+  copy: src=backup-database dest=/usr/local/bin/backup-database mode=0755
+  tags:
+  - mariadb-server
+
+- name: Set up some cronjobs to backup databases as configured
+  template: >
+    src=cron-backup-database
+    dest=/etc/cron.d/cron-backup-database-{{ item }}
+  with_items:
+  - "{{ dbs_to_backup }}"
+  when: dbs_to_backup != []
+  tags:
+  - cron
+  - mariadb-server
