@@ -13,6 +13,7 @@
   with_items:
   - bugzilla
   - bugzilla-contrib
+  - perl-Encode-Detect
   - perl-Test-Taint
   - perl-XMLRPC-Lite
   tags:
