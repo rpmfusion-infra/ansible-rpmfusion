@@ -3,6 +3,14 @@
 buildvm-01.online.rpmfusion.net
 buildvm-02.online.rpmfusion.net
 
+[buildvm-ppc64]
+buildvm-ppc64-01.osuosl.rpmfusion.net
+buildvm-ppc64-02.osuosl.rpmfusion.net
+
+[buildvm-ppc64le]
+buildvm-ppc64le-01.osuosl.rpmfusion.net
+buildvm-ppc64le-02.osuosl.rpmfusion.net
+
 [buildvmhost]
 
 [buildhw]
@@ -19,4 +27,6 @@ arm-builder04.scaleway.rpmfusion.net
 [builders:children]
 buildhw
 buildvm
+buildvm-ppc64
+buildvm-ppc64le
 buildarm
