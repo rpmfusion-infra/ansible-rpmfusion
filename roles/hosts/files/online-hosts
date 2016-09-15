@@ -19,6 +19,7 @@
 192.168.181.138 pkgdb02.online.rpmfusion.net pkgdb02
 192.168.181.141 bodhi01.online.rpmfusion.net bodhi01
 192.168.181.157 bugzilla02.online.rpmfusion.net bugzilla02
+192.168.181.160 ipsilon01.online.rpmfusion.net ipsilon01
 
 # hv01 online - vpn
 192.168.182.1 hv01.vpn.rpmfusion.net proxy.vpn.rpmfusion.net nfs-server.vpn.rpmfusion.net
