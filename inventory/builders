@@ -20,6 +20,10 @@ buildvm-ppc64le
 [buildarm:children]
 scaleway-c1
 
+[osuos:children]
+buildvm-ppc64
+buildvm-ppc64le
+
 [scaleway-c1]
 arm-builder01.scaleway.rpmfusion.net
 arm-builder02.scaleway.rpmfusion.net
