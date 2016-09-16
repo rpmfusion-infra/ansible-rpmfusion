@@ -5,17 +5,17 @@
 188.165.226.50	puppet.rpmfusion.org puppet puppet.ovh.rpmfusion.lan
 
 # hv01 online - public
-#195.154.185.75 hv01.online.rpmfusion.net hv01
-#212.83.132.100 koji.rpmfusion.org koji
-#212.129.31.198 pkgs.rpmfusion.org pkgs
+195.154.185.75 hv01.online.rpmfusion.net hv01
+212.83.132.100 koji.rpmfusion.org koji
+212.129.31.198 pkgs.rpmfusion.org pkgs
 
 # hv01 online - lan
-192.168.181.254 hv01.online.rpmfusion.net hv01 nfs-server.online.rpmfusion.net log01.online.rpmfusion.net log01 proxy.online.rpmfusion.net hub.online.rpmfusion.net nfs-server proxy
-192.168.181.135 koji01.online.rpmfusion.net koji01 koji.rpmfusion.org koji
-192.168.181.137 pkgs01.online.rpmfusion.net pkgs01 pkgs.rpmfusion.org pkgs
+#192.168.181.254 hv01.online.rpmfusion.net hv01 nfs-server.online.rpmfusion.net log01.online.rpmfusion.net log01 proxy.online.rpmfusion.net hub.online.rpmfusion.net nfs-server proxy
+#192.168.181.135 koji01.online.rpmfusion.net koji01 koji.rpmfusion.org koji
+#192.168.181.137 pkgs01.online.rpmfusion.net pkgs01 pkgs.rpmfusion.org pkgs
 
 # hv01 online - vpn
-192.168.182.1 hv01.vpn.rpmfusion.net proxy.vpn.rpmfusion.net nfs-server.vpn.rpmfusion.net
+192.168.182.1 hv01.vpn.rpmfusion.net proxy.vpn.rpmfusion.net nfs-server.vpn.rpmfusion.net nfs-server proxy
 
 # osuosl
 #buildppc-01.osuosl.rpmfusion.net
