@@ -20,7 +20,7 @@ buildvm-ppc64le
 [buildarm:children]
 scaleway-c1
 
-[osuos:children]
+[osuosl:children]
 buildvm-ppc64
 buildvm-ppc64le
 
