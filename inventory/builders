@@ -4,16 +4,18 @@ buildvm-01.online.rpmfusion.net
 buildvm-02.online.rpmfusion.net
 
 [buildvm-ppc64]
-buildvm-ppc64-01.osuosl.rpmfusion.net
-buildvm-ppc64-02.osuosl.rpmfusion.net
+buildppc-01.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
+buildppc-02.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
 
 [buildvm-ppc64le]
-buildvm-ppc64le-01.osuosl.rpmfusion.net
-buildvm-ppc64le-02.osuosl.rpmfusion.net
+buildppc64le-01.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
+buildppc64le-02.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
 
 [buildvmhost]
 
-[buildhw]
+[buildhw:children]
+buildvm-ppc64
+buildvm-ppc64le
 
 [buildarm:children]
 scaleway-c1
