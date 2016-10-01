@@ -1,0 +1,405 @@
+---
+# Tasks to set up fas_server
+
+- name: install needed packages
+  yum: pkg={{ item }} state=installed
+  with_items:
+  - fas
+  - fas-plugin-yubikey
+  - python-turbojson
+  - python-tgcaptcha
+  - httpd
+  - mod_wsgi
+  - python-bunch
+  - python-requests-kerberos
+  tags:
+  - packages
+  - fas
+
+- name: install needed packages
+  when: env == "staging"
+  yum: pkg={{ item }} state=installed
+  with_items:
+  - krb5-workstation
+  - python-requests-kerberos
+  tags:
+  - packages
+  - fas
+
+- name: configure krb5
+  when: env == "staging"
+  template: src=krb5.conf.j2 dest=/etc/krb5.conf owner=root group=root mode=0644
+  tags:
+  - config
+  - fas
+
+- name: install IPA keytab
+  when: env == "staging"
+  copy: >
+    src="{{ private }}/files/keytabs/{{env}}/fas_sync"
+    dest="/etc/fas_sync_keytab"
+    owner=fas
+    group=fas
+    mode=0600
+  tags:
+  - config
+  - fas
+
+- name: install ipa public cert
+  when: env == "staging"
+  copy: src=ipa.{{env}}.pem dest=/etc/fas_sync_cert.pem owner=root group=root mode=0644
+  tags:
+  - config
+  - fas
+
+- name: enable httpd_can_network_connect selinux boolean
+  seboolean: name={{ item }} state=yes persistent=yes
+  with_items:
+  - httpd_can_network_connect
+  - allow_ypbind
+  tags:
+  - config
+  - fas
+
+- name: setup /var/www/.python-eggs directory
+  file: path=/var/www/.python-eggs owner=apache group=apache mode=0700 state=directory
+  tags:
+  - config
+  - fas
+
+- name: setup /etc/fas-gpg directory
+  file: path=/etc/fas-gpg owner=fas group=fas mode=0700 state=directory setype=httpd_sys_rw_content_t
+  tags:
+  - config
+  - fas
+
+- name: install /etc/httpd/conf.d/accounts.conf file
+  template: >
+    src="fas-app.conf.j2"
+    dest="/etc/httpd/conf.d/accounts.conf"
+    owner=root
+    group=root
+    mode=0644
+  notify:
+  - reload httpd
+  tags:
+  - config
+  - fas
+
+- name: setup /etc/pki/fas directory
+  file: path=/etc/pki/fas owner=fas group=fas mode=0755 state=directory
+  tags:
+  - config
+  - fas
+
+- name: install pythonsitelib/fas/config/log.cfg
+  copy: >
+    src="fas-log.cfg"
+    dest="/usr/lib/python2.6/site-packages/fas/config/log.cfg"
+    owner=root
+    group=root
+    mode=0644
+  notify:
+  - reload httpd
+  tags:
+  - config
+  - fas
+
+#  $bugzillaUser = "fedora-admin-xmlrpc@redhat.com"
+
+- name: install /etc/fas-gpg/pubring.gpg file
+  copy: >
+    src="{{ private }}/files/fas-gpg/pubring.gpg"
+    dest="/etc/fas-gpg/pubring.gpg"
+    owner=fas
+    group=fas
+    mode=0600
+  tags:
+  - config
+  - fas
+
+- name: install /etc/pki/fas/rpmfusion-server-ca.cert file
+  copy: >
+    src="{{ private }}/files/rpmfusion-ca.cert"
+    dest="/etc/pki/fas/rpmfusion-server-ca.cert"
+    owner=fas
+    group=fas
+    mode=0644
+  tags:
+  - config
+  - fas
+
+- name: install /etc/pki/fas/rpmfusion-upload-ca.cert file
+  copy: >
+    src="{{ private }}/files/rpmfusion-ca.cert"
+    dest="/etc/pki/fas/rpmfusion-upload-ca.cert"
+    owner=fas
+    group=fas
+    mode=0644
+  tags:
+  - config
+  - fas
+
+- name: install /usr/share/fas/static/rpmfusion-server-ca.cert file
+  copy: >
+    src="{{ private }}/files/rpmfusion-ca.cert"
+    dest="/usr/share/fas/static/rpmfusion-server-ca.cert"
+    owner=root
+    group=root
+    mode=0644
+  tags:
+  - config
+  - fas
+
+- name: install /usr/share/fas/static/rpmfusion-upload-ca.cert file
+  copy: >
+    src="{{ private }}/files/rpmfusion-ca.cert"
+    dest="/usr/share/fas/static/rpmfusion-upload-ca.cert"
+    owner=root
+    group=root
+    mode=0644
+  tags:
+  - config
+  - fas
+
+- name: install /etc/fas.cfg file
+  template: >
+    src="fas.cfg.j2"
+    dest="/etc/fas.cfg"
+    owner=fas
+    group=apache
+    mode=0640
+  notify:
+  - reload httpd
+  tags:
+  - config
+  - fas
+
+- name: install /usr/local/bin/yubikey-remove.py file
+  when: env == "staging"
+  template: >
+    src="yubikey-remove.py.j2"
+    dest="/usr/local/bin/yubikey-remove.py"
+    owner=fas
+    group=fas
+    mode=0750
+  tags:
+  - config
+  - fas
+
+# $gen_cert = "True"
+
+- name: install /etc/fas.cfg file
+  template: >
+    src="fas.cfg.j2"
+    dest="/etc/fas.cfg"
+    owner=fas
+    group=apache
+    mode=0640
+  when: master_fas_node == True
+  notify:
+  - reload httpd
+  tags:
+  - config
+  - fas
+
+- name: setup /var/lock/rpmfusion-ca directory
+  file: path=/var/lock/rpmfusion-ca owner=fas group=fas mode=0700 state=directory setype=var_lock_t
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
+
+- name: setup /var/lib/rpmfusion-ca directory
+  file: path=/var/lib/rpmfusion-ca owner=fas group=fas mode=0771 state=directory setype=httpd_sys_content_t
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
+
+#- name: install /var/lib/rpmfusion-ca/.rnd file
+#  file: path=/var/lib/rpmfusion-ca/.rnd owner=fas group=fas mode=0600 setype=httpd_sys_content_t
+#  when: master_fas_node == True
+#  tags:
+#  - config
+#  - fas
+
+- name: setup /var/lib/rpmfusion-ca/newcerts directory
+  file: path=/var/lib/rpmfusion-ca/newcerts owner=fas group=fas mode=0700 state=directory
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
+
+- name: setup /var/lib/rpmfusion-ca/private directory
+  file: path=/var/lib/rpmfusion-ca/private owner=fas group=fas mode=0700 state=directory
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
+
+- name: install /var/lib/rpmfusion-ca/private/cakey.pem file
+  copy: >
+    src="{{ private }}/files/cakey.pem"
+    dest="/var/lib/rpmfusion-ca/private/cakey.pem"
+    owner=fas
+    group=fas
+    mode=0400
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
+
+- name: install /var/lib/rpmfusion-ca/Makefile file
+  copy: >
+    src="Makefile.rpmfusion-ca"
+    dest="/var/lib/rpmfusion-ca/Makefile"
+    owner=root
+    group=root
+    mode=0644
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
+
+- name: install /var/lib/rpmfusion-ca/openssl.cnf file
+  copy: >
+    src="rpmfusion-ca-client-openssl.cnf"
+    dest="/var/lib/rpmfusion-ca/openssl.cnf"
+    owner=root
+    group=root
+    mode=0644
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
+
+- name: install /var/lib/rpmfusion-ca/certhelper.py file
+  copy: >
+    src="certhelper.py"
+    dest="/var/lib/rpmfusion-ca/certhelper.py"
+    owner=root
+    group=root
+    mode=0755
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
+
+- name: install /var/lib/rpmfusion-ca/cacert.pem file
+  copy: >
+    src="{{ private }}/files/rpmfusion-ca.cert"
+    dest="/var/lib/rpmfusion-ca/cacert.pem"
+    owner=root
+    group=root
+    mode=0644
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
+
+#For publishing the crl
+- name: setup /srv/web/ca directory
+  file: path=/srv/web/ca owner=apache group=apache mode=0755 state=directory
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
+
+- name: twice every month, force a new crl to be created
+  cron: >
+    name="gen-crl"
+    job="cd /var/lib/rpmfusion-ca ; /usr/bin/make gencrl &> /dev/null"
+    user="fas"
+    minute="0"
+    hour="0"
+    day="1,15"
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
+
+- name: create directory /var/lib/rpmfusion-ca/crl/
+  file: path={{ item }} state=directory
+  with_items:
+  - /var/lib/rpmfusion-ca/crl/
+  tags:
+  - fas
+
+- name: touch /var/lib/rpmfusion-ca/crl/crl.pem and /var/lib/rpmfusion-ca/cacert.pem
+  command: touch /var/lib/rpmfusion-ca/cacert.pem /var/lib/rpmfusion-ca/crl/crl.pem
+  when: master_fas_node == True
+  changed_when: "1 != 1"
+  tags:
+  - config
+  - fas
+
+- name: create /srv/web/ca/crl.pem link
+  file: path="/srv/web/ca/crl.pem" state=link src="/var/lib/rpmfusion-ca/crl/crl.pem"
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
+
+- name: create /srv/web/ca/cacert.pem link
+  file: path="/srv/web/ca/cacert.pem" state=link src="/var/lib/rpmfusion-ca/cacert.pem"
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
+
+- name: install /etc/export-bugzilla.cfg file
+  template: >
+    src="export-bugzilla.cfg.j2"
+    dest="/etc/export-bugzilla.cfg"
+    owner=fas
+    group=fas
+    mode=0600
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
+
+
+- name: HOTFIX fix the export-bugzilla cron to not store bugzilla token
+  copy: >
+    src="export-bugzilla"
+    dest="/usr/sbin/export-bugzilla"
+    owner=root
+    group=root
+    mode=0755
+  tags:
+  - config
+  - hotfix
+  - fas
+
+
+- name: run export-bugzilla program
+  cron: >
+    name="export-bugzilla"
+    job="cd /etc; MAILTO=root; /usr/sbin/export-bugzilla fedorabugs fedora_contrib"
+    user="fas"
+    minute="10"
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
+
+- name: HOTFIX fas2.py in python-bugzilla to add a bugzilla override for ticket 4827
+  copy: src={{ roles }}/pkgdb2/files/fas2.py
+        dest=/usr/lib/python2.6/site-packages/fedora/client/fas2.py
+        mode=644 owner=root group=root
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
+  - hotfixfas
+
+- name: HOTFIX make sure only fas01 cleans up sessions
+  copy: src={{ roles }}/fas_server/files/controllers.py
+        dest=/usr/lib/python2.6/site-packages/fas/controllers.py
+        mode=644 owner=root group=root
+  tags:
+  - config
+  - fas
+  - hotfixfas

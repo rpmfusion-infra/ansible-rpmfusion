@@ -1,0 +1,31 @@
+[logging]
+ default = FILE:/var/log/krb5libs.log
+ kdc = FILE:/var/log/krb5kdc.log
+ admin_server = FILE:/var/log/kadmind.log
+
+[libdefaults]
+{% if env == "production" %}
+ default_realm = RPMFUSION.ORG
+{% else %}
+ default_realm = STG.RPMFUSION.ORG
+{% endif %}
+ dns_lookup_realm = false
+ dns_lookup_kdc = false
+ ticket_lifetime = 24h
+ renew_lifetime = 7d
+ forwardable = true
+
+[realms]
+{% if env == "production" %}
+ RPMFUSION.ORG = {
+  kdc = ipa01.online.rpmfusion.net
+  admin_server = ipa01.online.rpmfusion.net
+ }
+{% else %}
+ STG.RPMFUSION.ORG = {
+  kdc = ipa01.stg.online.rpmfusion.net
+  admin_server = ipa01.stg.online.rpmfusion.net
+ }
+{% endif %}
+
+[domain_realm]
