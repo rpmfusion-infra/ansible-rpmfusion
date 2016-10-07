@@ -1,0 +1,12 @@
+nm: 255.255.255.0
+gw: 192.168.181.254
+dns: 62.210.16.6
+ks_url: http://192.168.181.254/install/ks/fas01.ks
+volgroup: /dev/vg_hv03_virt
+eth0_ip: 192.168.181.172
+vmhost: hv01.online.rpmfusion.net
+datacenter: online
+
+nrpe_procs_warn: 900
+nrpe_procs_crit: 1000
+

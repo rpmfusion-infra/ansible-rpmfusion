@@ -25,8 +25,8 @@
   - fas_server
   - fedmsg/base
   - sudo
-  - yubikey
-  - totpcgi
+#  - yubikey
+#  - totpcgi
   - { role: openvpn/client, when: env != "staging" }
 
   tasks:

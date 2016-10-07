@@ -1,0 +1,47 @@
+---
+# Define resources for this group of hosts here. 
+lvm_size: 30000
+mem_size: 1024
+num_cpus: 1
+
+virt_install_command: "{{ virt_install_command_rhel6 }}"
+
+# for systems that do not match the above - specify the same parameter in
+# the host_vars/$hostname file
+
+wsgi_fedmsg_service: fas
+wsgi_procs: 40
+wsgi_threads: 1
+
+tcp_ports: [ 80, 873, 8443, 8444 ]
+
+fas_client_groups: sysadmin-main,sysadmin-accounts
+
+master_fas_node: True
+gen_cert: False
+
+# A host group for rsync config
+rsync_group: fas
+
+nrpe_procs_warn: 300
+nrpe_procs_crit: 500
+
+# These are consumed by a task in roles/fedmsg/base/main.yml
+fedmsg_certs:
+- service: shell
+  owner: root
+  group: sysadmin
+  can_send:
+  - logger.log
+- service: fas
+  owner: root
+  group: fas
+  can_send:
+  - fas.group.create
+  - fas.group.member.apply
+  - fas.group.member.remove
+  - fas.group.member.sponsor
+  - fas.group.update
+  - fas.role.update
+  - fas.user.create
+  - fas.user.update

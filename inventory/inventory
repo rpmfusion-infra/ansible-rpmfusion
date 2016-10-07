@@ -10,6 +10,9 @@ bugzilla02.online.rpmfusion.net
 [dbserver]
 db02.online.rpmfusion.net
 
+[fas]
+fas01.online.rpmfusion.net
+
 [ipsilon]
 ipsilon01.online.rpmfusion.net
 
