@@ -5,6 +5,7 @@ mem_size: 1024
 num_cpus: 1
 
 virt_install_command: "{{ virt_install_command_rhel6 }}"
+ks_repo: http://mirror.centos.org/centos/6/os/x86_64/
 
 # for systems that do not match the above - specify the same parameter in
 # the host_vars/$hostname file
