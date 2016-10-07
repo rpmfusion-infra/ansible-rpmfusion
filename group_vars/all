@@ -79,7 +79,7 @@ virt_install_command_rhel6: virt-install -n {{ inventory_hostname }}
                  "ksdevice=eth0 ks={{ ks_url }} ip={{ eth0_ip }} netmask={{ nm }} 
                   gateway={{ gw }} dns={{ dns }} console=tty0 console=ttyS0
                   hostname={{ inventory_hostname }}" 
-                 --network=bridge=br0 --autostart --noautoconsole --watchdog default
+                 --network=bridge=br1 --autostart --noautoconsole --watchdog default
 
 max_mem_size: "{{ mem_size * 1 }}"
 max_cpu: "{{ num_cpus * 1 }}"
