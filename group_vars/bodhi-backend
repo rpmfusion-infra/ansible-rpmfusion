@@ -1,0 +1,42 @@
+---
+# common items for the releng-* boxes
+lvm_size: 10000
+mem_size: 1024
+num_cpus: 1
+
+# Do not use testing repositories on production
+testing: False
+
+# These are for fedmsg publication from the bodhi backend.
+# If you change these iptables rules, you also need to changes the endpoints
+# list in roles/fedmsg/base/templates/endpoints-bodhi.py
+tcp_ports: [
+    3000, 3001, 3002, 3003, 3004,
+    3005, 3006, 3007, 3008, 3009,
+    3010, 3011, 3012, 3013, 3014,
+    3015, 3016, 3017, 3018, 3019,
+]
+# Make connections from signing bridges stateless, they break sigul connections
+# https://bugzilla.redhat.com/show_bug.cgi?id=1283364
+#custom_rules: ['-A INPUT --proto tcp --sport 44334 --source 10.5.125.71 -j ACCEPT']
+
+# With 16 cpus, theres a bunch more kernel threads
+nrpe_procs_warn: 900
+nrpe_procs_crit: 1000
+
+host_group: releng
+
+# These people get told when something goes wrong.
+fedmsg_error_recipients:
+- root@rpmfusion.org
+
+## XXX -- note that the fedmsg_certs declaration does not happen here, but
+# happens instead at the inventory/host_vars/ level since bodhi-backend03 and
+# bodhi-backend02 have different roles and responsibilities.
+
+nfs_mount_opts: "rw,hard,bg,intr,noatime,nodev,nosuid,nfsvers=4"
+
+fas_client_groups: sysadmin-releng,sysadmin-bodhi
+sudoers: "{{ private }}/files/sudo/00releng-sudoers"
+
+## XXX - note that the csi_ stuff is kept at the host_vars/ level.

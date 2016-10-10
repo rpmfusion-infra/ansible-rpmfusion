@@ -1,8 +1,11 @@
 [bastion]
 hv01.online.rpmfusion.net
 
-[bodhi-backend]
+[bodhi2]
 bodhi01.online.rpmfusion.net
+
+[bodhi-backend]
+bodhi-backend01.online.rpmfusion.net
 
 [bugzilla]
 bugzilla02.online.rpmfusion.net
@@ -27,6 +30,12 @@ pkgs01.online.rpmfusion.net
 
 [proxies]
 pkgs01.online.rpmfusion.net
+
+[releng-compose]
+bodhi01-backend.online.rpmfusion.net
+
+[sign-bridge]
+koji01.online.rpmfusion.net
 
 [bvirthost]
 
