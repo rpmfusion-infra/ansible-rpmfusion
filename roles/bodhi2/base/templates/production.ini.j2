@@ -4,22 +4,22 @@ prefix = /
 scheme = https
 
 [app:main]
-use = egg:bodhi
+use = egg:bodhi-server
 filter-with = proxy-prefix
 
 # Release status
 # pre-beta enforces the 'Pre Beta' policy defined here:
 # https://fedoraproject.org/wiki/Updates_Policy
-f24.status = pre_beta
+f25.status = pre_beta
 
-f24.post_beta.mandatory_days_in_testing = 7
-f24.post_beta.critpath.num_admin_approvals = 0
-f24.post_beta.critpath.min_karma = 2
-f24.post_beta.critpath.stable_after_days_without_negative_karma = 14
+f25.post_beta.mandatory_days_in_testing = 7
+f25.post_beta.critpath.num_admin_approvals = 0
+f25.post_beta.critpath.min_karma = 2
+f25.post_beta.critpath.stable_after_days_without_negative_karma = 14
 
-f24.pre_beta.mandatory_days_in_testing = 3
-f24.pre_beta.critpath.num_admin_approvals = 0
-f24.pre_beta.critpath.min_karma = 1
+f25.pre_beta.mandatory_days_in_testing = 3
+f25.pre_beta.critpath.num_admin_approvals = 0
+f25.pre_beta.critpath.min_karma = 1
 
 ##
 ## Atomic OSTree support
@@ -123,8 +123,8 @@ createrepo_cache_dir = /var/cache/createrepo
 jobs = cache_release_data refresh_metrics approve_testing_updates
 
 ## Comps configuration
-comps_dir = /var/cache/bodhi/comps
-comps_url = https://git.rpmfusion.org/comps.git
+comps_free_dir = /var/cache/bodhi/comps
+comps_free_url = https://git.rpmfusion.org/comps.git
 
 ##
 ## Mirror settings
@@ -390,10 +390,10 @@ updateinfo_rights = Copyright (C) 2015 Red Hat, Inc. and others.
 ##
 
 # pyramid.openid
-openid.success_callback = bodhi.security:remember_me
+openid.success_callback = bodhi.server.security:remember_me
 openid.provider = https://id.rpmfusion.org/openid/
 openid.url = https://id.rpmfusion.org/
-openid_template = {username}.id.rpmfusion.org
+openid_template = id.rpmfusion.org/openid/id/{username}
 openid.sreg_required = email
 
 # CORS allowed origins for cornice services
@@ -426,7 +426,7 @@ sqlalchemy.url = postgresql://bodhi2:{{ bodhi2Password }}@db02/bodhi2
 ##
 ## Templates
 ##
-mako.directories = bodhi:templates
+mako.directories = bodhi:server/templates
 
 ##
 ## Authentication & Sessions
@@ -455,8 +455,8 @@ host = 0.0.0.0
 port = 6543
 
 [pshell]
-m = bodhi.models
-#db = bodhi.models.DBSession
+m = bodhi.server.models
+#db = bodhi.server.models.DBSession
 t = transaction
 
 # Begin logging configuration

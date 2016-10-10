@@ -2,20 +2,8 @@
 # tasklist for setting up bodhi
 # This is the base set of files needed for bodhi
 
-- name: setup the bodhi2 copr repo
-  copy: >
-    src="lmacken-bodhi2-epel-7.repo"
-    dest="/etc/yum.repos.d/lmacken-bodhi2-epel-7.repo"
-    owner=root
-    group=root
-    mode=0644
-  tags:
-  - config
-  - bodhi
-
-
 - name: install needed packages
-  yum: pkg={{ item }} state=present
+  package: pkg={{ item }} state=present
   with_items:
   - bodhi-server
   - libsemanage-python
@@ -30,30 +18,30 @@
   - config
   - bodhi
 
-- name: setup basic /etc/bodhi/ contents
-  template: > 
-    src="staging.ini.j2" 
-    dest="/etc/bodhi/production.ini" 
-    owner=bodhi 
-    group=bodhi 
+- name: setup basic /etc/bodhi/ contents (staging)
+  template: >
+    src="staging.ini.j2"
+    dest="/etc/bodhi/production.ini"
+    owner=bodhi
+    group=bodhi
     mode=0600
-  when: inventory_hostname.startswith('bodhi') and env == 'staging'
+  when: inventory_hostname.startswith('bodhi0') and env == 'staging'
   notify:
   - reload bodhi httpd
   tags:
   - config
   - bodhi
 
-- name: setup basic /etc/bodhi/ contents
-  template: > 
-    src="production.ini.j2" 
-    dest="/etc/bodhi/production.ini" 
-    owner=bodhi 
-    group=bodhi 
+- name: setup basic /etc/bodhi/ contents (production)
+  template: >
+    src="production.ini.j2"
+    dest="/etc/bodhi/production.ini"
+    owner=bodhi
+    group=bodhi
     mode=0600
-  when: inventory_hostname.startswith('bodhi') and env == 'production'
+  when: inventory_hostname.startswith('bodhi0') and env == 'production'
   notify:
-  - reload httpd
+  - reload bodhi httpd
   tags:
   - config
   - bodhi
@@ -79,14 +67,14 @@
 
 - name: setup basic /etc/httpd/conf.d/ bodhi contents
   template: >
-    src="bodhi-app.conf"  
+    src="bodhi-app.conf"
     dest="/etc/httpd/conf.d/bodhi.conf"
     owner=root
     group=root
     mode=0644
   when: inventory_hostname.startswith('bodhi0')
   notify:
-  - reload httpd
+  - reload bodhi httpd
   tags:
   - config
   - bodhi
@@ -154,14 +142,14 @@
 #  - bodhi
 #  - selinux
 
-- name: enable httpd_tmp_exec SELinux boolean 
+- name: enable httpd_tmp_exec SELinux boolean
   seboolean: name=httpd_tmp_exec state=yes persistent=yes
   tags:
   - config
   - bodhi
   - selinux
 
-- name: enable httpd_can_network_connect_db SELinux boolean 
+- name: enable httpd_can_network_connect_db SELinux boolean
   seboolean: name=httpd_can_network_connect_db state=yes persistent=yes
   tags:
   - config

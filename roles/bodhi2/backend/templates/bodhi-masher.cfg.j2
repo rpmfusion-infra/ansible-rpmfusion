@@ -53,7 +53,7 @@ bodhi_password='<%= bodhiBugzillaPassword %>'
 bodhi_email = 'updates@rpmfusion.org'
 
 mail.on = True
-mail.server = 'bastion'
+mail.server = 'localhost'
 notice_sender = 'updates@rpmfusion.org'
 security_team = 'security_respons-members@rpmfusion.org'
 release_team_address = 'bodhiadmin-members@rpmfusion.org'
@@ -72,7 +72,7 @@ comps_dir = '/var/tmp/bodhi/comps'
 base_address = 'https://admin.rpmfusion.org'
 bz_server = 'https://bugzilla.rpmfusion.org/xmlrpc.cgi'
 bz_cookie = '/var/tmp/bodhi-bz.cookie'
-bz_products = 'Fedora,Fedora EPEL,oVirt'
+bz_products = 'Fedora,Fedora EPEL'
 
 acl_system = 'pkgdb'
 pkgdb_url = 'https://admin.rpmfusion.org/pkgdb'
@@ -84,9 +84,11 @@ serverca_cert = '/etc/pki/bodhi/fedora-server-ca.cert'
 
 masher_lock_id = 'FEDORA'
 
-master_repomd = 'http://download01.phx2.rpmfusion.org/pub/fedora/linux/updates/%d/%s/repodata/repomd.xml'
-fedora_master_repomd = 'http://download01.phx2.rpmfusion.org/pub/fedora/linux/updates/%d/%s/repodata/repomd.xml'
-fedora_epel_master_repomd = 'http://download01.phx2.rpmfusion.org/pub/epel/%d/%s/repodata/repomd.xml'
+master_repomd = 'http://download1.rpmfusion.org/free/fedora/updates/%d/%s/repodata/repomd.xml'
+fedora_free_master_repomd = 'http://download1.rpmfusion.org/free/fedora/linux/updates/%d/%s/repodata/repomd.xml'
+fedora_nonfree_master_repomd = 'http://download1.rpmfusion.org/nonfree/fedora/linux/updates/%d/%s/repodata/repomd.xml'
+fedora_free_epel_master_repomd = 'http://download1.rpmfusion.org/free/epel/%d/%s/repodata/repomd.xml'
+fedora_nonfree_epel_master_repomd = 'http://download1.rpmfusion.org/nonfree/epel/%d/%s/repodata/repomd.xml'
 
 arches = 'armhfp i386 x86_64'
 

@@ -13,7 +13,7 @@
   - bodhi
 
 - name: install needed packages
-  yum: pkg={{ item }} state=present
+  package: pkg={{ item }} state=present
   with_items:
   - mock
   - mash
@@ -23,6 +23,7 @@
   - python-mock
   - sigul
   - python-alembic
+  - python-scandir
   tags:
   - packages
   - bodhi
@@ -59,31 +60,21 @@
   copy: >
     src="{{ private }}/files/bodhi_key_and_cert.pem"
     dest="/etc/pki/bodhi/bodhi.pem"
-    owner=bodhi
-    group=bodhi
-    mode=0400
-  when: inventory_hostname.startswith('bodhi01')
-  tags:
-  - config
-  - bodhi
-
-- name: change owner and group attributes of bodhi.pem file
-  file: >
-    path="/etc/pki/bodhi/bodhi.pem"
     owner=apache
     group=apache
-  when: inventory_hostname.startswith('bodhi01')
+    mode=0400
+  when: inventory_hostname.startswith('bodhi-backend')
   tags:
-  - bodhi
   - config
+  - bodhi
 
 - name: change owner and group attributes of /var/log/bodhi directory
   file: path=/var/log/bodhi owner=apache group=apache
-  when: inventory_hostname.startswith('bodhi01')
+  when: inventory_hostname.startswith('bodhi-backend')
   tags:
   - bodhi
   - config
-  
+
 - name: setup /etc/bodhi/mash.conf file...
   template: >
     src=mash.conf
@@ -117,7 +108,7 @@
 # tasks for setting up epelmasher
 
 - name: install needed packages
-  yum: pkg={{ item }} state=present
+  package: pkg={{ item }} state=present
   with_items:
   - repoview
   tags:
@@ -272,18 +263,36 @@
   cron: name="bodhi-expire-overrides" hour="*" minute=0 user="apache"
         job="/usr/bin/bodhi-expire-overrides /etc/bodhi/production.ini 2> /dev/null"
         cron_file=bodhi-expire-overrides-job
-  when: inventory_hostname.startswith('bodhi01') and env == "production"
+  when: inventory_hostname.startswith('bodhi-backend02') and env == "production"
   tags:
   - config
   - bodhi
   - cron
 
-- name: have the apache own the bodhi config
-  file: >
-    path="/etc/bodhi/production.ini"
+- name: setup basic /etc/bodhi/ contents (staging)
+  template: >
+    src="{{roles}}/bodhi2/base/templates/staging.ini.j2"
+    dest="/etc/bodhi/production.ini"
     owner=apache
     group=apache
-  when: inventory_hostname.startswith('bodhi')
+    mode=0600
+  when: inventory_hostname.startswith('bodhi-backend') and env == 'staging'
+  notify:
+  - reload bodhi httpd
+  tags:
+  - config
+  - bodhi
+
+- name: setup basic /etc/bodhi/ contents (production)
+  template: >
+    src="{{roles}}/bodhi2/base/templates/production.ini.j2"
+    dest="/etc/bodhi/production.ini"
+    owner=apache
+    group=apache
+    mode=0600
+  when: inventory_hostname.startswith('bodhi-backend') and env == 'production'
+  notify:
+  - reload bodhi httpd
   tags:
   - config
   - bodhi
@@ -319,7 +328,7 @@
     path="/var/cache/mash"
     owner=apache
     group=apache
-  when: inventory_hostname.startswith('bodhi01')
+  when: inventory_hostname.startswith('bodhi-backend')
   tags:
   - config
   - bodhi
@@ -329,7 +338,7 @@
     path="/var/cache/bodhi"
     owner=apache
     group=apache
-  when: inventory_hostname.startswith('bodhi01')
+  when: inventory_hostname.startswith('bodhi-backend')
   tags:
   - config
   - bodhi
@@ -340,7 +349,7 @@
     owner=apache
     group=apache
     state=directory
-  when: inventory_hostname.startswith('bodhi01')
+  when: inventory_hostname.startswith('bodhi-backend')
   tags:
   - config
   - bodhi
@@ -352,7 +361,6 @@
     owner=apache
     group=nrpe
     state=directory
-    recurse=yes
   ignore_errors: true
   notify:
   - restart fedmsg-hub
