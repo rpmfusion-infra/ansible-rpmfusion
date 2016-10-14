@@ -33,5 +33,5 @@ HOME=/srv/git /usr/bin/gitolite compile
 cd /
 
 rm -rf $TEMPDIR
-chown root:cvsextras /etc/gitolite/conf/gitolite.conf-compiled.pm
+chown root:packager /etc/gitolite/conf/gitolite.conf-compiled.pm
 chmod g+r /etc/gitolite/conf/gitolite.conf-compiled.pm

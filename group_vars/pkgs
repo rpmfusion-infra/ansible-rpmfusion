@@ -14,7 +14,7 @@ fas_client_admin_app: HOME=/srv/git /usr/share/gitolite3/gitolite-shell -s {user
 fas_client_ssh_groups: "@cvs,sysadmin-main,sysadmin-build"
 admin_groups: "@sysadmin-build"
 
-git_group: cvsextras
+git_group: packager
 git_port: 9418
 git_server: /usr/libexec/git-core/git-daemon
 git_server_args: --export-all --syslog --inetd --verbose
@@ -51,7 +51,7 @@ fedmsg_certs:
   - logger.log
 - service: scm
   owner: root
-  group: cvsextras
+  group: packager
   can_send:
   - git.receive
 - service: lookaside
