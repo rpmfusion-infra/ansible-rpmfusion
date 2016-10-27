@@ -2,17 +2,17 @@
 #
 # Copyright (C) 2008-2012  Ricky Zhou, Red Hat, Inc.
 # This file is part of python-fedora
-# 
+#
 # python-fedora is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-# 
+#
 # python-fedora is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Lesser General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Lesser General Public
 # License along with python-fedora; if not, see <http://www.gnu.org/licenses/>
 #
@@ -32,34 +32,47 @@ from bunch import Bunch
 from kitchen.text.converters import to_bytes
 
 try:
+    import libravatar
+except ImportError:
+    libravatar = None
+
+try:
     from hashlib import md5
 except ImportError:
     from md5 import new as md5
 
-from fedora.client import AppError, BaseClient, FasProxyClient, \
-        FedoraClientError, FedoraServiceError
-from fedora import __version__, b_
+from fedora.client import (
+    AppError, BaseClient, FasProxyClient,
+    FedoraClientError, FedoraServiceError
+)
+
+from fedora import __version__
 
 ### FIXME: To merge:
 # /usr/bin/fasClient from fas
 # API from Will Woods
 # API from MyFedora
 
+
 class FASError(FedoraClientError):
     '''FAS Error'''
     pass
+
 
 class CLAError(FASError):
     '''CLA Error'''
     pass
 
-USERFIELDS = ['affiliation', 'bugzilla_email', 'certificate_serial',
-        'comments', 'country_code', 'creation', 'email', 'emailtoken',
-        'facsimile', 'gpg_keyid', 'human_name', 'id', 'internal_comments',
-        'ircnick', 'latitude', 'last_seen', 'longitude', 'password',
-        'password_changed', 'passwordtoken', 'postal_address', 'privacy',
-        'locale', 'ssh_key', 'status', 'status_change', 'telephone',
-        'unverified_email', 'timezone', 'username', ]
+USERFIELDS = [
+    'affiliation', 'bugzilla_email', 'certificate_serial',
+    'comments', 'country_code', 'creation', 'email', 'emailtoken',
+    'facsimile', 'gpg_keyid', 'human_name', 'id', 'internal_comments',
+    'ircnick', 'latitude', 'last_seen', 'longitude', 'password',
+    'password_changed', 'passwordtoken', 'postal_address', 'privacy',
+    'locale', 'ssh_key', 'status', 'status_change', 'telephone',
+    'unverified_email', 'timezone', 'username', 'security_question',
+    'security_answer', ]
+
 
 class AccountSystem(BaseClient):
     '''An object for querying the Fedora Account System.
@@ -69,19 +82,38 @@ class AccountSystem(BaseClient):
     other details so you can concentrate on the methods that are important to
     your program.
 
+    .. warning::
+
+        If your code is trying to use the AccountSystem object to
+        connect to fas for multiple users you probably want to use
+        :class:`~fedora.client.FasProxyClient` instead.  If your code is
+        trying to reuse a single instance of AccountSystem for multiple users
+        you *definitely* want to use :class:`~fedora.client.FasProxyClient`
+        instead.  Using AccountSystem in these cases may result in a user
+        being logged in as a different user.  (This may be the case even if
+        you instantiate a new AccountSystem object for each user if
+        :attr:cache_session: is True since that creates a file on the file
+        system that can end up loading session credentials for the wrong
+        person.
+
     .. versionchanged:: 0.3.26
         Added :meth:`~fedora.client.AccountSystem.gravatar_url` that returns
         a url to a gravatar for a user.
+    .. versionchanged:: 0.3.33
+        Renamed :meth:`~fedora.client.AccountSystem.gravatar_url` to
+        :meth:`~fedora.client.AccountSystem.avatar_url`.
     '''
     # proxy is a thread-safe connection to the fas server for verifying
     # passwords of other users
     proxy = None
 
-    # size that we allow to request from gravatar.com
-    _valid_gravatar_sizes = (32, 64, 140)
+    # size that we allow to request from remote avatar providers.
+    _valid_avatar_sizes = (32, 64, 140)
+    # URLs for remote avatar providers.
+    _valid_avatar_services = ['libravatar', 'gravatar']
 
-    def __init__(self, base_url='https://admin.fedoraproject.org/accounts/',
-            *args, **kwargs):
+    def __init__(self, base_url='https://admin.rpmfusion.org/accounts/',
+                 *args, **kwargs):
         '''Create the AccountSystem client object.
 
         :kwargs base_url: Base of every URL used to contact the server.
@@ -98,123 +130,35 @@ class AccountSystem(BaseClient):
             on the filesystem between runs.
         '''
         if 'useragent' not in kwargs:
-            kwargs['useragent'] = 'Fedora Account System Client/%s' \
-                    % __version__
+            kwargs['useragent'] = \
+                'Fedora Account System Client/%s' % __version__
+
         super(AccountSystem, self).__init__(base_url, *args, **kwargs)
         # We need a single proxy for the class to verify username/passwords
         # against.
         if not self.proxy:
             self.proxy = FasProxyClient(base_url, useragent=self.useragent,
-                    session_as_cookie=False, debug=self.debug,
-                    insecure=self.insecure)
+                                        session_as_cookie=False,
+                                        debug=self.debug,
+                                        insecure=self.insecure)
 
         # Preseed a list of FAS accounts with bugzilla addresses
         # This allows us to specify a different email for bugzilla than is
         # in the FAS db.  It is a hack, however, until FAS has a field for the
         # bugzilla address.
         self.__bugzilla_email = {
-                # Konstantin Ryabitsev: mricon@gmail.com
-                100029: 'icon@fedoraproject.org',
-                # Sean Reifschneider: jafo@tummy.com
-                100488: 'jafo-redhat@tummy.com',
-                # Karen Pease: karen-pease@uiowa.edu
-                100281: 'meme@daughtersoftiresias.org',
-                # Robert Scheck: redhat@linuxnetz.de
-                100093: 'redhat-bugzilla@linuxnetz.de',
-                # Scott Bakers: bakers@web-ster.com
-                100881: 'scott@perturb.org',
-                # Colin Charles: byte@aeon.com.my
-                100014: 'byte@fedoraproject.org',
-                # W. Michael Petullo: mike@flyn.org
-                100136: 'redhat@flyn.org',
-                # Elliot Lee: sopwith+fedora@gmail.com
-                100060: 'sopwith@redhat.com',
-                # Control Center Team: Bugzilla user but email doesn't exist
-                9908: 'control-center-maint@redhat.com',
-                # Máirín Duffy
-                100548: 'duffy@redhat.com',
-                # Muray McAllister: murray.mcallister@gmail.com
-                102321: 'mmcallis@redhat.com',
-                # William Jon McCann: mccann@jhu.edu
-                102489: 'jmccann@redhat.com',
-                # Matt Domsch's rebuild script -- bz email goes to /dev/null
-                103590: 'ftbfs@fedoraproject.org',
-                # Sindre Pedersen Bjørdal: foolish@guezz.net
-                100460 : 'sindrepb@fedoraproject.org',
-                # Jesus M. Rodriguez: jmrodri@gmail.com
-                102180: 'jesusr@redhat.com',
-                # Roozbeh Pournader: roozbeh@farsiweb.info
-                100350: 'roozbeh@gmail.com',
-                # Michael DeHaan: michael.dehaan@gmail.com
-                100603: 'mdehaan@redhat.com',
-                # Sebastian Gosenheimer: sgosenheimer@googlemail.com
-                103647: 'sebastian.gosenheimer@proio.com',
-                # Ben Konrath: bkonrath@redhat.com
-                101156: 'ben@bagu.org',
-                # Kai Engert: kaie@redhat.com
-                100399: 'kengert@redhat.com',
-                # William Jon McCann: william.jon.mccann@gmail.com
-                102952: 'jmccann@redhat.com',
-                # Simon Wesp: simon@w3sp.de
-                109464: 'cassmodiah@fedoraproject.org',
-                # Robert M. Albrecht: romal@gmx.de
-                101475: 'mail@romal.de',
-                # Mathieu Bridon: mathieu.bridon@gmail.com
-                100753: 'bochecha@fedoraproject.org',
-                # Davide Cescato: davide.cescato@iaeste.ch
-                123204: 'ceski@fedoraproject.org',
-                # Nick Bebout: nick@bebout.net
-                101458: 'nb@fedoraproject.org',
-                # Niels Haase: haase.niels@gmail.com
-                126862: 'arxs@fedoraproject.org',
-                # Thomas Janssen: th.p.janssen@googlemail.com
-                103110: 'thomasj@fedoraproject.org',
-                # Michael J Gruber: 'michaeljgruber+fedoraproject@gmail.com'
-                105113: 'mjg@fedoraproject.org',
-                # Juan Manuel Rodriguez Moreno: 'nushio@gmail.com'
-                101302: 'nushio@fedoraproject.org',
-                # Andrew Cagney: 'andrew.cagney@gmail.com'
-                102169: 'cagney@fedoraproject.org',
-                # Jeremy Katz: 'jeremy@katzbox.net'
-                100036: 'katzj@fedoraproject.org',
-                # Dominic Hopf: 'dmaphy@gmail.com'
-                124904: 'dmaphy@fedoraproject.org',
-                # Christoph Wickert: 'christoph.wickert@googlemail.com':
-                100271: 'cwickert@fedoraproject.org',
-                # Elliott Baron: 'elliottbaron@gmail.com'
-                106760: 'ebaron@fedoraproject.org',
-                # Thomas Spura: 'spurath@students.uni-mainz.de'
-                111433: 'tomspur@fedoraproject.org',
-                # Adam Miller: 'maxamillion@gmail.com'
-                110673: 'maxamillion@fedoraproject.org',
-                # Garrett Holmstrom: 'garrett.holmstrom@gmail.com'
-                131739: 'gholms@fedoraproject.org',
-                # Tareq Al Jurf: taljurf.fedora@gmail.com
-                109863: 'taljurf@fedoraproject.org',
-                # Josh Kayse: jokajak@gmail.com
-                148243: 'jokajak@fedoraproject.org',
-                # Behdad Esfahbod: fedora@behdad.org
-                100102: 'behdad@fedoraproject.org',
-                # Daniel Bruno: danielbrunos@gmail.com
-                101608: 'dbruno@fedoraproject.org',
-                # Beth Lynn Eicher: bethlynneicher@gmail.com
-                148706: 'bethlynn@fedoraproject.org',
-                # Andre Robatino: andre.robatino@verizon.net
-                114970: 'robatino@fedoraproject.org',
-                # Jeff Sheltren: jeff@tag1consulting.com
-                100058: 'sheltren@fedoraproject.org',
-                # Josh Boyer: jwboyer@gmail.com
-                100115: 'jwboyer@redhat.com',
-                }
+            # Nicolas Chauvet
+            160404: 'ctubbsii@fedoraproject.org',
+        }
         # A few people have an email account that is used in owners.list but
         # have setup a bugzilla account for their primary account system email
         # address now.  Map these here.
         self.__alternate_email = {
-                # Damien Durand: splinux25@gmail.com
-                'splinux@fedoraproject.org': 100406,
-                # Kevin Fenzi: kevin@tummy.com
-                'kevin-redhat-bugzilla@tummy.com': 100037,
-                }
+            # Damien Durand: splinux25@gmail.com
+            'splinux@fedoraproject.org': 100406,
+            # Kevin Fenzi: kevin@tummy.com
+            'kevin-redhat-bugzilla@tummy.com': 100037,
+        }
         for bugzilla_map in self.__bugzilla_email.items():
             self.__alternate_email[bugzilla_map[1]] = bugzilla_map[0]
 
@@ -237,7 +181,8 @@ class AccountSystem(BaseClient):
     def _set_insecure(self, insecure):
         self._insecure = insecure
         self.proxy = FasProxyClient(self.base_url, useragent=self.useragent,
-                session_as_cookie=False, debug=self.debug, insecure=insecure)
+                                    session_as_cookie=False, debug=self.debug,
+                                    insecure=insecure)
         return insecure
     #: If this attribute is set to True, do not check server certificates
     #: against their CA's.  This means that man-in-the-middle attacks are
@@ -247,7 +192,7 @@ class AccountSystem(BaseClient):
     insecure = property(_get_insecure, _set_insecure)
 
     ### Groups ###
-    
+
     def create_group(self, name, display_name, owner, group_type,
                      invite_only=0, needs_sponsor=0, user_can_remove=1,
                      prerequisite='', joinmsg='', apply_rules='None'):
@@ -282,21 +227,25 @@ class AccountSystem(BaseClient):
             'apply_rules': apply_rules
         }
 
-        request = self.send_request('/group/create/%s/%s/%s/%s' % (
+        request = self.send_request(
+            '/group/create/%s/%s/%s/%s' % (
                 urllib.quote(name),
                 urllib.quote(display_name),
                 urllib.quote(owner),
                 urllib.quote(group_type)),
-                                    req_params=req_params,
-                                    auth=True)
+            req_params=req_params,
+            auth=True
+        )
         return request
-        
 
     def group_by_id(self, group_id):
         '''Returns a group object based on its id'''
         params = {'group_id': int(group_id)}
-        request = self.send_request('json/group_by_id', auth = True,
-                req_params = params)
+        request = self.send_request(
+            'json/group_by_id',
+            auth=True,
+            req_params=params
+        )
         if request['success']:
             return request['group']
         else:
@@ -305,13 +254,17 @@ class AccountSystem(BaseClient):
     def group_by_name(self, groupname):
         '''Returns a group object based on its name'''
         params = {'groupname': groupname}
-        request = self.send_request('json/group_by_name', auth = True,
-                req_params = params)
+        request = self.send_request(
+            'json/group_by_name',
+            auth=True,
+            req_params=params
+        )
         if request['success']:
             return request['group']
         else:
-            raise AppError(message=b_('FAS server unable to retrieve group'
-                ' %(group)s') % {'group': to_bytes(groupname)},
+            raise AppError(
+                message='FAS server unable to retrieve group'
+                ' %(group)s' % {'group': to_bytes(groupname)},
                 name='FASError')
 
     def group_members(self, groupname):
@@ -331,10 +284,10 @@ class AccountSystem(BaseClient):
             Return a Bunch instead of a DictContainer
         '''
         request = self.send_request('/group/dump/%s' %
-                urllib.quote(groupname), auth=True)
+                                    urllib.quote(groupname), auth=True)
 
-        return [Bunch(username=user[0], role_type=user[3])
-                    for user in request['people']]
+        return [Bunch(username=user[0],
+                      role_type=user[3]) for user in request['people']]
 
     ### People ###
 
@@ -343,21 +296,24 @@ class AccountSystem(BaseClient):
         person_id = int(person_id)
         params = {'person_id': person_id}
         request = self.send_request('json/person_by_id', auth=True,
-                req_params=params)
+                                    req_params=params)
 
         if request['success']:
             if person_id in self.__bugzilla_email:
                 request['person']['bugzilla_email'] = \
-                        self.__bugzilla_email[person_id]
+                    self.__bugzilla_email[person_id]
             else:
-                request['person']['bugzilla_email'] = request['person']['email']
-            # In a devel version of FAS, membership info was returned separately
+                request['person']['bugzilla_email'] = \
+                    request['person']['email']
+
+            # In a devel version of FAS, membership info was returned
+            # separately
             # This was later corrected (can remove this code at some point)
             if 'approved' in request:
                 request['person']['approved_memberships'] = request['approved']
             if 'unapproved' in request:
                 request['person']['unapproved_memberships'] = \
-                        request['unapproved']
+                    request['unapproved']
             return request['person']
         else:
             return dict()
@@ -365,8 +321,10 @@ class AccountSystem(BaseClient):
     def person_by_username(self, username):
         '''Returns a person object based on its username'''
         params = {'username': username}
-        request = self.send_request('json/person_by_username', auth = True,
-                req_params = params)
+        request = self.send_request(
+            'json/person_by_username',
+            auth=True,
+            req_params=params)
 
         if request['success']:
             person = request['person']
@@ -374,58 +332,143 @@ class AccountSystem(BaseClient):
                 person['bugzilla_email'] = self.__bugzilla_email[person['id']]
             else:
                 person['bugzilla_email'] = person['email']
-            # In a devel version of FAS, membership info was returned separately
+            # In a devel version of FAS, membership info was returned
+            # separately
             # This was later corrected (can remove this code at some point)
             if 'approved' in request:
                 request['person']['approved_memberships'] = request['approved']
             if 'unapproved' in request:
                 request['person']['unapproved_memberships'] = \
-                        request['unapproved']
+                    request['unapproved']
             return person
         else:
             return dict()
 
-    def gravatar_url(self, username, size=64,
-                     default=None):
-        ''' Returns a URL to a gravatar for a given username.
+    def avatar_url(self, username, size=64,
+                   default=None, lookup_email=True,
+                   service=None):
+        ''' Returns a URL to an avatar for a given username.
 
-        :arg username: FAS username to construct a gravatar url for
-        :kwarg size: size of the gravatar.  Allowed sizes are 32, 64, 140.
+        Avatars are drawn from third party services.
+
+        :arg username: FAS username to construct a avatar url for
+        :kwarg size: size of the avatar.  Allowed sizes are 32, 64, 140.
             Default: 64
-        :kwarg default: If gravatar does not have a gravatar image for the
+        :kwarg default: If the service does not have a avatar image for the
             email address, this url is returned instead.  Default:
             the fedora logo at the specified size.
-        :raises ValueError: if the size parameter is not allowed
+        :kwarg lookup_email:  If true, use the email from FAS for gravatar.com
+            lookups, otherwise just append @fedoraproject.org to the username.
+            For libravatar.org lookups, this is ignored.  The openid identifier
+            of the user is used instead.
+            Note that gravatar.com lookups will be much slower if lookup_email
+            is set to True since we'd have to make a query against FAS itself.
+        :kwarg service: One of 'libravatar' or 'gravatar'.
+            Default: 'libravatar'.
+        :raises ValueError: if the size parameter is not allowed or if the
+            service is not one of 'libravatar' or 'gravatar'
         :rtype: :obj:`str`
-        :returns: url of a gravatar for the user
+        :returns: url of a avatar for the user
 
-        If that user has no gravatar entry, instruct gravatar.com to redirect
-        us to the Fedora logo.
+        If that user has no avatar entry, instruct the remote service to
+        redirect us to the Fedora logo.
 
         If that user has no email attribute, then make a fake request to
-        gravatar.
+        the third party service.
 
         .. versionadded:: 0.3.26
+        .. versionchanged: 0.3.30
+            Add lookup_email parameter to control whether we generate avatar
+            urls with the email in fas or username@fedoraproject.org
+        .. versionchanged: 0.3.33
+            Renamed from `gravatar_url` to `avatar_url`
+        .. versionchanged: 0.3.34
+            Updated libravatar to use the user's openid identifier.
         '''
-        if size not in self._valid_gravatar_sizes:
-            raise ValueError(b_('Size %(size)i disallowed.  Must be in'
-                ' %(valid_sizes)r') % { 'size': size,
-                    'valid_sizes': self._valid_gravatar_sizes})
+
+        if size not in self._valid_avatar_sizes:
+            raise ValueError(
+                'Size %(size)i disallowed.  Must be in %(valid_sizes)r' % {
+                    'size': size,
+                    'valid_sizes': self._valid_avatar_sizes
+                }
+            )
+
+        # If our caller explicitly requested libravatar but they don't have
+        # it installed, then we need to raise a nice error and let them know.
+        if service == 'libravatar' and not libravatar:
+            raise ValueError("Install python-pylibravatar if you want to "
+                             "use libravatar as an avatar provider.")
+
+        # If our caller didn't specify a service, let's pick a one for them.
+        # If they have pylibravatar installed, then by all means let freedom
+        # ring!  Otherwise, we'll use gravatar.com if we have to.
+        if not service:
+            if libravatar:
+                service = 'libravatar'
+            else:
+                service = 'gravatar'
+
+        # Just double check to make sure they didn't pass us a bogus service.
+        if service not in self._valid_avatar_services:
+            raise ValueError(
+                'Service %(service)r disallowed. '
+                'Must be in %(valid_services)r' % {
+                    'service': service,
+                    'valid_services': self._valid_avatar_services
+                }
+            )
 
         if not default:
             default = "http://fedoraproject.org/static/images/" + \
-                    "fedora_infinity_%ix%i.png" % (size, size)
+                      "fedora_infinity_%ix%i.png" % (size, size)
 
-        query_string = urllib.urlencode({
-            's': size,
-            'd': default,
-        })
+        if service == 'libravatar':
+            openid = 'http://%s.id.fedoraproject.org/' % username
+            return libravatar.libravatar_url(
+                openid=openid,
+                size=size,
+                default=default,
+            )
+        else:
+            if lookup_email:
+                person = self.person_by_username(username)
+                email = person.get('email', 'no_email')
+            else:
+                email = "%s@rpmfusion.org" % username
 
-        person = self.person_by_username(username)
-        email = person.get('email', 'no_email')
-        hash = md5(email).hexdigest()
+            query_string = urllib.urlencode({
+                's': size,
+                'd': default,
+            })
 
-        return "http://www.gravatar.com/avatar/%s?%s" % (hash, query_string)
+            hash = md5(email).hexdigest()
+
+            return "http://www.gravatar.com/avatar/%s?%s" % (
+                hash, query_string)
+
+    def gravatar_url(self, *args, **kwargs):
+        """ *Deprecated* - Use avatar_url.
+
+         .. versionadded:: 0.3.26
+         .. versionchanged: 0.3.30
+            Add lookup_email parameter to control whether we generate gravatar
+            urls with the email in fas or username@fedoraproject.org
+         .. versionchanged: 0.3.33
+            Deprecated in favor of `avatar_url`.
+        """
+
+        warnings.warn(
+            "gravatar_url is deprecated and will be removed in"
+            " a future version.  Please port your code to use avatar_url(...,"
+            " service='libravatar', ...)  instead",
+            DeprecationWarning, stacklevel=2)
+
+        if 'service' in kwargs:
+            raise TypeError("'service' is an invalid keyword argument for"
+                            " this function.  Use avatar_url() instead)")
+
+        return self.avatar_url(*args, service='gravatar', **kwargs)
 
     def user_id(self):
         '''Returns a dict relating user IDs to usernames'''
@@ -495,15 +538,15 @@ class AccountSystem(BaseClient):
         '''
         # Make sure we have a valid key value
         if key not in ('id', 'username', 'email'):
-            raise KeyError(b_('key must be one of "id", "username", or'
-                ' "email"'))
+            raise KeyError('key must be one of "id", "username", or'
+                           ' "email"')
 
         if fields:
             fields = list(fields)
             for field in fields:
                 if field not in USERFIELDS:
-                    raise KeyError(b_('%(field)s is not a valid field to'
-                        ' filter') % {'field': to_bytes(field)})
+                    raise KeyError('%(field)s is not a valid field to'
+                                   ' filter' % {'field': to_bytes(field)})
         else:
             fields = USERFIELDS
 
@@ -521,17 +564,22 @@ class AccountSystem(BaseClient):
                 unrequested_fields.append('email')
                 fields.append('email')
 
-        request = self.send_request('/user/list?tg_format=json', req_params={'search': search,
-            'fields': [f for f in fields if f != 'bugzilla_email']}, auth=True)
+        request = self.send_request(
+            '/user/list',
+            req_params={
+                'search': search,
+                'fields': [f for f in fields if f != 'bugzilla_email']
+            },
+            auth=True)
 
         people = Bunch()
         for person in itertools.chain(request['people'],
-                request['unapproved_people']):
+                                      request['unapproved_people']):
             # Retrieve bugzilla_email from our list if necessary
             if 'bugzilla_email' in fields:
                 if person['id'] in self.__bugzilla_email:
                     person['bugzilla_email'] = \
-                            self.__bugzilla_email[person['id']]
+                        self.__bugzilla_email[person['id']]
                 else:
                     person['bugzilla_email'] = person['email']
 
@@ -555,10 +603,11 @@ class AccountSystem(BaseClient):
         .. versionchanged:: 0.3.21
             Return a Bunch instead of a DictContainer
         '''
-        warnings.warn(b_("people_by_id() is deprecated and will be removed in"
+        warnings.warn(
+            "people_by_id() is deprecated and will be removed in"
             " 0.4.  Please port your code to use people_by_key(key='id',"
             " fields=['human_name', 'email', 'username', 'bugzilla_email'])"
-            " instead"), DeprecationWarning, stacklevel=2)
+            " instead", DeprecationWarning, stacklevel=2)
 
         request = self.send_request('/json/user_id', auth=True)
         user_to_id = {}
@@ -612,9 +661,13 @@ class AccountSystem(BaseClient):
             returned.
         '''
         request = self.send_request('config/list/%s/%s/%s' %
-                (username, application, attribute), auth=True)
+                                    (username, application, attribute),
+                                    auth=True)
         if 'exc' in request:
-            raise AppError(name = request['exc'], message = request['tg_flash'])
+            raise AppError(
+                name=request['exc'],
+                message=request['tg_flash']
+            )
 
         # Return the value if it exists, else None.
         if 'configs' in request and attribute in request['configs']:
@@ -634,10 +687,14 @@ class AccountSystem(BaseClient):
         :raises AppError: if the server returns an exception
         :returns: A dict mapping ``attribute`` to ``value``.
         '''
-        request = self.send_request('config/list/%s/%s/%s' %
-                (username, application, pattern), auth=True)
+        request = self.send_request(
+            'config/list/%s/%s/%s' %
+            (username, application, pattern),
+            auth=True)
         if 'exc' in request:
-            raise AppError(name = request['exc'], message = request['tg_flash'])
+            raise AppError(
+                name=request['exc'],
+                message=request['tg_flash'])
 
         return request['configs']
 
@@ -653,12 +710,15 @@ class AccountSystem(BaseClient):
         :arg value: The value to set this to
         :raises AppError: if the server returns an exception
         '''
-        request = self.send_request('config/set/%s/%s/%s' %
-                (username, application, attribute),
-                req_params={'value': value}, auth=True)
+        request = self.send_request(
+            'config/set/%s/%s/%s' %
+            (username, application, attribute),
+            req_params={'value': value}, auth=True)
 
         if 'exc' in request:
-            raise AppError(name = request['exc'], message = request['tg_flash'])
+            raise AppError(
+                name=request['exc'],
+                message=request['tg_flash'])
 
     def people_query(self, constraints=None, columns=None):
         '''Returns a list of dicts representing database rows
@@ -682,7 +742,8 @@ class AccountSystem(BaseClient):
         req_params['columns'] = ','.join(columns)
 
         try:
-            request = self.send_request('json/people_query',
+            request = self.send_request(
+                'json/people_query',
                 req_params=req_params, auth=True)
             if request['success']:
                 return request['data']
@@ -716,7 +777,7 @@ class AccountSystem(BaseClient):
 
     ### fasClient Special Methods ###
 
-    def group_data(self, group_name='*', force_refresh=None):
+    def group_data(self, force_refresh=None):
         '''Return administrators/sponsors/users and group type for all groups
 
         :arg force_refresh: If true, the returned data will be queried from the
@@ -732,19 +793,19 @@ class AccountSystem(BaseClient):
             params['force_refresh'] = True
 
         try:
-            #request = self.send_request('json/fas_client/group_data',
-            request = self.send_request('group/list/%s?tg_format=json' % group_name,
+            request = self.send_request(
+                'json/fas_client/group_data',
                 req_params=params, auth=True)
-            return request
-            #if request['success']:
-            #    return request['data']
-            #else:
-            #    raise AppError(message=b_('FAS server unable to retrieve'
-            #        ' group members'), name='FASError')
+            if request['success']:
+                return request['data']
+            else:
+                raise AppError(
+                    message='FAS server unable to retrieve'
+                    ' group members', name='FASError')
         except FedoraServiceError:
             raise
 
-    def user_data(self, user_key='*'):
+    def user_data(self):
         '''Return user data for all users in FAS
 
         Note: If the user is not authorized to see password hashes,
@@ -757,13 +818,12 @@ class AccountSystem(BaseClient):
         .. versionadded:: 0.3.8
         '''
         try:
-            request = self.send_request('user/list/%s?tg_format=json' % user_key, auth=True)
-            return request
-           # if request['success']:
-           #     return request['data']
-           # else:
-           #     raise AppError(message=b_('FAS server unable to retrieve user'
-           #         ' information'), name='FASError')
+            request = self.send_request('json/fas_client/user_data', auth=True)
+            if request['success']:
+                return request['data']
+            else:
+                raise AppError(
+                    message='FAS server unable to retrieve user'
+                    ' information', name='FASError')
         except FedoraServiceError:
             raise
-
