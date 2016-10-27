@@ -211,13 +211,10 @@ mail.transport = 'smtp'
 mail.manager = 'demand'
 
 # Enable yubikeys
-yubi_server_prefix='http://localhost/yk-val/verify?id='
 {% if env == "staging" %}
+yubi_server_prefix='http://localhost/yk-val/verify?id='
 ykksm_db="postgres://ykksmimporter:{{ ykksmimporterPassword }}@db-fas01.stg/ykksm"
 ykval_db="postgres://ykval_verifier:{{ ykval_verifierPassword }}@db-fas01.stg/ykval"
-{% else %}
-ykksm_db="postgres://ykksmimporter:{{ ykksmimporterPassword }}@db-ykksm/ykksm"
-ykval_db="postgres://ykval_verifier:{{ ykval_verifierPassword }}@db-ykval/ykval"
 {% endif %}
 
 # Enable or disable generation of SSL certificates for users
@@ -230,9 +227,9 @@ openssl_expire = 15552000 # 60*60*24*180 = 6 months
 openssl_ca_dir = "/var/lib/rpmfusion-ca"
 openssl_ca_newcerts = "/var/lib/rpmfusion-ca/newcerts"
 openssl_ca_index = "/var/lib/rpmfusion-ca/index.txt"
-openssl_c = "FR"
-openssl_st = "IDF"
-openssl_l = "Paris"
+openssl_c = "EU"
+openssl_st = "None"
+openssl_l = "Freeworld"
 openssl_o = "RPM Fusion Project"
 openssl_ou = "RPM Fusion User Cert"
 
