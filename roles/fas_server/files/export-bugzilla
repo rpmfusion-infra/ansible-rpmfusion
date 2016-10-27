@@ -28,7 +28,7 @@ turbogears.update_config(configfile=cfgfile)
 from turbogears.database import session
 from fas.model import BugzillaQueue
 
-BZSERVER = config.get('bugzilla.url', 'https://bugzilla.rpmfusion.org/bugzilla-cvs/xmlrpc.cgi')
+BZSERVER = config.get('bugzilla.url', 'https://bugzilla.rpmfusion.org/xmlrpc.cgi')
 BZUSER = config.get('bugzilla.username')
 BZPASS = config.get('bugzilla.password')
 MAILSERVER = config.get('mail.server', 'localhost')
