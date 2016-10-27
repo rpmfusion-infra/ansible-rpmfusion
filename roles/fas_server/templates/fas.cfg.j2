@@ -227,11 +227,19 @@ openssl_expire = 15552000 # 60*60*24*180 = 6 months
 openssl_ca_dir = "/var/lib/rpmfusion-ca"
 openssl_ca_newcerts = "/var/lib/rpmfusion-ca/newcerts"
 openssl_ca_index = "/var/lib/rpmfusion-ca/index.txt"
+{% if env == "staging" %}
 openssl_c = "EU"
 openssl_st = "None"
 openssl_l = "Freeworld"
 openssl_o = "RPM Fusion Project"
 openssl_ou = "RPM Fusion User Cert"
+{% else %}
+openssl_c = "EU"
+openssl_st = "France"
+openssl_l = "France"
+openssl_o = "RPM Fusion"
+openssl_ou = "Upload Files"
+{% endif %}
 
 # Source of entrophy for salts, tokens, passwords
 # os.urandom will be used if this is false.
