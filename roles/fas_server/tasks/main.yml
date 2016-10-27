@@ -347,6 +347,15 @@
   - config
   - fas
 
+- name: HOTFIX adapt fpca.html
+  copy: src={{ files }}/hotfix/fas/fpca.html
+        dest=/usr/lib/python2.6/site-packages/fas/templates/fpca/fpca.html
+        mode=644 owner=root group=root
+  tags:
+  - config
+  - fas
+  - hotfixfas
+
 - name: install /etc/export-bugzilla.cfg file
   template: >
     src="export-bugzilla.cfg.j2"
