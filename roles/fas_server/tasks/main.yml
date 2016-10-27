@@ -217,12 +217,12 @@
   - config
   - fas
 
-#- name: install /var/lib/rpmfusion-ca/.rnd file
-#  file: path=/var/lib/rpmfusion-ca/.rnd owner=fas group=fas mode=0600 setype=httpd_sys_content_t
-#  when: master_fas_node == True
-#  tags:
-#  - config
-#  - fas
+- name: install /var/lib/rpmfusion-ca/.rnd file
+  file: path=/var/lib/rpmfusion-ca/.rnd owner=fas group=fas mode=0600 setype=httpd_sys_content_t
+  when: master_fas_node == True
+  tags:
+  - config
+  - fas
 
 - name: setup /var/lib/rpmfusion-ca/newcerts directory
   file: path=/var/lib/rpmfusion-ca/newcerts owner=fas group=fas mode=0700 state=directory
@@ -377,7 +377,7 @@
 - name: run export-bugzilla program
   cron: >
     name="export-bugzilla"
-    job="cd /etc; MAILTO=root; /usr/sbin/export-bugzilla fedorabugs fedora_contrib"
+    job="cd /etc; MAILTO=root; /usr/sbin/export-bugzilla rpmfusionbugs rpmfusion_contrib"
     user="fas"
     minute="10"
   when: master_fas_node == True
