@@ -125,15 +125,15 @@ string_mask = MASK:0x2002
 
 [ req_distinguished_name ]
 countryName			= Country Name (2 letter code)
-countryName_default		= FR
+countryName_default		= EU
 countryName_min			= 2
 countryName_max			= 2
 
 stateOrProvinceName		= State or Province Name (full name)
-stateOrProvinceName_default	= IDF
+stateOrProvinceName_default	= None
 
 localityName			= Locality Name (eg, city)
-localityName_default		= Paris
+localityName_default		= Freeworld
 
 0.organizationName		= Organization Name (eg, company)
 0.organizationName_default	= RPM Fusion Project
