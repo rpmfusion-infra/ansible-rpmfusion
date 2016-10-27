@@ -19,7 +19,7 @@ tcp_ports: [ 80, 873, 8443, 8444 ]
 fas_client_groups: sysadmin-main,sysadmin-accounts
 
 master_fas_node: True
-gen_cert: False
+gen_cert: True
 
 # A host group for rsync config
 rsync_group: fas
