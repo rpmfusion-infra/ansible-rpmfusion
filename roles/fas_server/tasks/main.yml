@@ -347,18 +347,9 @@
   - config
   - fas
 
-- name: HOTFIX adapt fpca.html
-  copy: src={{ files }}/hotfix/fas/fpca.html
-        dest=/usr/lib/python2.6/site-packages/fas/templates/fpca/fpca.html
-        mode=644 owner=root group=root
-  tags:
-  - config
-  - fas
-  - hotfixfas
-
-- name: HOTFIX adapt master.html
-  copy: src={{ files }}/hotfix/fas/master.html
-        dest=/usr/lib/python2.6/site-packages/fas/templates/master.html
+- name: HOTFIX adapt RPM Fusion templates
+  copy: src={{ files }}/hotfix/fas/
+        dest=/usr/lib/python2.6/site-packages/fas/
         mode=644 owner=root group=root
   tags:
   - config
