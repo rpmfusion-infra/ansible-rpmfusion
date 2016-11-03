@@ -43,7 +43,11 @@ $use_suexec = 0;
 $db_driver = '{{ bugzilla_db_driver }}';
 
 # The DNS name of the host that the database server runs on.
+{% if bugzilla_db_host == 'localhost' %}
+$db_host = ''
+{% else %}
 $db_host = '{{ bugzilla_db_host }}';
+{% endif %}
 
 # The name of the database
 $db_name = '{{ bugzilla_db_name }}';
