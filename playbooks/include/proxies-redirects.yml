@@ -18,12 +18,6 @@
 #    website: fas.rpmfusion.org
 #    target: https://admin.rpmfusion.org/accounts/
 
-  - role: httpd/redirect
-    name: fas
-    website: admin.rpmfusion.org
-    path: /accounts
-    target: https://fas.rpmfusion.org/
-
   - role: httpd/redirectmatch
     name: mailman
     website: admin.rpmfusion.org
