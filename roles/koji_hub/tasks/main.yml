@@ -193,8 +193,8 @@
   - koji_hub
   when: env == 'staging'
 
-- name: instaall rpmfusion-ca.cert in various places
-  copy: src={{ private }}/files/rpmfusion-ca.cert dest={{ item }} owner=apache
+- name: install rpmfusion-bundle-ca.cert in various places
+  copy: src={{ private }}/files/rpmfusion-bundle-ca.cert dest={{ item }} owner=apache
   with_items:
   - /etc/kojira/extras_cacert.pem
   - /etc/pki/tls/certs/extras_cacert.pem
@@ -351,7 +351,7 @@
   when: env != 'staging' and ansible_hostname.startswith('koji')
 
 - name: install serverca cert for oscar (garbage collector) user
-  copy: src={{ private }}/files/rpmfusion-ca.cert dest=/etc/koji-gc/serverca.crt
+  copy: src={{ private }}/files/rpmfusion-server-ca.cert dest=/etc/koji-gc/serverca.crt
   tags:
   - koji_hub
   when: env != 'staging' and ansible_hostname.startswith('koji')
