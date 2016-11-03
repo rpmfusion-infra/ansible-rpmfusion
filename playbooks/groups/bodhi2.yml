@@ -19,8 +19,6 @@
   - sudo
   - collectd/base
   - rsyncd
-  - { role: openvpn/client,
-      when: env != "staging" }
   - apache
   - { role: bodhi2/base, when: "inventory_hostname.startswith('bodhi0')" }
   - { role: fedmsg/base,  when: "inventory_hostname.startswith('bodhi0')" }
