@@ -6,17 +6,11 @@ num_cpus: 16
 
 # for systems that do not match the above - specify the same parameter in
 # the host_vars/$hostname file
-tcp_ports: [ 80, 443, 111, 2049,
+tcp_ports: [ 80, 443,
     # These 8 ports are used by fedmsg.  One for each wsgi thread.
     3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007]
 
-udp_ports: [ 111, 2049 ]
-
-custom_rules: [
-    # Needed for keepalived
-    '-A INPUT -d 224.0.0.0/8 -j ACCEPT',
-    '-A INPUT -p vrrp -j ACCEPT',
-]
+udp_ports: []
 
 fas_client_groups: sysadmin-build
 sudoers: "{{ private }}/files/sudo/00releng-sudoers"
