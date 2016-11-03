@@ -61,8 +61,8 @@
   - role: httpd/website
     name: bugzilla.rpmfusion.org
     sslonly: true
-    #cert_name: bugzilla.rpmfusion.org
-    cert_name: "{{wildcard_cert_name}}"
+    cert_name: bugzilla.rpmfusion.org
+    SSLCertificateChainFile : bugzilla.rpmfusion.org-intermediate.cert
 
 
   - role: httpd/website
@@ -79,11 +79,9 @@
     # Must not be sslonly, because example.id.fedoraproject.org must be reachable
     # via plain http for openid identity support
     sslonly: false
-    #cert_name: id.rpmfusion.org
-    cert_name: "{{wildcard_cert_name}}"
+    cert_name: id.rpmfusion.org
+    SSLCertificateChainFile : id.rpmfusion.org-intermediate.cert
 
-
-  - role: httpd/website
     name: lists.rpmfusion.org
     sslonly: true
     #cert_name: lists.rpmfusion.org
