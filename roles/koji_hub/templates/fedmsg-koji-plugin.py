@@ -5,6 +5,7 @@
 #     Ralph Bean <rbean@redhat.com>
 #     Mike Bonnet <mikeb@redhat.com>
 
+from koji.context import context
 from koji.plugin import callbacks
 from koji.plugin import callback
 from koji.plugin import ignore_error
@@ -73,6 +74,12 @@ def get_message_body(topic, *args, **kws):
         msg['build_id'] = info.get('id', None)
         msg['task_id'] = info.get('task_id', None)
 
+        if msg['task_id']:
+            task = kojihub.Task(msg['task_id'])
+            msg['request'] = task.getRequest()
+        else:
+            msg['request'] = None
+
         if 'owner_name' in info:
             msg['owner'] = info['owner_name']
         elif 'owner_id' in info:
@@ -118,10 +125,13 @@ def get_message_body(topic, *args, **kws):
     c for c in callbacks.keys()
     if c.startswith('post') and c not in [
         'postImport', # This is kind of useless; also noisy.
+        # This one is special, and is called every time, so ignore it.
+        # Added here https://pagure.io/koji/pull-request/148
+        'postCommit',
     ]
 ])
 @ignore_error
-def send_message(cbtype, *args, **kws):
+def queue_message(cbtype, *args, **kws):
     if cbtype.startswith('post'):
         msgtype = cbtype[4:]
     else:
@@ -169,4 +179,22 @@ def send_message(cbtype, *args, **kws):
 
     body = scrub(body)
 
+{% if env != 'staging' %}
+    # Send the messages immediately.
     fedmsg.publish(topic=topic, msg=body, modname='buildsys')
+{% else %}
+    # Queue the message for later.
+    # It will only get sent after postCommit is called.
+    messages = getattr(context, 'fedmsg_plugin_messages', [])
+    messages.append(dict(topic=topic, msg=body, modname='buildsys'))
+    context.fedmsg_plugin_messages = messages
+
+
+# Meanwhile, postCommit actually sends messages.
+@callback('postCommit')
+@ignore_error
+def send_messages(cbtype, *args, **kws):
+    messages = getattr(context, 'fedmsg_plugin_messages', [])
+    for message in messages:
+        fedmsg.publish(**message)
+{% endif %}
