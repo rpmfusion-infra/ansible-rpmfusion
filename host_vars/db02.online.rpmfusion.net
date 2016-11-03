@@ -26,7 +26,7 @@ dbs_to_backup:
 lvm_size: 10240
 mem_size: 2048
 num_cpus: 1
-fas_client_groups: sysadmin-db,sysadmin
+fas_client_groups: sysadmin-db
 
 is_kojidb: True
 
