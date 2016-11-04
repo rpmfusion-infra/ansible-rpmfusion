@@ -21,6 +21,7 @@ dbs_to_backup:
 - bodhi2
 - pkgdb2
 - koji
+- fas2
 
 # These are normally group variables, but in this case db servers are often different
 lvm_size: 10240
