@@ -18,7 +18,7 @@ config.read('/etc/fas.conf')
 
 
 pkgdb_url = 'https://admin.rpmfusion.org/pkgdb'
-fas = BaseClient('https://fas.rpmfusion.org/accounts',
+fas = BaseClient('https://admin.rpmfusion.org/accounts',
     username=config.get('global', 'login').strip('"'),
     password=config.get('global', 'password').strip('"'))
 
