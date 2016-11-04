@@ -1,6 +1,6 @@
 ---
 host_group: kojibuilder
-fas_client_groups: sysadmin-build
+fas_client_groups: sysadmin-releng
 sudoers: "{{ private }}/files/sudo/00releng-sudoers"
 freezes: true
 

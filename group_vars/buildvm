@@ -14,8 +14,7 @@ virt_install_command: "{{ virt_install_command_one_nic }}"
 # for systems that do not match the above - specify the same parameter in
 # the host_vars/$hostname file
 host_group: kojibuilder
-#fas_client_groups: sysadmin-relenag
-fas_client_groups: sysadmin-main
+fas_client_groups: sysadmin-releng
 sudoers: "{{ private }}/files/sudo/sysadmin-main"
 
 koji_hub_nfs: "rpmfusion_koji"
