@@ -51,7 +51,7 @@ $db_driver = '{{ bugzilla_db_driver }}';
 
 # The DNS name or IP address of the host that the database server runs on.
 {% if bugzilla_db_host == 'localhost' %}
-$db_host = ''
+$db_host = '';
 {% else %}
 $db_host = '{{ bugzilla_db_host }}';
 {% endif %}
