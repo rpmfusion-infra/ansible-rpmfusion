@@ -1,12 +1,13 @@
 ---
 # tasks file for bugzilla
 #
-- name: install eseyman bugzilla 4.4 copr repo
-  copy: src="eseyman-bugzilla-4.4-epel-7.repo" dest="/etc/yum.repos.d/eseyman-bugzilla-4.4-epel-7.repo" owner=root group=root
+- name: install eseyman bugzilla 5.0 copr repo
+  copy: src="eseyman-bugzilla-5.0-epel-7.repo" dest="/etc/yum.repos.d/bugzilla-epel.repo" owner=root group=root
   tags:
   - config
   - packages
   - yumrepos
+  when: ansible_distribution_major_version|int == 7
 
 - name: install needed packages for bugzilla
   yum: pkg={{ item }} state=present
