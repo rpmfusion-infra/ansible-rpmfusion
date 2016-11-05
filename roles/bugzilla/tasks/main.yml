@@ -41,4 +41,8 @@
   - config
   - bugzilla
 
+- name: install apache httpd bugzilla
+  copy: src="bugzilla-httpd.conf" dest="/etc/httpd/conf.d/bugzilla.conf" owner=root group=root
+  tags:
+  - config
 
