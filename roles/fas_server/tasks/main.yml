@@ -119,7 +119,7 @@
 
 - name: install /etc/pki/fas/rpmfusion-server-ca.cert file
   copy: >
-    src="{{ private }}/files/rpmfusion-ca.cert"
+    src="{{ private }}/files/rpmfusion-server-ca.cert"
     dest="/etc/pki/fas/rpmfusion-server-ca.cert"
     owner=fas
     group=fas
@@ -141,7 +141,7 @@
 
 - name: install /usr/share/fas/static/rpmfusion-server-ca.cert file
   copy: >
-    src="{{ private }}/files/rpmfusion-ca.cert"
+    src="{{ private }}/files/rpmfusion-server-ca.cert"
     dest="/usr/share/fas/static/rpmfusion-server-ca.cert"
     owner=root
     group=root
@@ -168,34 +168,6 @@
     owner=fas
     group=apache
     mode=0640
-  notify:
-  - reload httpd
-  tags:
-  - config
-  - fas
-
-- name: install /usr/local/bin/yubikey-remove.py file
-  when: env == "staging"
-  template: >
-    src="yubikey-remove.py.j2"
-    dest="/usr/local/bin/yubikey-remove.py"
-    owner=fas
-    group=fas
-    mode=0750
-  tags:
-  - config
-  - fas
-
-# $gen_cert = "True"
-
-- name: install /etc/fas.cfg file
-  template: >
-    src="fas.cfg.j2"
-    dest="/etc/fas.cfg"
-    owner=fas
-    group=apache
-    mode=0640
-  when: master_fas_node == True
   notify:
   - reload httpd
   tags:
