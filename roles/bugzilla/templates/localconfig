@@ -78,6 +78,22 @@ $db_sock = '';
 # doesn't work)
 $db_check = 0;
 
+# Path to a PEM file with a list of trusted SSL CA certificates.
+# The file must be readable by web server user.
+$db_mysql_ssl_ca_file = '';
+
+# Path to a directory containing trusted SSL CA certificates in PEM format.
+# Directory and files inside must be readable by the web server user.
+$db_mysql_ssl_ca_path = '';
+
+# Full path to the client SSL certificate in PEM format we will present to the DB server.
+# The file must be readable by web server user.
+$db_mysql_ssl_client_cert = '';
+
+# Full path to the private key corresponding to the client SSL certificate.
+# The file must not be password-protected and must be readable by web server user.
+$db_mysql_ssl_client_key = '';
+
 # With the introduction of a configurable index page using the
 # template toolkit, Bugzilla's main index page is now index.cgi.
 # Most web servers will allow you to use index.cgi as a directory
@@ -89,12 +105,6 @@ $db_check = 0;
 #       wish to have checksetup.pl create one for you, you must
 #       make sure that index.html doesn't already exist
 $index_html = 0;
-
-# For some optional functions of Bugzilla (such as the pretty-print patch
-# viewer), we need the cvs binary to access files and revisions.
-# Because it's possible that this program is not in your path, you can specify
-# its location here.  Please specify the full path to the executable.
-$cvsbin = '';
 
 # For some optional functions of Bugzilla (such as the pretty-print patch
 # viewer), we need the interdiff binary to make diffs between two patches.
