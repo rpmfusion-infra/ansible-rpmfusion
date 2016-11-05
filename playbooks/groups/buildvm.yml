@@ -32,6 +32,8 @@
     when: not inventory_hostname.startswith('bkernel')
   - include: "{{ tasks }}/motd.yml"
     when: not inventory_hostname.startswith('bkernel')
+  - include: "{{ tasks }}/openvpn_client.yml"
+    when: not datacenter == 'online'
 
   - name: make sure kojid is running
     service: name=kojid state=running enabled=yes
