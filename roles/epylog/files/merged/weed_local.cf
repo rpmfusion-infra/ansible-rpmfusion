@@ -1,0 +1,369 @@
+[ADD]
+##
+# Here is where you add your own rules
+#
+
+audit:.*
+ansible.*: Invoked.*
+ansible.*: message repeated.*
+ansible-accelerate:.*
+ansible-async_wrapper:.*
+auditd.*: Audit daemon rotating log files
+autocloud_job.*
+avahi-daemon.*
+btseed.*
+bugyou-cntrl.*
+chronyd.*
+collectd.*: Filter subsystem.*
+collectd.*: Value too old.*
+collectd.*: processes plugin: Failed to read from.*
+collectd.*: 0 Success:.*value has been dispatched.
+collectd.*: message repeated.*times.*0 Success:.*
+collectd.*: exec plugin.*Unable to parse command\, ignoring line.*
+dbus.*:.*avc:.*received.*
+dbus.*:.*Reloaded configuration.*
+dbus.*:.*Successfully activated service 'org.fedoraproject.Setroubleshootd'.*
+dbus.*:.*Successfully activated service 'org.freedesktop.nm_dispatcher'
+dbus.*:.*\[system\].*Activating via systemd: service.*
+dbus.*:.*\[system\].*Activating.*using servicehelper.*
+dbus.*:.*\[system\].*Successfully activated service.*
+dbus-daemon.*:.*Successfully activated service \'org.fedoraproject.Setroubleshootd\'.*
+dbus-daemon.*:.*Activating via systemd: service.*
+dbus-daemon.*:.*Successfully activated service.*
+dhclient.*: bound to.*
+dhclient.*: DHCPDISCOVER.*
+dhclient.*: DHCPACK.*
+dhclient.*: DHCPREQUEST.*
+dhcpd:.*Wrote.*leases file.*
+dnsmasq-dhcp.*
+# work around bug https://bugzilla.redhat.com/show_bug.cgi?id=947989
+dhclient.*: send_packet: Operation not permitted
+dhclient.*: dhclient.c:.*: Failed to send 300 byte long packet over fallback interface.
+dhclient.*: Internet Systems Consortium DHCP Client.*
+dhclient.*: Copyright 2004-2013 Internet Systems Consortium.
+dhclient.*: All rights reserved.
+dhclient.*: For info, please visit https://www.isc.org/software/dhcp/
+dhclient.*: Listening on.*
+dhclient.*: Sending on.*
+dhclient.*: Sending on.*
+dhclient.*: $
+dnf:.*
+dnf-automatic:.*
+docker.*
+dracut.*
+fedmsg-hub.*
+moksha-hub.*
+mailman3.*
+freshclam.*: Can't connect to port 80 of host.*
+freshclam.*: connect_error:.*
+freshclam.*: Downloading.*                            
+freshclam.*:.*is up to date.*
+freshclam.*:.*updated.*
+freshclam.*: Database updated.*
+freshclam.*: ClamAV update process started
+git-daemon.*: Connection from.*
+git-daemon.*: Connection reset by peer
+git-daemon.*: .* does not appear to be a git repository
+git-daemon.*: Extended attributes.*
+git-daemon.*: Request upload-pack.*
+git-daemon.*: The remote end hung up unexpectedly
+git-daemon.*: userpath.*
+git-daemon.*: Request upload-archive for.*
+git-daemon.*: fatal: write error: Connection timed out
+groupadd.*: group added to.*: name=(mockbuild|dialout|floppy|cdrom|tape|utmp|utempter|dbus|avahi-autoipd|rpc|rpcuser|nfsnobody|ssh_keys).*
+(group|user)add.*: new (user|group): name=(mockbuild|dialout|floppy|cdrom|tape|utmp|utempter|dbus|avahi-autoipd|rpc|rpcuser|nfsnobody|ssh_keys).*
+heartbeat.* info:.*
+heartbeat.*:info.*
+heartbeat.*:WARN: Gmain_timeout_dispatch: Dispatch function for retransmit request took too long to execute.*
+in.tftpd.*: tftp: client does not accept options
+journal: libvirt version.*
+journal: Failed to acquire.*
+journal: cannot lookup default selinux label for.*
+journal: Domain id.*
+kernel:.*CPU.*power limit.*
+kernel:.*dma-pl330 fff3d000.dma: Reset Channel.*
+kernel: TCPv6: Possible SYN flooding on port 80. Sending cookies.
+kernel: TCPv6: Possible SYN flooding on port 80. Dropping request.
+kernel: possible SYN flooding on port 80. Sending cookies.
+kernel: EXT4-fs \(.*\): mounted filesystem with ordered data mode.*
+kernel: ioctl32\(e2fsck.*
+kernel: ioctl32\(resize2fs.*
+kernel: md: data-check of RAID array.*
+kernel: md: delaying data-check of.*
+kernel: md: md.*: data-check done.
+kernel: md: minimum _guaranteed_  speed.*
+kernel: md: using 128k window.*
+kernel: md: using maximum available idle IO bandwidth.*
+kernel: printk.*suppressed.
+kernel: __ratelimit:.*callbacks suppressed
+kernel:.*subj=.*
+kernel:.*exe=.* \(sauid=.*, hostname=.* addr=.* terminal=.*\)
+kernel:.*type=.*audit\(.*
+kernel:.*audit_printk_skb:.*callbacks suppressed
+kernel:.*usb 3-3: new full-speed USB device number.*using xhci_hcd
+kernel:.*usb 3-3: Device not responding to set address.
+kernel:.*usb 3-3: Device not responding to set address.
+kernel:.*usb 3-3: device not accepting address.*error -71
+kernel:.*kvm.*vcpu.*unhandled rdmsr.*
+kernel:.*kvm_get_msr_common:.*callbacks suppressed
+kernel:.*device vnet.*entered promiscuous mode
+kernel:.*virbr0: port.*entered.*state
+kernel:.*virbr0: topology change detected, propagating
+kernel: blk_update_request.*I/O error, dev loop0, sector.*
+kernel: blk-mq: bad return on queue.*
+kojid.*
+koschei.*
+kojira.*
+logrotate.*
+lvm.*: Another thread is handling an event. Waiting...*
+libvirtd:.*debug.*
+nagios.*
+named.*: .* general: info:.*
+named.*: .* notify: info:.*
+named.*: .* general: error: zone.*unchanged. zone may fail to transfer to slaves.
+named.*: .* resolver: notice: DNS format error from.*: invalid response
+named.*: .* resolver: notice: DNS format error from.*: non-improving referral
+named.*: .* resolver: notice: clients-per-query increased to.*
+named.*: .* security: info: client.*: view.*: query (cache).*denied
+named.*: .* edns-disabled: info: success resolving.*after.*
+named.*: .* security: info: client.*denied
+named.*: .* rate-limit: info:.*
+named.*: .* general: warning: checkhints: view.*
+named.*: .* query-errors: info: client.*rate limit slip response to.*
+named.*: .* query-errors: info: client.*rate limit drop response to.*
+NetworkManager.*: \<info\>.*
+NetworkManager.*: \<warn\>.*
+NetworkManager.*: \<error\>.*Unspecific failure
+nm-dispatcher: Dispatching action.*
+ntpd.*
+openqa:.*is not a registered asset
+openqa: no products found.*
+openqa-scheduler.*
+openqa-websockets.*
+openshift-master.*
+fedora-openqa-consumer.*
+openvpn.*: Auth read bytes.*
+openvpn.*: CLIENT_LIST.*
+openvpn.*: END
+openvpn.*: event_wait : Interrupted system call.*
+openvpn.*: GLOBAL_STATS.*
+openvpn.*: HEADER.*
+openvpn.*: OpenVPN STATISTICS
+openvpn.*: post-compress bytes.*
+openvpn.*: post-decompress bytes.*
+openvpn.*: pre-compress bytes.*
+openvpn.*: pre-decompress bytes.*
+openvpn.*: ROUTING_TABLE.*
+openvpn.*: TCP/UDP.*
+openvpn.*: TCP/UDP.*
+openvpn.*: TIME.*
+openvpn.*: TITLE.*
+openvpn.*: TUN/TAP.*
+openvpn.*: UDPv4 link (local|remote).*
+openvpn.*: SIGUSR1.*
+openvpn.*: Updated.*
+openvpn.*:.*Re-using SSL/TLS context.*
+openvpn.*:.*LZO compression.*
+openvpn.*: NOTE: the current --script-security setting may allow this configuration to call user-defined scripts.*
+openvpn.*: WARNING: No server certificate verification method has been enabled.*
+origin-master.*
+pam_unix\(.*\): account .* has password changed in future
+pagure-stream-server.py:.*
+polkitd.*
+postfix/anvil.*: statistics.*
+postfix/bounce.*sender non-delivery notification.*
+postfix/error.*:.*delivery temporarily suspended.*Connection timed out.*
+postfix/error.*:.*delivery temporarily suspended.*No route to host.*
+postfix/error.*:.*delivery temporarily suspended.*temporarily deferred due to user complaints.*
+postfix/error.*:.*delivery temporarily suspended.*while receiving the initial server greeting.*
+postfix/error.*:.*delivery temporarily suspended.*Host or domain name not found.*
+postfix/error.*:.*delivery temporarily suspended.*Connection refused.*
+postfix/error.*:.*delivery temporarily suspended.*conversation with.*
+postfix/error.*:.*delivery temporarily suspended.*service not available, closing transmission channel.*
+postfix/error.*:.*delivery temporarily suspended.*Network is unreachable.*
+postfix/error.*:.*refused to talk to me.*
+postfix/lmtp.*:.*250.*Ok.*
+postfix/lmtp.*: 503.*
+postfix/local.*: table.*has changed -- restarting.*
+postfix/master.*: daemon started.*
+postfix/master.*: terminating on signa.*
+postfix/pipe.*:.*delivered via spamassassin.*
+postfix/postfix-script.*: starting the Postfix mail system
+postfix/postfix-script.*: stopping the Postfix mail system
+postfix/postfix-script.*: waiting for the Postfix mail system to terminate
+postfix/scache.*: statistics.*
+postfix/smtp.*: 400.*
+postfix/smtp.*: 421.*
+postfix/smtp.*: 450.*
+postfix/smtp.*: 451.*
+postfix/smtp.*: 452.*
+postfix/smtp.*: 454.*
+postfix/smtp.*: 503.*
+postfix/smtp.*: conversation.* timed out.*
+postfix/smtpd.*: table.*has changed -- restarting.*
+postfix/smtpd.*: timeout.*
+postfix/smtpd.*: too many errors after RCPT.*
+postfix/smtp.*: enabling PIX.*
+postfix/smtp.*: lost connection.*
+postfix/smtp.*:.*refused to talk to me.*
+postfix/smtp.*: warning: malformed domain name.*                                
+postfix/smtp.*: warning: valid_hostname:.*    
+postfix/smtp.*:.*yahoo.*refused to talk to me.*
+python.*: ansible-<stdin>.*
+python.*: ansible.*: Invoked.*
+python.*: ansible.* Invoked.*
+python2.*
+rabbitmq-server.*
+ResourceManager.*: info:.*
+restorecond: Reset file context /etc/aliases.*
+restorecond: Reset file context /var/db/shadow.db.*
+restorecond: Unable to watch.*
+Rootkit Hunter: Rootkit hunter.*
+Rootkit Hunter: Scanning.*
+root: time debug:.*
+registry.*
+rpc.idmapd.*: nss_getpwnam: name.*apache.*
+rpc.idmapd.*: nss_getpwnam: name.*masher.*
+rpc.idmapd.*: nss_getpwnam: name.*root@fedora.*
+rpc.idmapd.*: nss_getpwnam: name.*root@localdomain*
+rsyncd.*: building.*
+rsyncd.*: connect from.*
+rsyncd.*: file has vanished:
+rsyncd.*: name lookup failed for.*
+rsyncd.*: rsync: connection unexpectedly closed.*
+rsyncd.*: rsync error: error in rsync protocol data stream.*
+rsyncd.*: sent.*
+rsyncd.*: rsync: change_dir.*failed.*
+#rsync.*: rsync on.*
+rsyslogd-2163:epoll_ctl failed
+#goofy-ass rsyslogd error :(
+^\(\':\',.*
+setfiles: relabeling .*
+spamc.*: connect to spamd on.*
+spamc.*: skipped message, greater.*
+spamd.*: bayes: cannot open bayes databases.*                                    
+spamd.*: logger: removing.*
+spamd.*: prefork.*
+spamd.*: pyzor:.* error: TERMINATED
+spamd: result:.*
+spamd.*: spamd: clean message.*
+spamd.*: spamd: clean message.*
+spamd.*: spamd: handled cleanup.*
+spamd.*: spamd: identified spam.*
+spamd.*: spamd: server killed.*
+spamd.*: spamd: server pid.*
+spamd.*: spamd: server started.*
+spamd.*: spamd: server successfully.*
+spamd.* spamd: setuid to.*
+sshd.*: Address.*maps to.*but this does not map back to the address - POSSIBLE BREAK-IN ATTEMPT.*
+sshd.*: Did not receive identification.*
+sshd.*: Disconnecting: Too many authentication failures for root.*
+sshd.*: error: connect_to
+sshd.*: error: ssh_selinux_setup_pty:
+sshd.*: Found matching RSA key.*
+sshd.*: Found matching DSA key.*
+sshd.*: input_userauth_request: invalid user.*
+sshd.*: pam_unix\(sshd:session\): session closed for user.*
+sshd.*: pam_unix\(sshd:session\): session opened for user.*
+sshd.*: Postponed publickey for.*
+sshd.*: refused connect from.*
+sshd.*: reverse mapping checking getaddrinfo.*POSSIBLE BREAK-IN ATTEMPT.*
+sshd.*: Server listening on.*
+sshd.*: subsystem request for sftp
+sshd.*: pam_namespace.*: Unmount of \/tmp failed, Device or resource busy.*
+sshd.*: Set /proc/self/oom_score_adj.*
+sshd.*: Connection from.* port.*
+sshd.*: Transferred: sent.*, received.*bytes
+sshd.*: Closing connection to.*port.*
+sshd.*: User child is on pid.*
+sshd.*: Read error from remote host.*: Connection reset by peer
+sshd.*: Read error from remote host.*: Connection timed out
+sshd.*: error: Could not load host key: /etc/ssh/ssh_host_dsa_key
+sshd.*: Starting session.*
+sshd.*: fatal: Read from socket failed: Connection reset by peer.*
+sshd.*: Starting session: subsystem 'sftp' for root from 10.5.126.23 port.*
+sshd.*: Starting session: subsystem 'sftp' for root from 209.132.181.6 port.*
+sshd.*: Corrupted MAC on input.
+sshd.*: pam_systemd(sshd:session): Failed to create session: No such file or directory
+sshd.*: fatal: Write failed: Connection reset by peer
+sshd.*: pam_succeed_if\(sshd:auth\): requirement.*
+sshd.*: pam_unix\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=.*
+sshd.*: PAM .* more authentication failures\; logname= uid=0 euid=0 tty=ssh ruser= rhost=.*
+sshd.*: pam_unix\(sshd:auth\): check pass; user unknown
+sshd.*: error\: maximum authentication attempts exceeded for.*from.*port.*ssh2 [preauth]
+sshd.*: Disconnecting\: Too many authentication failures.*
+sshd.*: Disconnected from.*
+sshd.*: Read error from remote host.*
+sshd.*: error\: maximum authentication attempts exceeded for.*
+sshd.*: Close session.*user root from 10.5.126.23 port.*id 0
+sshd.*: error\: key_read: uudecode.*failed
+sshd.*: Connection reset by.*
+sshd.*: error\: buffer_get_ret\: trying to get more bytes.*
+sshd.*: error\: buffer_get_string_ret\: buffer_get failed
+sshd.*: error\: buffer_get_bignum2_ret\: invalid bignum
+sshd.*: error\: key_from_blob\: can\'t read rsa key
+sshd.*: error\: key_read\: key_from_blob
+sshd.*: Close session\: user root from 10.5.126.23 port.*
+stunnel:.*
+su: pam_unix\(su-l:session\): session .* for user.*
+runuser: pam_unix\(runuser-l:session\).* session opened for user postgres by.*
+runuser: pam_unix\(runuser-l:session\).* session closed for user postgres
+systemd-logind.*
+systemd: dev-disk-by.*
+systemd: Start.*
+systemd.*: Stop.*
+systemd.*: Reached.*
+systemd: pam_unix\(systemd-user:session\): session opened for user root by (uid=0)
+systemd: pam_unix\(systemd-user:session\): session closed for user root
+systemd: pam_unix\(systemd-user:session\): session.*
+systemd.*: Start.* Cleanup of Temporary Directories.*
+systemd-machine-id-setup.*: Initializing machine ID.*                            
+systemd.*: Created slice user-.*.slice.
+systemd: Created slice User Slice of.*
+systemd: Listening on D-Bus User Message Bus Socket.
+systemd.*: Removed slice user-.*slice.
+systemd.*: Received SIGRTMIN\+24 from PID.*
+systemd.*: Failed to mark scope session-.*.scope as abandoned : Stale file handle
+systemd.*: Failed to reset devices.list on /machine.slice: Invalid argument
+systemd: tmp.mount.*
+systemd: Unit git.*
+systemd-coredump:.*
+systemd-machined:.*
+systemd: Configuration file.*is marked world-inaccessible.*
+systemd: Reload.*
+systemd: Closed D-Bus User Message Bus Socket.
+systemd: Removed slice User Slice of root.
+systemd-udevd: conflicting device node.*
+supybot.*
+unix_chkpwd.*: account .* has password changed in future
+unix_chkpwd.*: password check failed for user \(root\)
+userhelper.*: running \'/usr/sbin/mock.*
+worker.*
+# Do not want any of the new gitolite stuff
+gitolite.*
+groupadd.*: new group.*
+groupadd.*: group added to /etc/g.*
+useradd.*: new user.*
+varnishd.*: Child .* said missing \)CLI.*
+varnishd.*: Child .* said nothing to repeatCLI result.*
+xinetd.*: Exiting.*
+xinetd.*: FAIL: git per_source_limit.*
+xinetd.*: readjusting service rsync
+xinetd.*: Reconfigured.*
+xinetd.*: Started.*
+xinetd.*: Starting reconfiguration
+xinetd.*: Swapping defaults
+xinetd.*: xinetd Version.*
+ykksm.*: SUCCESS.*
+ykval.*: LOG_INFO.*
+ykval.*: LOG_WARNING.*
+ykval.*: SUCCESS.*
+ykval.*: WARNING.*
+yum.*: Installed:.*
+yum.*: Updated:.*
+
+
+[REMOVE]
+##
+# Here is where you put the rules (VERBATIM) from the weed_dist.cf file
+#
