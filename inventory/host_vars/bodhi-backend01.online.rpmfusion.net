@@ -1,0 +1,20 @@
+nm: 255.255.255.0
+gw: 192.168.181.254
+dns: 62.210.16.6
+ks_url: http://192.168.181.254/install/ks/bodhi01.ks
+volgroup: /dev/vg_hv03_virt
+eth0_ip: 192.168.181.151
+vmhost: hv01.online.rpmfusion.net
+datacenter: online
+
+nrpe_procs_warn: 900
+nrpe_procs_crit: 1000
+
+# These set a config value in /etc/fedmsg.d/, see roles/bodhi2/base/
+bodhi_masher_enabled: True
+bodhi_updates_handler_enabled: False
+bodhi_signed_handler_enabled: False
+
+wsgi_procs: 2
+wsgi_threads: 15
+
