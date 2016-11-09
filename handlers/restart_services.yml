@@ -71,9 +71,6 @@
 - name: fix openvpn routing
   action: shell /etc/openvpn/fix-routes.sh
 
-- name: restart postfix
-  action: service name=postfix state=restarted
-
 - name: restart xinetd
   action: service name=xinetd state=restarted
 
@@ -85,6 +82,12 @@
 
 - name: rebuild postfix transport
   command: /usr/sbin/postmap /etc/postfix/transport
+
+- name: rebuild postfix tls_policy
+  command: /usr/sbin/postmap /etc/postfix/tls_policy
+
+- name: restart postfix
+  service: name=postfix state=restarted
 
 - name: restart glusterd
   service: name=glusterd state=restarted
@@ -124,9 +127,13 @@
 - name: restart stunnel
   service: name=stunnel state=restarted
 
-- name: restart cinder
+- name: restart cinder api
   service: name=openstack-cinder-api state=restarted
+
+- name: restart cinder scheduler
   service: name=openstack-cinder-scheduler state=restarted
+
+- name: restart cinder volume
   service: name=openstack-cinder-volume state=restarted
 
 - name: restart autocloud
@@ -140,6 +147,9 @@
 
 - name: reload NetworkManager-connections
   command: nmcli c reload
+
+- name: restart basset-worker
+  service: name=basset-worker state=restarted
 
 - name: apply interface-changes
   command: nmcli con up {{ item.split()[1] }}
