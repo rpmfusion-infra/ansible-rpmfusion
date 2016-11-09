@@ -1,0 +1,111 @@
+---
+- name: install packages
+  yum: name={{ item }} state=present
+  with_items:
+  - bind
+  - unzip
+  - git
+  - libsemanage-python
+  - policycoreutils-python
+  tags:
+  - packages
+  - dns
+
+- name: copy rndc config
+  copy: src=rndc.conf dest=/etc/rndc.conf
+  notify:
+  - restart named
+  tags:
+  - config
+  - dns
+
+- name: copy rndc key
+  copy: src={{ private }}/files/dns/rndc.key dest=/etc/rndc.key
+  notify:
+  - restart named
+  tags:
+  - config
+  - dns
+
+- name: copy named cache
+  copy: src=named.ca dest=/var/named/named.ca
+  notify:
+  - restart named
+  tags:
+  - config
+  - dns
+
+- name: copy GeoIP.sh
+  copy: src=GeoIP.sh dest=/var/named/GeoIP.sh mode=0755
+  notify:
+  - restart named
+  tags:
+  - config
+  - dns
+
+- name: create GeoIP acl
+  command: /var/named/GeoIP.sh
+  changed_when: "1 != 1"
+  notify:
+  - restart named
+  tags:
+  - dns
+
+- name: copy update-dns
+  copy: src=update-dns dest=/usr/local/bin/update-dns mode=0755
+  notify:
+  - restart named
+  tags:
+  - config
+  - dns
+
+- name: copy zones
+  copy: src=zones.conf dest=/etc/named/zones.conf owner=root group=root mode=0644
+  notify:
+  - restart named
+  tags:
+  - config
+  - dns
+
+- name: copy named config
+  copy: src=named.conf dest=/etc/named.conf mode=0644 owner=root group=root
+  notify:
+  - restart named
+  tags:
+  - config
+  - dns
+
+- name: update dns
+  command: /usr/local/bin/update-dns
+  changed_when: "1 != 1"
+  notify:
+  - restart named
+  tags:
+  - config
+  - dns
+
+- name: update dns cron
+  cron: name="update dns" job="/usr/local/bin/update-dns >/dev/null" minute=0,15,30,45
+  tags:
+  - dns
+
+- name: check semanage ports
+  command: semanage port -l
+  register: semanageoutput
+  check_mode: no
+  changed_when: "1 != 1"
+  tags:
+  - dns
+
+- name: set ports so bind statistics-channel can bind to 8053
+  command: semanage port -a -t dns_port_t -p tcp 8053
+  when: semanageoutput.stdout.find("8053") == -1
+  notify:
+  - restart named
+  tags:
+  - dns
+
+- name: named service
+  service: name=named state=started enabled=yes
+  tags:
+  - dns
