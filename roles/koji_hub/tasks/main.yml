@@ -25,6 +25,12 @@
   - config
   - koji_hub
 
+- name: install the runroot_hub.py
+  copy: src=runroot_hub.py dest=/etc/koji-hub/plugins/runroot_hub.py owner=root mode=0644
+  tags:
+  - config
+  - koji_hub
+
 - name: make koji pki directory
   file: state=directory path=/etc/pki/koji/ owner=root group=root
 
