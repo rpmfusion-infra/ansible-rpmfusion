@@ -1,6 +1,6 @@
 [filter:proxy-prefix]
 use = egg:PasteDeploy#prefix
-prefix = /
+prefix = /updates
 scheme = https
 
 [app:main]
@@ -251,8 +251,8 @@ fedmenu.data_url = https://apps.fedoraproject.org/js/data.js
 
 # Koji certs
 client_cert = /etc/pki/bodhi/bodhi.pem
-clientca_cert = /etc/pki/bodhi/fedora-upload-ca.cert
-serverca_cert = /etc/pki/bodhi/fedora-server-ca.cert
+clientca_cert = /etc/pki/bodhi/rpmfusion-upload-ca.cert
+serverca_cert = /etc/pki/bodhi/rpmfusion-server-ca.cert
 
 ##
 ## ACL system
