@@ -19,8 +19,8 @@
   - mash
   - fedmsg-hub
   - fedmsg-relay
-  - fedmsg-atomic-composer
   - python-mock
+  - python2-fedmsg-atomic-composer
   - sigul
   - python-alembic
   - python-scandir
@@ -144,6 +144,7 @@
     mode=0644
   tags:
   - config
+  - bodhi
 
 #
 # cron job that syncs packages to koji
@@ -158,7 +159,7 @@
   cron: name="owner-sync-el5" minute="2,12,22,32,42,52" user="root"
         job="/usr/local/bin/owner-sync-pkgdb el5-free ; /usr/local/bin/owner-sync-pkgdb el5-nonfree"
         cron_file=update-koji-owner-el5
-  when: inventory_hostname.startswith('bodhi01') and env == "production"
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
   tags:
   - bodhi
 
@@ -166,7 +167,7 @@
   cron: name="owner-sync-el6" minute="3,13,23,33,43,53" user="root"
         job="/usr/local/bin/owner-sync-pkgdb el6-free ; /usr/local/bin/owner-sync-pkgdb el6-nonfree"
         cron_file=update-koji-owner-el6
-  when: inventory_hostname.startswith('bodhi01') and env == "production"
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
   tags:
   - bodhi
   
@@ -174,15 +175,23 @@
   cron: name="owner-sync-epel4" minute="4,14,24,34,44,54" user="root"
         job="/usr/local/bin/owner-sync-pkgdb el7-free;  /usr/local/bin/owner-sync-pkgdb el7-nonfree"
         cron_file=update-koji-owner-el7
-  when: inventory_hostname.startswith('bodhi01') and env == "production"
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
   tags:
   - bodhi
-  
+
 - name: sync packages from pkgdb2 to koji fedora
-  cron: name="owner-sync-fedora" minute="7,17,27,37,47,57" user="root" 
+  cron: name="owner-sync-fedora" minute="7,17,27,37,47,57" user="root"
         job="/usr/local/bin/owner-sync-pkgdb f23-free; /usr/local/bin/owner-sync-pkgdb f23-nonfree; /usr/local/bin/owner-sync-pkgdb f24-free; /usr/local/bin/owner-sync-pkgdb f24-nonfree; /usr/local/bin/owner-sync-pkgdb f25-free; /usr/local/bin/owner-sync-pkgdb f25-nonfree; /usr/local/bin/owner-sync-pkgdb f26-free; /usr/local/bin/owner-sync-pkgdb f26-nonfree"
         cron_file=update-koji-owner-fedora
-  when: inventory_hostname.startswith('bodhi01') and env == "production"
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  tags:
+  - bodhi
+
+- name: sync packages from pkgdb2 to koji fedor (docker)
+  cron: name="owner-sync-fedora" minute="7,17,27,37,47,57" user="root"
+        job="/usr/local/bin/owner-sync-pkgdb f24-docker;/usr/local/bin/owner-sync-pkgdb f25-docker;/usr/local/bin/owner-sync-pkgdb f26-docker"
+        cron_file=update-koji-owner-fedora-docker
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
   tags:
   - bodhi
 #
@@ -191,7 +200,7 @@
 
 - name: put fedora-updates-push in place
   copy: src={{ item }} dest=/usr/local/bin/{{ item }} mode=0755
-  when: inventory_hostname.startswith('bodhi01') and env == "production"
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
   with_items:
   - fedora-updates-push
   - fedora-free-updates-push
@@ -203,45 +212,53 @@
 
 - name: put fedora-epel-push in place
   copy: src=fedora-epel-push dest=/usr/local/bin/fedora-epel-push mode=0755
-  when: inventory_hostname.startswith('bodhi01') and env == "production"
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
   tags:
   - config
   - bodhi
   - cron
 
-- name: put update-fullfilelist in place
-  copy: src=update-fullfilelist dest=/usr/local/bin/update-fullfilelist mode=0755
-  when: inventory_hostname.startswith('bodhi01') and env == "production"
+- name: put update-fullfiletimelist in place
+  copy: src="{{ files }}/scripts/update-fullfiletimelist" dest=/usr/local/bin/update-fullfiletimelist mode=0755
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
   tags:
   - config
   - bodhi
   - cron
 
-- name: Updates sync cron job. 
+- name: add create-filelist script from quick-fedora-mirror
+  copy: src="{{ files }}/scripts/create-filelist" dest=/usr/local/bin/create-filelist mode=0755
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
+  tags:
+  - config
+  - bodhi
+  - cron
+
+- name: Updates sync cron job.
   cron: name="updates-sync" minute="15,45" user="ftpsync"
         job="/usr/local/bin/lock-wrapper fedora-updates-push '/usr/local/bin/fedora-updates-push && /usr/local/bin/update-fullfilelist fedora'"
         cron_file=updates-sync
-  when: inventory_hostname.startswith('bodhi01') and env == "production"
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
   tags:
   - config
   - bodhi
   - cron
 
-- name: epel Updates sync cron job. 
+- name: epel Updates sync cron job.
   cron: name="epel-updates-sync" minute="15,45" user="ftpsync"
         job="/usr/local/bin/lock-wrapper fedora-epel-push '/usr/local/bin/fedora-epel-push && /usr/local/bin/update-fullfilelist epel'"
         cron_file=updates-sync
-  when: inventory_hostname.startswith('bodhi01') and env == "production"
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
   tags:
   - config
   - bodhi
   - cron
 
-- name: directory sizes update cron job. 
+- name: directory sizes update cron job.
   cron: name="directory-sizes-update" minute="30" hour="19" user="ftpsync"
         job="/usr/bin/find /pub/alt/ /pub/archive/ /pub/fedora-secondary/ /pub/fedora/ /pub/epel/ -type d ! -path '/pub/fedora/.snapshot*' ! -path '/pub/epel/.snapshot*' ! -path '/pub/alt/.snapshot*' ! -path '/pub/archive/.snapshot*' ! -path '/pub/fedora-secondary/.snapshot*' ! -path '/pub/alt/stage*' ! -path '/pub/alt/tmp' ! -path '/pub/alt/screenshots/f21/source' | grep -v snapshot | /usr/bin/xargs -n 1 /usr/bin/du --exclude=.snapshot --exclude=stage -sh > /tmp/DIRECTORY_SIZES.txt 2> /dev/null; cp /tmp/DIRECTORY_SIZES.txt /pub/"
         cron_file=directory-sizes-update
-  when: inventory_hostname.startswith('bodhi01') and env == "production"
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
   tags:
   - config
   - bodhi
@@ -253,7 +270,7 @@
   cron: name="bodhi-approve-testing" hour="*/6" minute=0 user="apache"
         job="/usr/bin/bodhi-approve-testing /etc/bodhi/production.ini 2> /dev/null"
         cron_file=bodhi-approve-testing-job
-  when: inventory_hostname.startswith('bodhi01') and env == "production"
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
   tags:
   - config
   - bodhi
@@ -263,7 +280,7 @@
   cron: name="bodhi-expire-overrides" hour="*" minute=0 user="apache"
         job="/usr/bin/bodhi-expire-overrides /etc/bodhi/production.ini 2> /dev/null"
         cron_file=bodhi-expire-overrides-job
-  when: inventory_hostname.startswith('bodhi-backend02') and env == "production"
+  when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
   tags:
   - config
   - bodhi
