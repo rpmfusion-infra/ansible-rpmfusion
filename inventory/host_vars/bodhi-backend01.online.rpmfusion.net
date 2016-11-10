@@ -12,8 +12,8 @@ nrpe_procs_crit: 1000
 
 # These set a config value in /etc/fedmsg.d/, see roles/bodhi2/base/
 bodhi_masher_enabled: True
-bodhi_updates_handler_enabled: False
-bodhi_signed_handler_enabled: False
+bodhi_updates_handler_enabled: True
+bodhi_signed_handler_enabled: True
 
 wsgi_procs: 2
 wsgi_threads: 15
