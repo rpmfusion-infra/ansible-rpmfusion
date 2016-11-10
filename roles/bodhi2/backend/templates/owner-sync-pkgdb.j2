@@ -42,8 +42,8 @@ def get_options():
         'server': 'http://koji.rpmfusion.org/kojihub',
         'weburl': 'http://koji.rpmfusion.org/koji',
         'cert': '/etc/pki/pkgdb/pkgdb.pem',
-        'ca': '/etc/pki/pkgdb/fedora-server-ca.cert',
-        'serverca': '/etc/pki/pkgdb/fedora-server-ca.cert'
+        'ca': '/etc/pki/pkgdb/rpmfusion-upload-ca.cert',
+        'serverca': '/etc/pki/pkgdb/rpmfusion-server-ca.cert'
     }
     for configFile in ('/etc/koji.conf.d/pkgdb', os.path.expanduser('~/.koji/rpmfusion-config')):
         if os.access(configFile, os.F_OK):

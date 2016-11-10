@@ -126,13 +126,19 @@
   tags:
   - config
 
-- name: install /etc/pki/fas/fedora-server-ca.cert file
+- name: install Project CA in pkgdb
   copy: >
-    src="{{ private }}/files/rpmfusion-ca.cert"
-    dest="/etc/pki/pkgdb/fedora-server-ca.cert"
+    src="{{ private }}/files/{{ item  }}"
+    dest="/etc/pki/pkgdb/{{ item }}"
+    owner=root
+    group=root
     mode=0644
+  with_items:
+  - rpmfusion-server-ca.cert
+  - rpmfusion-upload-ca.cert
   tags:
   - config
+  - bodhi
 
 - name: create pki dir
   file: path=/root/.koji mode=700 state=directory
