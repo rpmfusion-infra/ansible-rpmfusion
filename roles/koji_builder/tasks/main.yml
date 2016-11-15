@@ -119,6 +119,21 @@
   - koji_builder
   when: ansible_distribution_major_version|int > 21
 
+
+- name: create kojid service override directory
+  file: path=/etc/systemd/system/kojid.service.d state=directory
+  tags:
+  - koji_buidler
+  when: ansible_distribution_major_version|int > 6
+
+- name: systemd kojid service override
+  copy: src=builders/kojid.service.d.override.conf dst=/etc/systemd/system/kojid.service.d/override.conf
+  notify:
+  - reload systemd
+  tags:
+  - koji_buidler
+  when: ansible_distribution_major_version|int > 6
+
 - name: build /etc/kojid/kojid.conf from group vars
   template: src=kojid.conf dest=/etc/kojid/kojid.conf
   notify:
