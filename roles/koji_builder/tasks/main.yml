@@ -127,7 +127,7 @@
   when: ansible_distribution_major_version|int > 6
 
 - name: systemd kojid service override
-  copy: src=builders/kojid.service.d.override.conf dst=/etc/systemd/system/kojid.service.d/override.conf
+  copy: src=builders/kojid.service.d.override.conf dest=/etc/systemd/system/kojid.service.d/override.conf
   notify:
   - reload systemd
   tags:
