@@ -1,0 +1,42 @@
+Alias /favicon.ico {{ mailman_webui_basedir }}/static/hyperkitty/img/favicon.ico
+Alias /static      {{ mailman_webui_basedir }}/static
+
+#ErrorLog /var/log/httpd/webui_error.log
+#CustomLog /var/log/httpd/webui_access.log combined
+
+WSGIScriptAlias / {{ mailman_webui_confdir }}/webui.wsgi
+WSGIDaemonProcess webui display-name=webui maximum-requests=1000 processes=4 threads=10
+WSGISocketPrefix run/wsgi
+WSGIRestrictStdout On
+WSGIRestrictSignal Off
+WSGIPythonOptimize 1
+
+<Directory "{{ mailman_webui_confdir }}">
+    <Files webui.wsgi>
+        Order deny,allow
+        Allow from all
+        Require all granted
+    </Files>
+    WSGIProcessGroup webui
+</Directory>
+
+<Directory "{{ mailman_webui_basedir }}/static">
+    Order deny,allow
+    Allow from all
+    Require all granted
+</Directory>
+
+
+# Old static archives
+
+Alias /pipermail/ {{ mailman_webui_basedir }}/old-archives/pipermail/
+<Directory {{ mailman_webui_basedir }}/old-archives/pipermail>
+    Options MultiViews FollowSymLinks
+    AllowOverride None
+    Require all granted
+    AddDefaultCharset Off
+</Directory>
+
+RedirectMatch ^/pipermail[/]*$ /
+RedirectMatch ^/mailman/listinfo/$ /
+RedirectMatch ^/mailman$ /

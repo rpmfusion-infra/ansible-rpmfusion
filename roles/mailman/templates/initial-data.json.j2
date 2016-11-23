@@ -1,0 +1,30 @@
+[
+{% for host in mailman_domains %}
+{
+    "fields": {
+        "domain": "{{ host }}",
+        "name": "RPM Fusion mailing-lists"
+    },
+    "model": "sites.site",
+    "pk": {{ loop.index }}
+},
+{% endfor %}
+{% for service_name, service_data in mailman_login.items() %}
+{
+    "fields": {
+        "name": "{{ service_data.display_name }}",
+        "sites": [
+            {% for host in mailman_domains %}
+            {{ loop.index }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        "client_id": "{{ mailman_login_secrets[env][service_name].client_id }}",
+        "secret": "{{ mailman_login_secrets[env][service_name].secret }}",
+        "key": "",
+        "provider": "{{ service_data.provider }}"
+    },
+    "model": "socialaccount.socialapp",
+    "pk": {{ loop.index }}
+}{% if not loop.last %},{% endif %}
+{% endfor %}
+]

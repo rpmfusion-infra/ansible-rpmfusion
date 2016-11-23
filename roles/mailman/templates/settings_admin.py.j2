@@ -1,0 +1,23 @@
+#-*- coding: utf-8 -*-
+
+"""
+Copy of the Django settings file, but with database admin credentials (for
+schema modifications)
+"""
+
+from settings import *
+try:
+    from settings_local import *
+except ImportError:
+    pass
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'hyperkitty',
+        'USER': 'hyperkittyadmin',
+        'PASSWORD': '{{ mailman_hyperkitty_admin_db_pass }}',
+        'HOST': '{{ mailman_db_server }}',
+        'PORT': '',
+    }
+}

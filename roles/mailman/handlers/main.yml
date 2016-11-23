@@ -1,0 +1,9 @@
+---
+- name: restart mailman3
+  service: name=mailman3 state=restarted
+
+- name: reload apache
+  service: name=httpd state=reloaded
+
+- name: restart memcached
+  service: name=memcached state=restarted
