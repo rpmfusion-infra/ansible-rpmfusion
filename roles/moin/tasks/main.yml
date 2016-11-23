@@ -1,0 +1,33 @@
+---
+# tasks file for moin
+
+- name: install needed packages for moin
+  yum: pkg={{ item }} state=present
+  with_items:
+  - moin
+  - mod_wsgi
+  - httpd
+  tags:
+  - packages
+  - moin
+
+- name: create content directory for moin
+  file: path=/var/www/moin state=directory mode=0755
+  tags:
+  - config
+  - moin
+
+- name: create a symlink to moin.wsgi
+  file: path=/var/www/moin/moin.wsgi dest=/usr/share/moin/server/moin.wsgi state=link
+  tags:
+  - config
+  - moin
+
+- name: moin apache config
+  copy: src=moin.conf dest=/etc/http/conf.d/moin.conf
+  tags:
+  - config
+  - moin
+  notify:
+  - restart apache
+
