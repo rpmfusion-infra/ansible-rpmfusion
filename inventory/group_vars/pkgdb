@@ -8,8 +8,8 @@ num_cpus: 1
 # the host_vars/$hostname file
 
 wsgi_fedmsg_service: pkgdb2
-wsgi_procs: 3
-wsgi_threads: 2
+wsgi_procs: 2
+wsgi_threads: 25
 
 tcp_ports: [ 80 ]
 
