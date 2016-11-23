@@ -22,8 +22,6 @@
   - fas_client
   - collectd/base
   - sudo
-  - { role: openvpn/client,
-      when: env != "staging" }
   - apache
 
   tasks:
@@ -42,7 +40,7 @@
 #
 
 - name: prepare setting up the database
-  hosts: db01.stg.rpmfusion.org:db01.rpmfusion.org
+  hosts: mailman-db-stg:mailman-db
   gather_facts: no
   user: root
 
@@ -53,7 +51,7 @@
     - packages
 
 - name: setup the database
-  hosts: db01.stg.rpmfusion.org:db01.rpmfusion.org
+  hosts: mailman-db-stg:mailman-db
   gather_facts: no
   become: yes
   become_user: postgres
@@ -116,7 +114,6 @@
     - httpd
     - mailman3
     - postfix
-    when: inventory_hostname.startswith('mailman01.online') or inventory_hostname.startswith('lists-dev')
 
   handlers:
   - include: "{{ handlers }}/restart_services.yml"
