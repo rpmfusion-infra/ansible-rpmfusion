@@ -25,6 +25,18 @@ ipsilon01.online.rpmfusion.net
 [koji]
 koji01.online.rpmfusion.net
 
+[mailman]
+se01.online.rpmfusion.net
+
+[mailman-stg]
+test01.scaleway.rpmfusion.net
+
+[mailman-db]
+db02.online.rpmfusion.net
+
+[mailman-stg]
+test01.scaleway.rpmfusion.net
+
 [pkgdb]
 pkgdb02.online.rpmfusion.net
 
