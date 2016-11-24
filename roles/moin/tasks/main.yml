@@ -18,7 +18,7 @@
   - moin
 
 - name: create a symlink to moin.wsgi
-  file: path=/var/www/moin/moin.wsgi dest=/usr/share/moin/server/moin.wsgi state=link
+  file: src=/var/www/moin/moin.wsgi dest=/usr/share/moin/server/moin.wsgi state=link
   tags:
   - config
   - moin
