@@ -24,7 +24,7 @@
   - moin
 
 - name: moin apache config
-  copy: src=moin.conf dest=/etc/http/conf.d/moin.conf
+  copy: src=moin.conf dest=/etc/httpd/conf.d/moin.conf
   tags:
   - config
   - moin
