@@ -1,0 +1,108 @@
+html { margin: 0; padding: 0; font-family: sans-serif; } 
+body { padding: 0; margin: 0; }
+
+@media screen {
+body { color: #333; background: #fff url(fountain.png) repeat-x top; }
+#logo { margin-left: 0.8em; }
+#logo a { font-family: sans-serif; font-size: 1.75em; text-decoration: none; color: #bd9; }
+#logo img { float: left; margin-right: 0.5em; }
+#header { background: #fff url(background.jpg) no-repeat right 60%; border-bottom: 1px solid #222; }
+#iconbar { float: right; margin: 0.25em; padding: 0; font-size: 80%; font-weight: bold; margin-top: -20px; }
+#iconbar span, #iconbar a { display: block; float: left; width: 62px; padding-top: 24px; text-decoration: none; color: #666; text-align: center; background: url(toolbox.png) no-repeat top center; margin: 1px; }
+#iconbar span { color: #bbb;background-image: url(toolbox-gray.png) }
+a#editlink { background-image: url(edit.png) }
+span#editlink { background-image: url(edit-gray.png) }
+a#infolink { background-image: url(versions.png) }
+#iconbar a:hover { border: 1px dotted #999; margin: 0; color: #000; }
+#header hr { height: 0; border: none; clear:right; margin: 0; }
+#searchform { float: right; margin: 0.125em 0.25em 2em 0.25em; 
+        opacity: 0.75;
+        -moz-opacity:0.75;
+        filter: alpha(opacity=75);
+}
+#searchform input { border: 1px solid #350; background: #eee; color: #222; vertical-align: middle; font-size: 80%; font-weight: bold; }
+#searchform input:focus { color: #000; background: #fff; }
+#navibar { display: block; margin: 0; padding: 0; font-size: 80%; font-weight: bold; }
+#pagetrail { margin: 0; padding: 0; font-size: 80%; margin-top: 0.25em}
+#pagetrail li ,#navibar li { display: inline; margin: 0; margin-right: 1em; }
+#navibar a { color: #069; text-decoration: none; }
+#pagetrail a { color: #999; text-decoration: none; }
+#navibar li.current a { color: #046 }
+#navibar li a:hover { color: #012; }
+#pagetrail li a:hover { color: #012; } 
+#message { font-size: 80%; border-bottom: 1px solid #000; background: #ffb; color: #000; padding: 2px 0.5em; position: absolute; top: 0; left: 0; right: 0; 
+}
+#message p { margin: 0.125em 0; }
+#message .buttons { position: absolute; top: 0.125em; right: 0.5em; font-weight: bold; }
+#message a { color: #67b; text-decoration: none; }
+#message a:hover { color: #000; }
+#loginform { 
+    clear: right;
+    margin: 0.5em;
+    float:right; width: 15em; border: 1px solid #000; background: #fff; color: #444; font-size: 80%; padding: 0.25em; 
+
+        opacity: 0.75;
+        -moz-opacity:0.75;
+        filter: alpha(opacity=75);
+}
+#loginform a { float: right; }
+#loginform fieldset { background: #eee url(fountain.png) repeat-x top; border: 1px solid #999; clear: right; }
+#loginform fieldset legend { font-weight: bold; }
+#loginform input { border: 1px solid #999; background: #ddd; width: 6em; vertical-align: middle; }
+#loginform label { display: block; height: 2em; text-align: right; }
+#loginform label input { margin-left: 0.5em; }
+#loginform label input:focus { color: #000; background: #fff; }
+#loginform input#loginsubmit { display: block; margin: 0.5em auto; font-weight: bold; }
+#loginform input#loginsubmit:hover { color: #000; background: #eee; border: 1px solid #000; }
+#editor { margin: 0; margin-top: 5em; }
+#editor-help { font-size: 80%; background: #eee; border: 1px solid #999; }
+#preview { border: 1px dashed #999; margin: -1px; margin-top: 2em; }
+#editor input#editor-comment, #editor textarea { display: block; width: 100%; font-size: 80%; font-family: DejaVu Sans Mono, BitstreamVera Sans Mono, Lucida Console, monospace; border: 1px solid #999; padding: 0.125em; background: #fff; color: #000; }
+#editor fieldset input { border: 1px solid #999; font-weight: bold; background: #ddd; color: #444; }
+#editor fieldset input:hover { color: #000; border: 1px solid #000; background: #eee; } 
+#page { margin: 1em 2em; }
+}
+
+@media print {
+#header, #pagetrail, #loginform, #footer, #iconbar { display: none; }
+#page {color: #000; background: #fff;}
+}
+
+#page { line-height: 1.4; } 
+#pageinfo { margin-top: 2em; border-top: 2px solid #eee; padding: 0.25em; font-size: 80%; color: #999; } 
+pre { font-size: 1em; font-family: DejaVu Sans Mono, Bitsream Vera Sans Mono, Lucida Console, monospace; line-height: 1; white-space: pre; white-space: pre-wrap; word-wrap: break-word; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; border-bottom: 2px solid #eee; border-top: 2px solid #eee; }
+#page pre .ID { font-style: italic; }
+#page pre .ResWord { font-weight: bold; }
+#page pre .Operator { font-weight: bold; color: #999; }
+#page pre .Comment { color: #999; font-style: italic;}
+#page pre .Number { color: #069; }
+#page pre .String { color: #069; font-style: italic; }
+#page pre .SPChar { color: #069; font-weight: bold; }
+span.LineNumber { color: #666; background: #eee; font-weight: bold; font-size: 80%; border-right: 1px solid #999; margin-right: 0.5em; border-top: 2px solid #eee; }
+#page a.codenumbers { float: right; font-size: 80%; font-weight: normal; }
+a img { border:none }
+a { color: #069; text-decoration: none; }
+a:visited { color: #046 }
+a.www, a.http, a.https, a.ftp { color: #45b; }
+a.www:visited, a.http:visited, a.https:visited, a.ftp:visited { color: #56d; }
+a.nonexistent { color: #b11; background: #fee; }
+a:hover { color: #012; background: #e0f5fa;}
+h1, h2, h3, h4, h5, h6 { font-family: sans-serif; font-weight: normal; margin: 1em 0 0.25em 0; color: #7ac; border-bottom: 2px solid #eee; line-height: 1; }
+#pagelocation { color: #689; margin-top: 0; font-size: 250%; letter-spacing: 0.025em; }
+p, ul, ol { margin: 0 0 1em 0; }
+ul, ol { padding-left: 1.5em }
+table { border-collapse: collapse; margin: 0.5em auto}
+th, td { border: 1px solid #999; padding: 0.25em; }
+th { background: #eee; }
+li p { margin: 0; }
+hr { height:0; border:none; border-top: 2px solid #eee; margin: 0.5em 0}
+hr.hr1 { border-top: 2px solid #abc;}
+hr.hr2 { border-top: 2px solid #78a;}
+hr.hr3 { border-top: 2px solid #569;}
+hr.hr4 { border-top: 2px solid #347;}
+hr.hr5 { border-top: 2px solid #126;}
+hr.hr6 { border-top: 2px solid #014;}
+textarea, select, input { border: 1px solid #999; font-size: 1em; vertical-align: middle; }
+input:hover { border: 1px solid #000; background: #fff; color: #000 }
+table.searchpages { border: none; border-top: 2px solid #eee; }
+table.searchpages td { border: none; font-weight: bold; }
