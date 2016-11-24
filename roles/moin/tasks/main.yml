@@ -23,6 +23,12 @@
   - config
   - moin
 
+- name: copy moin theme
+  copy: src={{ files }}/moin/rpmfusion-theme/ dest=/var/www/moin/rpmfusion-theme
+  tags:
+  - config
+  - moin
+
 - name: deploy moin wikiconfig.py
   copy: src={{ files }}/moin/wikiconfig.py dest=/var/www/moin/wikiconfig.py
   tags:
