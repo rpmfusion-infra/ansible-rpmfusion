@@ -13,6 +13,9 @@ bugzilla02.online.rpmfusion.net
 [dbserver]
 db02.online.rpmfusion.net
 
+[dns]
+se01.online.rpmfusion.net
+
 [fas]
 fas01.online.rpmfusion.net
 
