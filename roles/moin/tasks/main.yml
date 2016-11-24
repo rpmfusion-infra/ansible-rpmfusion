@@ -24,7 +24,7 @@
   - moin
 
 - name: deploy moin wikiconfig.py
-  copy: src={{ files }}/moin/wikiconfig.py dest==/var/www/moin/wikiconfig.py
+  copy: src={{ files }}/moin/wikiconfig.py dest=/var/www/moin/wikiconfig.py
   tags:
   - config
   - moin
