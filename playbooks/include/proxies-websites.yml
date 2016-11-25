@@ -51,7 +51,8 @@
     server_aliases:
     - www.rpmfusion.org
     sslonly: true
-    cert_name: "{{wildcard_cert_name}}"
+    cert_name: rpmfusion.org
+    SSLCertificateChainFile : rpmfusion.org-intermediate.cert
 
   - role: httpd/website
     name: admin.rpmfusion.org
