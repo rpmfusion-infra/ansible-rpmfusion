@@ -2,7 +2,7 @@ nm: 255.255.255.0
 gw: 195.154.185.1
 dns: 62.210.16.6
 ks_url: http://192.168.181.254/install/ks/se01.ks
-ks_repo: http://192.168.181.254/repo/redhat/el7Server/x86_64/os/
+
 volgroup: /dev/vg_hv03_virt
 eth0_ip: 192.168.181.1
 vmhost: hv01.online.rpmfusion.net
