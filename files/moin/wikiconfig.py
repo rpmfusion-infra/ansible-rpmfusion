@@ -60,7 +60,7 @@ class Config(multiconfig.DefaultConfig):
     # use this setting and it will automatically work.
     # If you run your wiki script at /mywiki, you need to use this:
     #url_prefix_static = '/mywiki' + url_prefix_static
-    url_prefix_static = '/moin' + url_prefix_static
+    #url_prefix_static = '/moin' + url_prefix_static
 
 
     # Wiki identity ----------------------------------------------------
