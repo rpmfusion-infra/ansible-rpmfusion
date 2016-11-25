@@ -6,7 +6,7 @@ ks_repo: http://192.168.181.254/repo/redhat/el7Server/x86_64/os/
 volgroup: /dev/vg_hv03_virt
 eth0_ip: 212.129.31.198
 eth1_ip: 192.168.181.137
-vmhost: hv01.online.rpmfusion.org
+vmhost: hv01.online.rpmfusion.net
 datacenter: online
 
 nrpe_procs_warn: 900
