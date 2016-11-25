@@ -11,6 +11,7 @@
 
 # hv01 online - lan
 192.168.181.1   se01.online.rpmfusion.net se01
+192.168.181.3   mailman01.online.rpmfusion.net mailman01
 192.168.181.5   moin01.online.rpmfusion.net moin01
 192.168.181.254 hv01.online.rpmfusion.net hv01 nfs-server.online.rpmfusion.net log01.online.rpmfusion.net log01 proxy.online.rpmfusion.net hub.online.rpmfusion.net nfs-server proxy
 192.168.181.101 buildvm-01.online.rpmfusion.net buildvm-01
