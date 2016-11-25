@@ -38,8 +38,7 @@ db02.online.rpmfusion.net
 test01.scaleway.rpmfusion.net
 
 [moin]
-se01.online.rpmfusion.net
-test01.scaleway.rpmfusion.net
+moin01.online.rpmfusion.net
 
 [pkgdb]
 pkgdb02.online.rpmfusion.net
