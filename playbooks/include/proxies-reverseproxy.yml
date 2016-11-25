@@ -13,10 +13,12 @@
 
   roles:
 
-#  - role: httpd/reverseproxy
-#    website: id.rpmfusion.org
-#    destname: id
-#    proxyurl: http://localhost:10020
+  - role: httpd/reverseproxy
+    website: rpmfusion.org
+    destname: se01
+    localpath: /
+    remotepath: /moin
+    proxyurl: http://se01
 
   - role: httpd/reverseproxy
     website: admin.rpmfusion.org
