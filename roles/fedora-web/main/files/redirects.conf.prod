@@ -11,13 +11,9 @@ RewriteRule .* - [F]
 RewriteCond %{REMOTE_ADDR} ^95\.24\.237\.122$
 RewriteRule .* - [F]
 
-# Sponsor links should go to the specific sponsor page
-RewriteRule  ^(/.*)?/sponsors.*$ https://getfedora.org/sponsors [R=301,L]
 
 RewriteEngine On
-RewriteCond %{HTTPS} off
-RewriteRule ^/([^/]+/)?(keys|verify)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+RewriteRule ^(.*)$ https://rpmfusion.org/$1 [R=301,L]
 
 
-RewriteCond %{HTTP_REFERER} .*fedorproject.*
-RewriteRule .* http://mmcgrath.fedorapeople.org/spam.html [R=301,L]
