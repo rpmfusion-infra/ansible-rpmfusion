@@ -1,0 +1,64 @@
+---
+# common items for the releng-* boxes
+lvm_size: 250000
+mem_size: 16384
+num_cpus: 4
+# for systems that do not match the above - specify the same parameter in
+# the host_vars/$hostname file
+
+tcp_ports: [
+    25, 80, 443,
+    # For outgoing fedmsg
+    3000, 3001, 3002, 3003,
+]
+
+fas_client_groups: sysadmin-tools,sysadmin-main
+
+# These are consumed by a task in roles/fedmsg/base/main.yml
+fedmsg_certs:
+- service: shell
+  owner: root
+  group: sysadmin
+  can_send:
+  - logger.log
+- service: mailman
+  owner: mailman
+  group: mailman
+  can_send:
+  - mailman.receive
+
+# Postfix main.cf
+postfix_group: mailman
+
+# Used by the mailman role
+mailman_db_server: db02.online.rpmfusion.net
+mailman_domains:
+- lists.rpmfusion.org
+mailman_login:
+  gitlab:
+    display_name: GitLab
+    provider: gitlab
+  github:
+    display_name: GitHub
+    provider: github
+  twitter:
+    display_name: Twitter
+    provider: twitter
+  google:
+    display_name: Google
+    provider: google
+  facebook:
+    display_name: Facebook
+    provider: facebook
+  stackexchange:
+    display_name: StackExchange
+    provider: stackexchange
+
+# by default, the number of emails in queue before we whine
+nrpe_check_postfix_queue_warn: 100
+nrpe_check_postfix_queue_crit: 200
+
+# Number of processes for nagios
+nrpe_procs_warn: 300
+nrpe_procs_crit: 500
+
