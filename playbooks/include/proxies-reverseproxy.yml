@@ -15,14 +15,16 @@
 
   - role: httpd/reverseproxy
     website: rpmfusion.org
-    destname: se01
+    destname: moin01
     localpath: /
-    remotepath: /moin
-    proxyurl: http://se01
+    remotepath: /
+    proxyurl: http://moin01
 
   - role: httpd/reverseproxy
     website: admin.rpmfusion.org
     destname: bodhi
+    localpath: /updates
+    remotepath: /
     proxyurl: http://bodhi01
 
   - role: httpd/reverseproxy
