@@ -49,7 +49,8 @@
   - role: httpd/website
     name: rpmfusion.org
     server_aliases:
-    - localhost
+    - www.rpmfusion.org
+    sslonly: true
     cert_name: "{{wildcard_cert_name}}"
 
   - role: httpd/website
