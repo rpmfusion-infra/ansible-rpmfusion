@@ -51,7 +51,7 @@
     server_aliases:
     - www.rpmfusion.org
     sslonly: true
-    sslonly_no_hsts: true
+    sslonly_hsts: false
     cert_name: rpmfusion.org
     SSLCertificateChainFile : rpmfusion.org-intermediate.cert
 
