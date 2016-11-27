@@ -51,6 +51,7 @@
     server_aliases:
     - www.rpmfusion.org
     sslonly: true
+    sslonly_no_hsts: true
     cert_name: rpmfusion.org
     SSLCertificateChainFile : rpmfusion.org-intermediate.cert
 
@@ -65,13 +66,6 @@
     sslonly: true
     cert_name: bugzilla.rpmfusion.org
     SSLCertificateChainFile : bugzilla.rpmfusion.org-intermediate.cert
-
-
-  - role: httpd/website
-    name: fas.rpmfusion.org
-    sslonly: true
-    #cert_name: fas.rpmfusion.org
-    cert_name: "{{wildcard_cert_name}}"
 
 
   - role: httpd/website
