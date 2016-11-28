@@ -173,6 +173,8 @@ class Config(multiconfig.DefaultConfig):
         #u'HelpContents',
         u'Configuration',
         u'ReportingBugs',
+        u'Howto',
+        u'FAQ',
     ]
 
     # The default theme anonymous or new users get
