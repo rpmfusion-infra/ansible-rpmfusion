@@ -206,3 +206,7 @@ class Config(multiconfig.DefaultConfig):
     # Enable graphical charts, requires gdchart.
     #chart_options = {'width': 600, 'height': 300}
 
+    # Surge protection - https://moinmo.in/HelpOnConfiguration/SurgeProtection
+    surge_action_limits = None # disable surge protection
+
+
