@@ -211,4 +211,7 @@ class Config(multiconfig.DefaultConfig):
     # Surge protection - https://moinmo.in/HelpOnConfiguration/SurgeProtection
     surge_action_limits = None # disable surge protection
 
+    # Disable rdns https://moinmo.in/HowTo/Tune%20Performance
+    log_reverse_dns_lookups = False
+
 
