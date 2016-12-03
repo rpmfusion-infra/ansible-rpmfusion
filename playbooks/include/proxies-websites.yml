@@ -50,6 +50,8 @@
     name: rpmfusion.org
     server_aliases:
     - www.rpmfusion.org
+    - www.rpmfusion.net
+    - rpmfusion.net
     sslonly: true
     sslonly_hsts: false
     cert_name: rpmfusion.org
