@@ -67,6 +67,11 @@
     cert_name: bugzilla.rpmfusion.org
     SSLCertificateChainFile : bugzilla.rpmfusion.org-intermediate.cert
 
+  - role: httpd/website
+    name: download0.rpmfusion.org
+    sslonly: false
+    cert_name: download0.rpmfusion.org
+    SSLCertificateChainFile : download0.rpmfusion.org-intermediate.cert
 
   - role: httpd/website
     name: id.rpmfusion.org
