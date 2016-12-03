@@ -88,8 +88,8 @@
   - role: httpd/website
     name: lists.rpmfusion.org
     sslonly: true
-    #cert_name: lists.rpmfusion.org
-    cert_name: "{{wildcard_cert_name}}"
+    cert_name: lists.rpmfusion.org
+    SSLCertificateChainFile : lists.rpmfusion.org-intermediate.cert
 
 
 # Overrided in distgit role
