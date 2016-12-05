@@ -686,3 +686,25 @@ readme_directory = /usr/share/doc/postfix-2.4.5/README_FILES
 
 message_size_limit = 20971520
 #inet_protocols = ipv4
+
+virtual_alias_domains =
+  rpmfusion.net,
+  rpmfusion.org,
+#  lists.rpmfusion.org,
+
+virtual_alias_maps =
+  hash:/etc/postfix/virtual,
+#  regexp:/etc/postfix/virtual-regexp,
+
+# SMTP restrictions (block bogus stuff)
+smtpd_sender_restrictions =
+  permit_mynetworks,
+  reject_unknown_sender_domain,
+
+smtpd_recipient_restrictions =
+  permit_mynetworks,
+  reject_unauth_destination,
+#  check_policy_service unix:postgrey/socket,
+
+body_checks = regexp:/etc/postfix/body_checks
+
