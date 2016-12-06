@@ -247,6 +247,13 @@
   notify:
   - reload httpd
 
+# -- Download0 failback primary mirror---------------------
+- name: install the Download0 httpd configs
+  copy: src={{item}} dest=/etc/httpd/conf.d/download0.rpmfusion.org/{{item}}
+  with_items:
+  - download0.conf
+  notify:
+  - reload httpd
 
 # -- Lookaside Cache -------------------------------------
 # This is the annex to Dist Git, where we host source tarballs.
