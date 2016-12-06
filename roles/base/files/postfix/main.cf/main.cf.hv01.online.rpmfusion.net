@@ -696,6 +696,11 @@ virtual_alias_maps =
   hash:/etc/postfix/virtual,
 #  regexp:/etc/postfix/virtual-regexp,
 
+# opendkim setup
+smtpd_milters = inet:localhost:8891
+non_smtpd_milters = inet:localhost:8891
+milter_default_action = accept
+
 # SMTP restrictions (block bogus stuff)
 smtpd_sender_restrictions =
   permit_mynetworks,
