@@ -50,7 +50,7 @@ pkgs01.online.rpmfusion.net
 pkgs01.online.rpmfusion.net
 
 [releng-compose]
-bodhi01-backend.online.rpmfusion.net
+bodhi-backend01.online.rpmfusion.net
 
 [sign-bridge]
 koji01.online.rpmfusion.net
