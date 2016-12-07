@@ -713,8 +713,8 @@ smtpd_tls_mandatory_exclude_ciphers = aNULL, MD5, RC4
 #tls_ssl_options = no_ticket, no_compression
 
 smtpd_tls_loglevel = 1
-smtpd_tls_cert_file = /etc/pki/tls/certs/gateway.crt
-smtpd_tls_key_file =  /etc/pki/tls/private/gateway.key
+smtpd_tls_cert_file = /etc/pki/tls/certs/localhost.crt
+smtpd_tls_key_file =  /etc/pki/tls/private/localhost.key
 smtpd_tls_CAfile  =   /etc/pki/tls/certs/ca-bundle.crt
 smtpd_tls_session_cache_timeout = 3600s
 smtpd_tls_session_cache_database        = btree:${queue_directory}/smtpd_scache
@@ -735,7 +735,7 @@ smtp_tls_mandatory_protocols = !SSLv2,!SSLv3
 smtp_tls_mandatory_ciphers = high
 smtp_tls_mandatory_exclude_ciphers= aNULL, MD5, RC4
 smtp_tls_loglevel = 1
-smtp_tls_cert_file = /etc/pki/tls/certs/locahost.crt
+smtp_tls_cert_file = /etc/pki/tls/certs/localhost.crt
 smtp_tls_key_file = /etc/pki/tls/private/localhost.key
 smtp_tls_CAfile  = /etc/pki/tls/certs/ca-bundle.crt
 
