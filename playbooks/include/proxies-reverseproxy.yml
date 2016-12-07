@@ -32,3 +32,8 @@
     destname: bugzilla02
     proxyurl: http://bugzilla02
 
+  - role: httpd/reverseproxy
+    website: lists.rpmfusion.org
+    destname: se01
+    proxyurl: http://se01
+
