@@ -1,3 +1,4 @@
+# "false"
 # Global Postfix configuration file. This file lists only a subset
 # of all parameters. For the syntax, and for a complete parameter
 # list, see the postconf(5) manual page (command: "man 5 postconf").
@@ -9,8 +10,6 @@
 #
 # For best results, change no more than 2-3 parameters at a time,
 # and test if Postfix still works after every change.
-
-# Custom rules
 
 # SOFT BOUNCE
 #
@@ -43,12 +42,6 @@ command_directory = /usr/sbin
 #
 daemon_directory = /usr/libexec/postfix
 
-# The data_directory parameter specifies the location of Postfix-writable
-# data files (caches, random numbers). This directory must be owned
-# by the mail_owner account (see below).
-#
-data_directory = /var/lib/postfix
-
 # QUEUE AND PROCESS OWNERSHIP
 #
 # The mail_owner parameter specifies the owner of the Postfix queue
@@ -77,17 +70,12 @@ mail_owner = postfix
 #myhostname = host.domain.tld
 #myhostname = virtual.domain.tld
 
-
-smtp_helo_name = $myhostname
-
 # The mydomain parameter specifies the local internet domain name.
 # The default is to use $myhostname minus the first component.
 # $mydomain is used as a default value for many other configuration
 # parameters.
 #
 #mydomain = domain.tld
-
-mydomain = rpmfusion.org
 
 # SENDING MAIL
 # 
@@ -105,6 +93,7 @@ mydomain = rpmfusion.org
 #myorigin = $myhostname
 #myorigin = $mydomain
 
+mydomain = rpmfusion.org
 myorigin = rpmfusion.org
 
 # RECEIVING MAIL
@@ -122,7 +111,6 @@ myorigin = rpmfusion.org
 #inet_interfaces = all
 #inet_interfaces = $myhostname
 #inet_interfaces = $myhostname, localhost
-
 inet_interfaces = all
 
 # The proxy_interfaces parameter specifies the network interface
@@ -168,8 +156,9 @@ inet_interfaces = all
 #
 # See also below, section "REJECTING MAIL FOR UNKNOWN LOCAL USERS".
 #
-
-mydestination = $myhostname, localhost.$mydomain
+mydestination = $myhostname,
+                localhost.$mydomain, localhost,
+                lists.rpmfusion.org
 #mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain
 #mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain,
 #	mail.$mydomain, www.$mydomain, ftp.$mydomain
@@ -258,7 +247,6 @@ unknown_local_recipient_reject_code = 550
 #mynetworks_style = subnet
 #mynetworks_style = host
 
-
 # Alternatively, you can specify the mynetworks list by hand, in
 # which case Postfix ignores the mynetworks_style setting.
 #
@@ -273,7 +261,6 @@ unknown_local_recipient_reject_code = 550
 #mynetworks = 168.100.189.0/28, 127.0.0.0/8
 #mynetworks = $config_directory/mynetworks
 #mynetworks = hash:/etc/postfix/network_table
-mynetworks = 192.168.181.0/24, 192.168.182.0/24, 127.0.0.0/8, 212.129.31.200/32
 
 
 # The relay_domains parameter restricts what destinations this system will
@@ -306,7 +293,7 @@ mynetworks = 192.168.181.0/24, 192.168.182.0/24, 127.0.0.0/8, 212.129.31.200/32
 #
 #relay_domains = $mydestination
 
-relay_domains = $mydestination lists.rpmfusion.org rpmfusion.net
+
 
 # INTERNET OR INTRANET
 
@@ -328,8 +315,8 @@ relay_domains = $mydestination lists.rpmfusion.org rpmfusion.net
 #relayhost = [mailserver.isp.tld]
 #relayhost = uucphost
 #relayhost = [an.ip.add.ress]
+relayhost =  [192.168.181.254]
 
-relayhost =  
 
 # REJECTING UNKNOWN RELAY USERS
 #
@@ -360,7 +347,7 @@ relayhost =
 # 
 # Specify 0 to disable the feature. Valid delays are 0..10.
 # 
-in_flow_delay = 1s
+#in_flow_delay = 1s
 
 # ADDRESS REWRITING
 #
@@ -505,8 +492,6 @@ recipient_delimiter = +
 # To use the old cyrus deliver program you have to set:
 #mailbox_transport = cyrus
 
-
-
 # The fallback_transport specifies the optional transport in master.cf
 # to use for recipients that are not found in the UNIX passwd database.
 # This parameter has precedence over the luser_relay parameter.
@@ -524,7 +509,7 @@ recipient_delimiter = +
 #fallback_transport = lmtp:unix:/var/lib/imap/socket/lmtp
 #fallback_transport =
 
-transport_maps = hash:/etc/postfix/transport
+#transport_maps = hash:/etc/postfix/transport
 # The luser_relay parameter specifies an optional destination address
 # for unknown recipients.  By default, mail for unknown@$mydestination,
 # unknown@[$inet_interfaces] or unknown@[$proxy_interfaces] is returned
@@ -563,7 +548,7 @@ transport_maps = hash:/etc/postfix/transport
 #
 # For details, see "man header_checks".
 #
-#header_checks = regexp:/etc/postfix/header_checks
+header_checks = regexp:/etc/postfix/header_checks
 
 # FAST ETRN SERVICE
 #
@@ -633,7 +618,7 @@ debug_peer_level = 2
 #
 debugger_command =
 	 PATH=/bin:/usr/bin:/usr/local/bin:/usr/X11R6/bin
-	 ddd $daemon_directory/$process_name $process_id & sleep 5
+	 xxgdb $daemon_directory/$process_name $process_id & sleep 5
 
 # If you can't use X, use this to capture the call stack when a
 # daemon crashes. The result is in a file in the configuration
@@ -690,58 +675,22 @@ manpage_directory = /usr/share/man
 # sample_directory: The location of the Postfix sample configuration files.
 # This parameter is obsolete as of Postfix 2.1.
 #
-sample_directory = /usr/share/doc/postfix-2.5.6/samples
+sample_directory = /usr/share/doc/postfix-2.4.5/samples
 
 # readme_directory: The location of the Postfix README files.
 #
-readme_directory = /usr/share/doc/postfix-2.5.6/README_FILES
-# Enable IPv4, and IPv6 if supported
-inet_protocols = ipv4
+readme_directory = /usr/share/doc/postfix-2.4.5/README_FILES
 
+# add this to new postfix to get it to add proper message-id and other 
+# headers to outgoing emails via the gateway. 
 
 
 message_size_limit = 20971520
-
-## TLS
-# enable opportunistic TLS support in the SMTP server
-smtpd_use_tls = yes
-smtpd_tls_security_level = may
-smtpd_tls_auth_only = yes
-smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3
-smtpd_tls_mandatory_ciphers = high
-smtpd_tls_mandatory_exclude_ciphers = aNULL, MD5, RC4
-#tls_ssl_options = no_ticket, no_compression
-
-smtpd_tls_loglevel = 1
-smtpd_tls_cert_file = /etc/pki/tls/certs/gateway.crt
-smtpd_tls_key_file =  /etc/pki/tls/private/gateway.key
-smtpd_tls_CAfile  =   /etc/pki/tls/certs/ca-bundle.crt
-smtpd_tls_session_cache_timeout = 3600s
-smtpd_tls_session_cache_database        = btree:${queue_directory}/smtpd_scache
-smtpd_tls_received_header               = yes
-smtpd_tls_ask_ccert                     = yes
-smtpd_tls_received_header = yes
-tls_random_source                       = dev:/dev/urandom
-smtpd_tls_eecdh_grade = ultra
-tls_eecdh_strong_curve = prime256v1
-tls_eecdh_ultra_curve = secp384r1
-# TLS end
-#TLS Client
-smtp_tls_fingerprint_digest=sha1
-smtp_tls_note_starttls_offer = yes
-smtp_tls_policy_maps = hash:/etc/postfix/tls_policy
-smtp_tls_security_level = may
-smtp_tls_mandatory_protocols = !SSLv2,!SSLv3
-smtp_tls_mandatory_ciphers = high
-smtp_tls_mandatory_exclude_ciphers= aNULL, MD5, RC4
-smtp_tls_loglevel = 1
-smtp_tls_cert_file = /etc/pki/tls/certs/locahost.crt
-smtp_tls_key_file = /etc/pki/tls/private/localhost.key
-smtp_tls_CAfile  = /etc/pki/tls/certs/ca-bundle.crt
-
-# opendkim setup
-smtpd_milters = inet:localhost:8891
-non_smtpd_milters = inet:localhost:8891
-milter_default_action = accept
+#inet_protocols = ipv4
 
 
+# Mailman, see MTA.rst
+owner_request_special = no
+transport_maps = hash:/var/lib/mailman3/data/postfix_lmtp
+local_recipient_maps = hash:/var/lib/mailman3/data/postfix_lmtp
+relay_domains = hash:/var/lib/mailman3/data/postfix_domains
