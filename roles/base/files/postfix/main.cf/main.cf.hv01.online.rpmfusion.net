@@ -685,7 +685,7 @@ readme_directory = /usr/share/doc/postfix-2.4.5/README_FILES
 
 
 message_size_limit = 20971520
-#inet_protocols = ipv4
+inet_protocols = ipv4
 
 virtual_alias_domains =
   rpmfusion.net,
@@ -693,8 +693,9 @@ virtual_alias_domains =
 #  lists.rpmfusion.org,
 
 virtual_alias_maps =
+  hash:/etc/aliases,
   hash:/etc/postfix/virtual,
-#  regexp:/etc/postfix/virtual-regexp,
+  regexp:/etc/postfix/virtual-regexp,
 
 # opendkim setup
 smtpd_milters = inet:localhost:8891
