@@ -27,7 +27,6 @@ operator:	root
 games:		root
 gopher:		root
 ftp:		root
-nobody:		root
 radiusd:	root
 nut:		root
 dbus:		root
