@@ -690,7 +690,7 @@ inet_protocols = ipv4
 virtual_alias_domains =
   rpmfusion.net,
   rpmfusion.org,
-#  lists.rpmfusion.org,
+  lists.rpmfusion.org,
 
 virtual_alias_maps =
   hash:/etc/aliases,
