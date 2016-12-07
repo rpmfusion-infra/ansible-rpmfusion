@@ -93,25 +93,6 @@ decode:		root
 root:		root@rpmfusion.net
 rpmfusion:	root@rpmfusion.net
 
-# rpmfusion.net (low-level stuff)
-root@rpmfusion.net              matthias@saou.eu, lxtnow@gmail.com, kwizart+rfsystem@kwizart.net
-postmaster@rpmfusion.net        root@rpmfusion.net
-
-# rpmfusion.org (visible stuff)
-root@rpmfusion.org              root@rpmfusion.net
-postmaster@rpmfusion.org        root@rpmfusion.net
-noreply@rpmfusion.org           nobody
-buildsys@rpmfusion.org          root@rpmfusion.net
-accounts@rpmfusion.org          root@rpmfusion.net
-cvsadmin@rpmfusion.org          rpmfusion-cvsadmin@lists.rpmfusion.org
-ftpsync@rpmfusion.org           kwizart
-nobody@rpmfusion.org            kwizart
-sysadmin@rpmfusion.org          root@rpmfusion.net
-rpmfusion-package-review@rpmfusion.org  rpmfusion-developers@lists.rpmfusion.org
-
-# rpmfusion.org (user override)
-kwizart                         kwizart+rpmfusion@kwizart.net
-
 # Bodhi & pkgdb aliases
 updates:    /dev/null
 pkgdb:      /dev/null
