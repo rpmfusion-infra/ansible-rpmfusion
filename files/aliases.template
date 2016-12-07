@@ -105,6 +105,7 @@ buildsys@rpmfusion.org          root@rpmfusion.net
 accounts@rpmfusion.org          root@rpmfusion.net
 cvsadmin@rpmfusion.org          rpmfusion-cvsadmin@lists.rpmfusion.org
 ftpsync@rpmfusion.org           kwizart
+nobody@rpmfusion.org            kwizart
 sysadmin@rpmfusion.org          root@rpmfusion.net
 rpmfusion-package-review@rpmfusion.org  rpmfusion-developers@lists.rpmfusion.org
 
