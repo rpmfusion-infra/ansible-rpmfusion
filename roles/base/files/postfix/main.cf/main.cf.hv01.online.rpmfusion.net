@@ -368,7 +368,7 @@ in_flow_delay = 1s
 # address masquerading or other forms of address rewriting including
 # username->Firstname.Lastname mapping.
 
-masquerade_domains = rpmfusion.org
+masquerade_domains = !lists.rpmfusion.org rpmfusion.org
 masquerade_exceptions = root apache
 
 # ADDRESS REDIRECTION (VIRTUAL DOMAIN)
@@ -698,7 +698,13 @@ readme_directory = /usr/share/doc/postfix-2.5.6/README_FILES
 # Enable IPv4, and IPv6 if supported
 inet_protocols = ipv4
 
+virtual_alias_domains =
+  rpmfusion.net,
+  rpmfusion.org,
 
+virtual_alias_maps =
+  hash:/etc/aliases,
+  hash:/etc/postfix/virtual,
 
 message_size_limit = 20971520
 
