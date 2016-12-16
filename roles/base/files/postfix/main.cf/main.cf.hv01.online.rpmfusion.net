@@ -706,6 +706,18 @@ virtual_alias_maps =
   hash:/etc/aliases,
   hash:/etc/postfix/virtual,
 
+# SMTP restrictions (block bogus stuff)
+smtpd_sender_restrictions =
+  permit_mynetworks,
+  reject_unknown_sender_domain,
+
+smtpd_recipient_restrictions =
+  permit_mynetworks,
+  reject_unauth_destination,
+#  check_policy_service unix:postgrey/socket,
+
+body_checks = regexp:/etc/postfix/body_checks
+
 message_size_limit = 20971520
 
 ## TLS
