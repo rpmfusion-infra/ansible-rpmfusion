@@ -24,6 +24,7 @@
 #  - rsyncd
   - openvpn/server
   - nfs/server
+  - packager_alias
 
   
   tasks:
