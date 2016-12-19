@@ -705,6 +705,7 @@ virtual_alias_domains =
 virtual_alias_maps =
   hash:/etc/aliases,
   hash:/etc/postfix/virtual,
+  hash:/etc/postfix/package-owner,
 
 # SMTP restrictions (block bogus stuff)
 smtpd_sender_restrictions =
