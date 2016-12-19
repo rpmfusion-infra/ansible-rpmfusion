@@ -40,7 +40,7 @@ except (urllib2.HTTPError,urllib2.URLError), e:
 
 else:
     pkgs = pkgdb_data['packages']
-    if len(pkgs) < 500:
+    if len(pkgs) < 100:
         print >> sys.stderr, 'Too few packages, something is wrong'
         sys.exit(1)
     email_list = fas_data['emails']
