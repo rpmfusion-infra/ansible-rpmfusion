@@ -95,12 +95,14 @@
   with_items:
   - rpmfusion-free.file
   - rpmfusion-nonfree.file
-  - f23-free-updates.mash
-  - f23-nonfree-updates.mash
-  - f23-free-updates-testing.mash
-  - f23-nonfree-updates-testing.mash
+  - f24-free-updates.mash
+  - f24-nonfree-updates.mash
   - f24-free-updates-testing.mash
   - f24-nonfree-updates-testing.mash
+  - f25-free-updates.mash
+  - f25-nonfree-updates.mash
+  - f25-free-updates-testing.mash
+  - f25-nonfree-updates-testing.mash
   tags:
   - config
   - bodhi
