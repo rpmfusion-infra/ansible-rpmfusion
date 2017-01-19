@@ -6,7 +6,7 @@ ks_url: http://192.168.181.254/install/ks/koji01.ks
 volgroup: /dev/vg_hv03_virt
 eth0_ip: 212.83.132.100
 eth1_ip: 192.168.181.135
-vmhost: hv01.online.rpmfusion.org
+vmhost: hv01.online.rpmfusion.net
 datacenter: online
 
 nrpe_procs_warn: 900
