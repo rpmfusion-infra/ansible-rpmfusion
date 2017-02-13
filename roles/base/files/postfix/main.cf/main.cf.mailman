@@ -355,7 +355,7 @@ relayhost =  [192.168.181.254]
 # address masquerading or other forms of address rewriting including
 # username->Firstname.Lastname mapping.
 
-masquerade_domains = list.rpmfusion.org rpmfusion.org
+masquerade_domains = !lists.rpmfusion.org rpmfusion.org
 masquerade_exceptions = root apache
 
 # ADDRESS REDIRECTION (VIRTUAL DOMAIN)
