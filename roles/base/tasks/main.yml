@@ -442,3 +442,4 @@
 
 - name: Setup host keytab
   include: keytab.yml
+  when: env == 'DISABLED'
