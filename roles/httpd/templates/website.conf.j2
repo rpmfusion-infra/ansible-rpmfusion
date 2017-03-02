@@ -10,9 +10,21 @@
   SetOutputFilter DEFLATE
 <% end -%>
 
+{% if acme -%}
+  AliasMatch ^/.well-known/acme-challenge/(.*)$ /var/www/html/.well-known/acme-challenge/$1
+
+  <Directory "/var/www/html/.well-known/acme-challenge/">
+      Options None
+      AllowOverride None
+      ForceType text/plain
+      RedirectMatch 404 "^(?!/\.well-known/acme-challenge/[\w-]{43}$)"
+  </Directory>
+<% end -%>
+
 {% if  sslonly -%}
   RewriteEngine On
   RewriteCond %{HTTPS} off
+  RewriteCond %{REQUEST_URI}  !^/.well-known/acme-challenge/.*
   RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [NE]
 <% else -%>
   Include "conf.d/{{ name }}/*.conf"
