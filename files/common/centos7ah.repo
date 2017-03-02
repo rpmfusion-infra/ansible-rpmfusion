@@ -1,0 +1,5 @@
+[ah]
+name=ah
+baseurl=http://cbs.centos.org/repos/atomic7-testing/x86_64/os/
+enabled=1
+gpgcheck=0
