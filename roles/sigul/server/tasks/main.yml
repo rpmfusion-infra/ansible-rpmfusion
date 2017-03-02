@@ -60,6 +60,14 @@
   when: ansible_distribution_major_version|int == 7
 
 - name: add polkit rules to allow sigul user to access the smartcard/yubikey
-  file: src=00-sigul.rules dest=/etc/polkit-1/rules.d/00-sigul.rules
+  copy: src=00-sigul.rules dest=/etc/polkit-1/rules.d/00-sigul.rules
+  tags:
+  - config
+
+- name: Deploy public certs
+  copy: src="{{private}}/files/{{item}}" dest=/etc/sigul/{{item}} mode=0644 owner=root group=root
+  with_items:
+  - rpmfusion-server-ca.cert
+  - rpmfusion-upload-ca.cert
   tags:
   - config
