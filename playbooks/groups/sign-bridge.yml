@@ -24,10 +24,10 @@
   - hosts
   - fas_client
   - sudo
-  - role: keytab/service
-    service: sigul
-    owner_user: sigul
-    owner_group: sigul
+#  - role: keytab/service
+#    service: sigul
+#    owner_user: sigul
+#    owner_group: sigul
   - sigul/bridge
 
   tasks:
