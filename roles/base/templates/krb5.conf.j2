@@ -1,0 +1,29 @@
+[logging]
+ default = FILE:/var/log/krb5libs.log
+ kdc = FILE:/var/log/krb5kdc.log
+ admin_server = FILE:/var/log/kadmind.log
+
+[libdefaults]
+ default_realm = {{ ipa_realm }}
+ rdns = false
+ dns_canonicalize_hostname = false
+ dns_lookup_realm = false
+ dns_lookup_kdc = false
+ ticket_lifetime = 24h
+ renew_lifetime = 7d
+ forwardable = true
+
+[realms]
+ {{ ipa_realm }} = {
+{% if ansible_distribution_major_version|int == 6 %}
+  kdc = ipa01{{ env_suffix }}.online.rpmfusion.net
+{% else %}
+  kdc = https://id{{ env_suffix }}.rpmfusion.org/KdcProxy
+{% endif %}
+ }
+
+[domain_realm]
+ .rpmfusion.org = RPMFUSION.ORG
+ rpmfusion.org = RPMFUSION.ORG
+ .stg.rpmfusion.org = STG.RPMFUSION.ORG
+ stg.rpmfusion.org = STG.RPMFUSION.ORG

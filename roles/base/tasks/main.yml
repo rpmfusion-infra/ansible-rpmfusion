@@ -5,12 +5,28 @@
 # Things in here are things we want to do to every machine no matter what.
 #
 
+- name: ensure packages required for semanage are installed (yum)
+  yum: name={{ item }} state=present
+  when: ansible_distribution_major_version|int < 22
+  with_items:
+  - policycoreutils-python
+  tags:
+  - selinux
+
+- name: ensure packages required for semanage are installed (dnf)
+  dnf: name={{ item }} state=present
+  when: ansible_distribution_major_version|int > 21 and ansible_cmdline.ostree is not defined
+  with_items:
+  - policycoreutils-python-utils
+  tags:
+  - selinux
+
 # XXX fixme # a datacenter 'fact' from setup
 - name: /etc/resolv.conf
   copy: src={{ item }} dest=/etc/resolv.conf
   with_first_found:
   - "{{ resolvconf }}"
-  - resolv.conf/{{ ansible_fqdn }}
+  - resolv.conf/{{ inventory_hostname }}
   - resolv.conf/{{ host_group }}
   - resolv.conf/{{ datacenter }}
   - resolv.conf/resolv.conf
@@ -26,7 +42,7 @@
   ignore_errors: true
   changed_when: false
   failed_when: "1 != 1"
-  always_run: true
+  check_mode: no
   tags:
    - config
    - resolvconf
@@ -49,7 +65,7 @@
   register: if_uuid
   changed_when: false
   failed_when: 'if_uuid.stdout == ""'
-  always_run: yes
+  check_mode: no
   when: ansible_distribution_major_version|int >=7 and nmclitest|success and ( not ansible_ifcfg_blacklist )
   tags:
    - config
@@ -88,17 +104,36 @@
   - base
   when: ansible_distribution_major_version|int > 21 and ansible_cmdline.ostree is not defined
 
-- debug: msg="{{ansible_nodename}}  {{inventory_hostname}} {{ansible_distribution_major_version|int}}"
-
 - name: make sure hostname is set right on rhel7 hosts
-  command: hostnamectl set-hostname {{ inventory_hostname }}
-  when: ( ansible_nodename != inventory_hostname ) and ansible_distribution_major_version|int == 7
+  hostname: name="{{inventory_hostname}}"
+
+- name: check if sshd port is already known by selinux
+  shell: semanage port -l | grep ssh
+  register: sshd_selinux_port
+  check_mode: no
+  changed_when: false
+  tags:
+  - sshd_config
+  - config
+  - sshd
+  - selinux
+  - base
+
+- name: allow alternate sshd port
+  command: semanage port -a -t ssh_port_t -p tcp {{ sshd_port }}
+  when: sshd_selinux_port.stdout.find('{{ sshd_port }}') == -1
+  tags:
+  - sshd_config
+  - config
+  - sshd
+  - selinux
+  - base
 
 - name: sshd_config
-  copy: src={{ item }} dest=/etc/ssh/sshd_config mode=600
+  copy: src={{ item }} dest=/etc/ssh/sshd_config mode=0600
   with_first_found:
     - "{{ sshd_config }}"
-    - ssh/sshd_config.{{ ansible_fqdn }}
+    - ssh/sshd_config.{{ inventory_hostname }}
     - ssh/sshd_config.{{ host_group }}
     - ssh/sshd_config.{{ dist_tag }}
     - ssh/sshd_config.{{ ansible_distribution }}
@@ -117,7 +152,7 @@
   tags:
   - rootpw
   - base
-  when: not (inventory_hostname.startswith('rawhide') or inventory_hostname.startswith('branched') or inventory_hostname.startswith('compose') or inventory_hostname.startswith('build') or inventory_hostname.startswith('arm') or inventory_hostname.startswith('bkernel') or inventory_hostname.startswith('koji01.stg') or inventory_hostname.startswith('aarch64') or inventory_hostname.startswith('s390') or inventory_hostname.startswith('fed-cloud09'))
+  when: not (inventory_hostname.startswith('rawhide') or inventory_hostname.startswith('branched') or inventory_hostname.startswith('compose') or inventory_hostname.startswith('build') or inventory_hostname.startswith('arm') or inventory_hostname.startswith('bkernel') or inventory_hostname.startswith('koji01.stg') or inventory_hostname.startswith('aarch64') or inventory_hostname.startswith('s390') or inventory_hostname.startswith('fed-cloud09') or inventory_hostname.startswith('ppc8-04'))
 
 - name: add ansible root key
   authorized_key: user=root key="{{ item }}"
@@ -188,14 +223,14 @@
   - base
 
 - name: iptables
-  template: src={{ item }} dest=/etc/sysconfig/iptables mode=600 validate="/sbin/iptables-restore --text %s"
+  template: src={{ item }} dest=/etc/sysconfig/iptables mode=0600 validate="/sbin/iptables-restore --text %s"
   with_first_found:
    - iptables/iptables.{{ datacenter }}
-   - iptables/iptables.{{ ansible_fqdn }}
+   - iptables/iptables.{{ inventory_hostname }}
    - iptables/iptables.{{ host_group }}
    - iptables/iptables.{{ env }}
    - iptables/iptables
-  when: not inventory_hostname.startswith('fed-cloud09')
+  when: not inventory_hostname.startswith(('fed-cloud09','osbs'))
   notify:
   - restart iptables
   - reload libvirtd
@@ -212,10 +247,10 @@
   - base
 
 - name: ip6tables
-  template: src={{ item }} dest=/etc/sysconfig/ip6tables mode=600 backup=yes
+  template: src={{ item }} dest=/etc/sysconfig/ip6tables mode=0600 backup=yes
   with_first_found:
    - iptables/ip6tables.{{ datacenter }}
-   - iptables/ip6tables.{{ ansible_fqdn }}
+   - iptables/ip6tables.{{ inventory_hostname }}
    - iptables/ip6tables.{{ host_group }}
    - iptables/ip6tables.{{ env }}
    - iptables/ip6tables
@@ -248,9 +283,9 @@
   - flush journald tmpfiles to persistent store
 
 - name: rsyslog.conf
-  copy: src={{ item }} dest=/etc/rsyslog.conf mode=644
+  copy: src={{ item }} dest=/etc/rsyslog.conf mode=0644
   with_first_found:
-    - rsyslog/rsyslog.conf.{{ ansible_fqdn }}
+    - rsyslog/rsyslog.conf.{{ inventory_hostname }}
     - rsyslog/rsyslog.conf.{{ dist_tag }}
     - rsyslog/rsyslog.conf.default
   notify:
@@ -261,7 +296,7 @@
   - base
 
 - name: rsyslog log rotate for rsyslog servers
-  copy: src=rsyslog/merged-rsyslog dest=/etc/logrotate.d/merged-rsyslog mode=644
+  copy: src=rsyslog/merged-rsyslog dest=/etc/logrotate.d/merged-rsyslog mode=0644
   when: inventory_hostname.startswith('log')
   notify:
   - restart rsyslog
@@ -282,7 +317,7 @@
   - base
 
 - name: log everything to log01 except on mirrorlist, do not log local4 there.
-  copy: src=rsyslog/rsyslog-log01 dest=/etc/rsyslog.d/rsyslog-log01.conf mode=644
+  copy: src=rsyslog/rsyslog-log01 dest=/etc/rsyslog.d/rsyslog-log01.conf mode=0644
   when: not inventory_hostname.startswith(('mirrorlist','copr','jenkins'))
   tags:
   - rsyslogd
@@ -290,13 +325,26 @@
   - base
 
 - name: log everything to log01 except on mirrorlist, do log local4 there.
-  copy: src=rsyslog/rsyslog-log01-nolocal4 dest=/etc/rsyslog.d/rsyslog-log01.conf mode=644
+  copy: src=rsyslog/rsyslog-log01-nolocal4 dest=/etc/rsyslog.d/rsyslog-log01.conf mode=0644
   when: inventory_hostname.startswith('mirrorlist')
   tags:
   - rsyslogd
   - config
   - base
-   - base
+
+- name: rsyslogd make systemd limits directory for file handles
+  file: dest=/etc/systemd/system/rsyslog.service.d/ mode=0755 owner=root group=root state=directory
+  when: inventory_hostname.startswith('log')
+  tags:
+  - rsyslogd
+  - config
+
+- name: rsyslogd put systemd limits directory for file handles
+  copy: src=rsyslog/rsyslog-limits.conf dest=/etc/systemd/system/rsyslog.service.d/limits.conf mode=0644
+  when: inventory_hostname.startswith('log')
+  tags:
+  - rsyslogd
+  - config
 
 - name: Setup postfix
   include: postfix.yml
@@ -315,7 +363,7 @@
   - base
 
 - name: install a sync httpd logs cron script only on log01
-  copy: src=syncHttpLogs.sh dest=/etc/cron.daily/syncHttpLogs.sh mode=755
+  copy: src=syncHttpLogs.sh dest=/etc/cron.daily/syncHttpLogs.sh mode=0755
   when: inventory_hostname.startswith('log01')
   tags:
   - config
@@ -328,7 +376,7 @@
   - base
 
 #
-# Blacklist the cdc_ether module as we don't want it loading mgmt usb0 and spewing to logs. 
+# Blacklist the cdc_ether module as we don't want it loading mgmt usb0 and spewing to logs.
 #
 - name: Blacklist cdc_ether module
   copy: src=blacklist-cdc_ether.conf dest=/etc/modprobe.d/blacklist-cdc_ether.conf
@@ -353,8 +401,8 @@
     dest="/etc/profile.d/setstgps1.sh"
     owner=root
     group=root
-    mode=644
-  when: env == 'staging'  
+    mode=0644
+  when: env == 'staging'
   tags:
   - base
   - config
@@ -368,10 +416,29 @@
     dest="/etc/profile.d/setprodps1.sh"
     owner=root
     group=root
-    mode=644
-  when: env == 'production'  
+    mode=0644
+  when: env == 'production'
   tags:
   - base
   - config
   - prompt
 
+# Set krb5 conf
+- name: configure krb5
+  template: src=krb5.conf.j2 dest=/etc/krb5.conf owner=root group=root mode=0644
+  when: not inventory_hostname.startswith('ipa')
+  tags:
+  - base
+  - config
+  - krb5
+
+- name: configure krb5 (IPA master)
+  template: src=krb5.conf.master.j2 dest=/etc/krb5.conf owner=root group=root mode=0644
+  when: inventory_hostname.startswith('ipa')
+  tags:
+  - base
+  - config
+  - krb5
+
+- name: Setup host keytab
+  include: keytab.yml
