@@ -6,6 +6,14 @@
   - packages
   - yumrepos
 
+- name: put CentOS AH repos on rhel systems
+  copy: src="{{ files }}/common/centos7ah.repo" dest="/etc/yum.repos.d/centos7ah.repo"
+  when: ansible_distribution == 'CentOS'
+  tags:
+  - config
+  - packages
+  - yumrepos
+
 - name: Install sigul server
   package: state=present name={{ item }}
   with_items:
