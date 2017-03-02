@@ -1,0 +1,46 @@
+# provision a new sign server.
+# NOTE: this assumes the boxes are already up and are accessible
+# NOTE: most of these vars_path come from group_vars/sign or from hostvars
+#
+# FURTHER NOTE: some of These machines run day to day with sshd disabled/off.
+# Access is via management interface only. This playbook does initial setup.
+# Please check with rel-eng before doing anything here.
+
+- name: make sign-vault server vm (secondary and stg only)
+  hosts: sign-vault
+  user: root
+  gather_facts: False
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  tasks:
+  - include: "{{ tasks }}/virt_instance_create.yml"
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"
+
+- name: make sign vault server
+  hosts: sign-vault
+  user: root
+  gather_facts: true
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+  - base
+  - rkhunter
+  - serial-console
+  - sigul/server
+
+  tasks:
+  - include: "{{ tasks }}/yumrepos.yml"
+  - include: "{{ tasks }}/motd.yml"
+
+  handlers:
+  - include: "{{ handlers }}/restart_services.yml"

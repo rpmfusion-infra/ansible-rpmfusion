@@ -55,6 +55,9 @@ bodhi-backend01.online.rpmfusion.net
 [sign-bridge]
 koji01.online.rpmfusion.net
 
+[sign-vault]
+sign-vault01.online.rpmfusion.net
+
 [bvirthost]
 
 [buildvmhost]
