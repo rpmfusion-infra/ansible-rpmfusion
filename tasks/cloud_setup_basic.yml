@@ -1,5 +1,5 @@
 ---
-- name: ntp pkgs
+- name: Install desired extra packages (yum)
   yum: state=present pkg={{ item }}
   with_items:
   - ntpdate
@@ -10,11 +10,32 @@
   tags:
   - packages
 
-- name: ntp pkgs
-  command: dnf install -y ntpdate ntp libsemanage-python libselinux-python
+- name: Install desired extra packages (dnf)
+  dnf: state=present pkg={{ item }}
+  with_items:
+  - ntpdate
+  - ntp
+  - libsemanage-python
+  - libselinux-python
   when: ansible_distribution_major_version|int > 21 and ansible_cmdline.ostree is not defined
   tags:
   - packages
+
+- name: remove some packages (yum)
+  yum: state=absent pkg={{ item }}
+  with_items:
+  - chrony
+  tags:
+  - packages
+  when: ansible_distribution_major_version|int < 22
+
+- name: remove some packages (dnf)
+  dnf: state=absent pkg={{ item }}
+  with_items:
+  - chrony
+  tags:
+  - packages
+  when: ansible_distribution_major_version|int > 21 and ansible_cmdline.ostree is not defined
 
 - name: put step-tickers in place
   copy: src="{{ files }}/common/step-tickers" dest=/etc/ntp/step-tickers
@@ -32,17 +53,18 @@
 #  tags:
 #  - config
 
-- name: add ansible root key 
+- name: add ansible root key
   authorized_key: user=root key="{{ item }}"
   with_file:
   - /srv/web/infra/ansible/roles/base/files/ansible-pub-key
   tags:
   - config
   - sshkeys
-  
+
 - name: add root keys for sysadmin-main and other allowed users
   authorized_key: user=root key="{{ item }}"
-  with_lines: "/srv/web/infra/ansible/scripts/auth-keys-from-fas @sysadmin-main {{ root_auth_users }}"
+  with_lines:
+   - "/srv/web/infra/ansible/scripts/auth-keys-from-fas @sysadmin-main {{ root_auth_users }}"
   tags:
   - config
   - sshkeys
@@ -54,7 +76,7 @@
 
 # note - kinda should be a handler - but handlers need args
 - name: restorecon
-  command: restorecon -R /root/.ssh
+  file: path=/root/.ssh setype=ssh_home_t recurse=yes
   tags:
   - config
 
@@ -73,7 +95,7 @@
   - packages
 
 - name: write out global-update-applied file if we updated
-  copy: content="updated" dest=/etc/sysconfig/global-update-applied 
+  copy: content="updated" dest=/etc/sysconfig/global-update-applied
   when: updated is defined
   tags:
   - packages

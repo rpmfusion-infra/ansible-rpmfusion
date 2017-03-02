@@ -4,6 +4,8 @@
   local_action: shell nc -w 5 {{ inventory_hostname }} 22 < /dev/null
   register: host_is_up
   ignore_errors: true
+  changed_when: false
+  check_mode: no
 
 - name: clean out old known_hosts (name based entries)
   local_action: known_hosts path={{item}} host={{inventory_hostname}} state=absent
@@ -44,10 +46,26 @@
 
 # instance can be both id and name, volume must be id
 # volume must be id
-- local_action: shell nova --os-auth-url="{{os_auth_url}}" --os-username="admin" --os-password="{{ADMIN_PASS}}" --os-tenant-name={{inventory_tenant}} volume-list | grep ' {{item.volume_id}} ' | grep 'available' && nova --os-auth-url="{{os_auth_url}}" --os-username="admin" --os-password="{{ADMIN_PASS}}" --os-tenant-name={{inventory_tenant}} volume-attach "{{inventory_instance_name}}" "{{item.volume_id}}" "{{item.device}}"
-  with_items: volumes
-  ignore_errors: yes
+#
+# Check that the volume is available
+#
+- local_action: shell nova --os-auth-url="{{os_auth_url}}" --os-username="admin" --os-password="{{ADMIN_PASS}}" --os-tenant-name={{inventory_tenant}} volume-list | grep ' {{item.volume_id}} ' | grep 'available'
+  with_items: "{{ volumes|default([]) }}"
+  register: volume_available
+  failed_when: volume_available.rc == 2
+  changed_when: volume_available.rc == 0
+  ignore_errors: True
   when: volumes is defined
+  check_mode: no
+
+#
+# If it is attach it.
+#
+- local_action: shell nova --os-auth-url="{{os_auth_url}}" --os-username="admin" --os-password="{{ADMIN_PASS}}" --os-tenant-name={{inventory_tenant}} volume-attach "{{inventory_instance_name}}" "{{item.volume_id}}" "{{item.device}}"
+  with_items: "{{ volumes|default([]) }}"
+  ignore_errors: True
+  failed_when: False
+  when: volumes is defined and volume_available is defined and volume_available
 
 - name: wait for he host to be hot
   local_action: wait_for host={{ public_ip }} port=22 delay=1 timeout=600
@@ -60,7 +78,7 @@
   when: host_is_up|failed
 
 - name: add new ssh host key (you still need to add it to official ssh_host_keys later)
-  local_action: known_hosts path={{item}} key="{{ hostkey.stdout }}" host={{ inventory_hostname }} state=present
+  local_action: known_hosts path={{ item }} key={{ hostkey.stdout }} host={{ inventory_hostname }} state=present
   ignore_errors: True
   with_items:
   - /root/.ssh/known_hosts
@@ -80,7 +98,7 @@
 
 - name: gather facts
   setup:
-  always_run: True
+  check_mode: no
   ignore_errors: True
   register: facts
 
