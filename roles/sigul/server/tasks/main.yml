@@ -1,6 +1,6 @@
 - name: put rhel AH repos on rhel systems
   copy: src="{{ files }}/common/rhel7ah.repo" dest="/etc/yum.repos.d/rhel7ah.repo"
-  when: ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS'
+  when: ansible_distribution == 'RedHat'
   tags:
   - config
   - packages
