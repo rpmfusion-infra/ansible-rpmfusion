@@ -1,12 +1,30 @@
 ---
+#######
+# BEGIN: Ansible roles_path variables
+#
+#   Background/reference about external repos pulled in:
+#       https://pagure.io/fedora-infrastructure/issue/5476
+#
+ansible_base: /srv/web/infra
+
+# Path to the openshift-ansible checkout as external git repo brought into
+# Fedora Infra
+openshift_ansible: /srv/web/infra/openshift-ansible/
+
+#
+# END: Ansible roles_path variables
+#######
+
 freezes: true
 # most of our systems are in online
 datacenter: online
+# for httpd/website
+server_admin: root@rpmfusion.org
 
 # usually we do not want to enable nested virt, only on some virthosts
 nested: false
 
-# most of our systems are 64bit. 
+# most of our systems are 64bit.
 # Used to install various nagios scripts and the like.
 libdir: /usr/lib64
 
@@ -34,8 +52,8 @@ mem_size: 1024
 num_cpus: 1
 lvm_size: 20000
 
-# Default netmask. Almost all our phx2 nets are /24's with the 
-# exception of 10.5.124.128/25. Almost all of our non phx2 sites are 
+# Default netmask. Almost all our phx2 nets are /24's with the
+# exception of 10.5.124.128/25. Almost all of our non phx2 sites are
 # less than a /24.
 eth0_nm: 255.255.255.0
 eth1_nm: 255.255.255.0
@@ -58,7 +76,7 @@ virt_install_command_one_nic: virt-install -n {{ inventory_hostname }}
                  'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyS0
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
-                 --network bridge=br1,model=virtio
+                 --network bridge={{ main_bridge }},model=virtio
                  --autostart --noautoconsole --watchdog default
 
 virt_install_command_two_nic: virt-install -n {{ inventory_hostname }} 
@@ -71,6 +89,27 @@ virt_install_command_two_nic: virt-install -n {{ inventory_hostname }}
                   ip={{ eth1_ip }}:::{{ nm }}:{{ inventory_hostname }}-nfs:eth1:none'
                  --network bridge={{ main_bridge }},model=virtio --network=bridge={{ nfs_bridge }},model=virtio
                  --autostart --noautoconsole --watchdog default
+
+virt_install_command_aarch64_one_nic: virt-install -n {{ inventory_hostname }}
+                 --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
+                 --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
+                 --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }}  -l {{ ks_repo }} -x
+                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyAMA0
+                  hostname={{ inventory_hostname }} nameserver={{ dns }}
+                  ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
+                 --network bridge={{ main_bridge }},model=virtio
+                 --autostart --noautoconsole
+
+virt_install_command_aarch64_two_nic: virt-install -n {{ inventory_hostname }}
+                 --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
+                 --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
+                 --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }}  -l {{ ks_repo }} -x
+                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyAMA0
+                  hostname={{ inventory_hostname }} nameserver={{ dns }}
+                  ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none
+                  ip={{ eth1_ip }}:::{{ nm }}:{{ inventory_hostname }}-nfs:eth1:none'
+                 --network bridge={{ main_bridge }},model=virtio --network=bridge={{ nfs_bridge }},model=virtio
+                 --autostart --noautoconsole
 
 virt_install_command_rhel6: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }}
@@ -87,6 +126,16 @@ max_cpu: "{{ num_cpus * 1 }}"
 # This is the wildcard certname for our proxies.  It has a different name for
 # the staging group and is used in the proxies.yml playbook.
 wildcard_cert_name: wildcard-2016.rpmfusion.org
+wildcard_crt_file: wildcard-2016.rpmfusion.org.cert
+wildcard_key_file: wildcard-2016.rpmfusion.org.key
+wildcard_int_file: wildcard-2016.rpmfusion.org.intermediate.cert
+SSLCertificateChainFile: wildcard-2016.rpmfusion.org.intermediate.cert
+
+# Everywhere, always, we should sign messages and validate signatures.
+# However, we allow individual hosts and groups to override this.  Use this very
+# carefully.. and never in production (good for testing stuff in staging).
+fedmsg_sign_messages: True
+fedmsg_validate_signatures: True
 
 # By default, nodes get no fedmsg certs.  They need to declare them explicitly.
 fedmsg_certs: []
@@ -132,28 +181,21 @@ nrpe_procs_crit: 300
 nrpe_check_postfix_queue_warn: 2
 nrpe_check_postfix_queue_crit: 5
 
-# env is staging or production, we default it to production here. 
+# env is staging or production, we default it to production here.
 env: production
 env_suffix:
 
 # nfs mount options, override at the group/host level
-nfs_mount_opts: "ro,hard,bg,intr,noatime,nodev,nosuid,nfsvers=3"
+nfs_mount_opts: "ro,hard,bg,intr,noatime,nodev,nosuid,nfsvers=4"
 
-# by default set become to false here We can override it as needed. 
-# Note that if become is true, you need to unset requiretty for 
-# ssh controlpersist to work. 
+# by default set become to false here We can override it as needed.
+# Note that if become is true, you need to unset requiretty for
+# ssh controlpersist to work.
 become: false
 
-# default the root_auth_users to nothing. 
+# default the root_auth_users to nothing.
 # This should be set for cloud instances in their host or group vars.
 root_auth_users: ''
-
-# default path for ansible-server
-ansible_base: /srv/web/infra
-
-# for httpd/website
-server_admin: root@rpmfusion.org
-SSLCertificateChainFile: wildcard-2016.rpmfusion.org.intermediate.cert
 
 # This vars get shoved into /etc/system_identification by the base role.
 # Groups and individual hosts should override them with specific info.
@@ -167,3 +209,35 @@ csi_relationship: |
     * What hosts/services rely on this?
 
     To update this text, add the csi_* vars to group_vars/ in ansible.
+
+
+# docker images required by OpenShift Origin
+openshift_required_images:
+  - "openshift/origin-pod"
+
+# docker images required by OSBS for builds
+fedora_required_images:
+  - "fedora:24"
+  - "fedora:25"
+  - "fedora:latest"
+
+#
+# say if we want the apache role dependency for mod_wsgi or not
+# In some cases we want mod_wsgi and no apache (for python3 httpaio stuff)
+#
+wsgi_wants_apache: true
+
+# IPA settings
+additional_host_keytabs: []
+ipa_server: ipa01.online.rpmfusion.org
+ipa_realm: RPMFUSION.ORG
+ipa_admin_password: "{{ ipa_prod_admin_password }}"
+
+# Normal default sshd port is 22
+sshd_port: 22
+
+# assume collectd apache
+collectd_apache: true
+
+# assume vpn is false
+vpn: False
