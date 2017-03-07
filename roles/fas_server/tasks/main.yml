@@ -378,7 +378,7 @@
 
 - name: HOTFIX on tgcatpcha2's model to prevent code execution
   copy: src={{ files }}/hotfix/python-tgcaptcha2/model.py
-        dest={{ pythonsitelib }}/tgcaptcha2/model.py
+        dest=/usr/lib/python2.6/site-packages/tgcaptcha2/model.py
         mode=644 owner=root group=root
   when: master_fas_node
   tags:
