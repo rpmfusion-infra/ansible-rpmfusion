@@ -376,3 +376,12 @@
   - fas
   - hotfixfas
 
+- name: HOTFIX on tgcatpcha2's model to prevent code execution
+  copy: src={{ files}}/hotfix/python-tgcaptcha2/model.py
+        dest={{ pythonsitelib }}/tgcaptcha2/model.py
+        mode=644 owner=root group=root
+  when: master_fas_node = True
+  tags:
+    - fas
+    - hotfix-captcha2
+    - hostfix-fas
