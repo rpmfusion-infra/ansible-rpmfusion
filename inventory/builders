@@ -1,3 +1,6 @@
+[buildaarch64]
+aarch64-01.linaro.rpmfusion.net
+aarch64-02.linaro.rpmfusion.net
 
 [buildvm]
 buildvm-01.online.rpmfusion.net
@@ -20,6 +23,9 @@ buildvm-ppc64le
 [buildarm:children]
 scaleway-c1
 
+[linaro:children]
+buildaarch64
+
 [osuosl:children]
 buildvm-ppc64
 buildvm-ppc64le
@@ -31,6 +37,7 @@ arm-builder03.scaleway.rpmfusion.net
 #arm-builder04.scaleway.rpmfusion.net
 
 [builders:children]
+buildaarch64
 buildhw
 buildvm
 buildvm-ppc64
