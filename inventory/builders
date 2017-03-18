@@ -19,6 +19,7 @@ buildppcle-01.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
 [buildhw:children]
 buildvm-ppc64
 buildvm-ppc64le
+buildaarch64
 
 [buildarm:children]
 scaleway-c1
