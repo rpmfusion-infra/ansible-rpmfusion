@@ -12,4 +12,4 @@
 # linaro hosts
 192.168.1.8 bastion02.linaro.rpmfusion.net bastion02
 192.168.1.13 aarch64-01.linaro.rpmfusion.net aarch64-01
-192.168.1.6  aarch64-02.linaro.rpmfusion.net aarch64-02
+192.168.1.10 aarch64-02.linaro.rpmfusion.net aarch64-02
