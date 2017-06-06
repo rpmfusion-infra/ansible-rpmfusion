@@ -1,0 +1,19 @@
+---
+# Define resources for this group of hosts here. 
+lvm_size: 30000
+mem_size: 2048
+num_cpus: 1
+
+tcp_ports: [ 80, 88, 389, 443, 464, 636 ]
+
+custom_rules: [ 
+    '-A INPUT -p udp -m udp -s 192.168.0.0/16 --dport 53 -j ACCEPT'
+]
+
+fas_client_groups: sysadmin-main,sysadmin-accounts
+
+nrpe_procs_warn: 300
+nrpe_procs_crit: 500
+
+ipa_dm_password: "{{ ipa_prod_dm_password }}"
+ipa_ldap_socket: ldapi://%2fvar%2frun%2fslapd-RPMFUSION-ORG.socket
