@@ -1,0 +1,250 @@
+---
+# Configuration for IPA
+
+- name: install needed packages
+  yum: pkg={{ item }} state=present
+  with_items:
+  - haveged
+  - ipa-server
+  - ipa-server-dns
+  - pynag
+  - python-ldap
+  tags:
+  - ipa/server
+  - packages
+
+- name: enable haveged
+  service: name=haveged state=started enabled=yes
+  tags:
+  - ipa/server
+  - config
+
+- name: install IPA
+  command: ipa-server-install
+           --realm={{ipa_realm}}
+           --domain={{ipa_realm}}
+           --ds-password={{ipa_dm_password}}
+           --admin-password={{ipa_admin_password}}
+           --mkhomedir
+           --no-ntp
+           --unattended
+           --no-ssh
+           --no-sshd
+           --setup-dns
+           --forwarder=192.168.181.254
+           --log-file=/var/log/ipainstall.log
+           creates=/etc/ipa/default.conf
+  tags:
+  - ipa/server
+  - config
+  when: inventory_hostname.startswith("ipa01")
+
+- name: install IPA vault
+  command: ipa-kra-install
+           --password={{ipa_dm_password}}
+           --unattended
+           --log-file=/var/log/ipakrainstall.log
+           creates=/var/log/ipakrainstall.log
+  tags:
+  - ipa/server
+  - config
+  when: inventory_hostname.startswith("ipa01")
+
+- name: determine whether we need to set up replication
+  stat: path=/etc/ipa/default.conf
+  register: replication_status
+  tags:
+  - ipa/server
+  - config
+  when: not inventory_hostname.startswith("ipa01")
+
+- name: create replica file
+  delegate_to: ipa01.online.rpmfusion.net
+  command: ipa-replica-prepare
+           --password={{ipa_dm_password}}
+           --ip-address={{eth0_ip}}
+           {{inventory_hostname}}
+           creates=/var/lib/ipa/replica-info-{{inventory_hostname}}.gpg
+  tags:
+  - ipa/server
+  - config
+  when: not inventory_hostname.startswith("ipa01") and not replication_status.stat.exists
+
+- name: retrieve replica file
+  delegate_to: ipa01.online.rpmfusion.net
+  fetch: src=/var/lib/ipa/replica-info-{{inventory_hostname}}.gpg
+         dest=/tmp/ipa_replica_{{inventory_hostname}}.gpg
+         flat=yes
+  tags:
+  - ipa/server
+  - config
+  when: not inventory_hostname.startswith("ipa01") and not replication_status.stat.exists
+
+- name: deploy replica file
+  copy: src=/tmp/ipa_replica_{{inventory_hostname}}.gpg
+        dest=/root/ipa_replica_{{inventory_hostname}}.gpg
+        mode=0600 owner=root group=root
+  tags:
+  - ipa/server
+  - config
+  when: not inventory_hostname.startswith("ipa01") and not replication_status.stat.exists
+
+- name: destroy replica file on ansible host
+  delegate_to: localhost
+  file: path=/tmp/ipa_replica_{{inventory_hostname}}.gpg state=absent
+  tags:
+  - ipa/server
+  - config
+  when: not inventory_hostname.startswith("ipa01") and not replication_status.stat.exists
+
+- name: deploy replica
+  command: ipa-replica-install
+           --setup-ca
+           --setup-kra
+           --password={{ipa_dm_password}}
+           --admin-password={{ipa_admin_password}}
+           --mkhomedir
+           --no-ntp
+           --unattended
+           --no-ssh
+           --no-sshd
+           --setup-dns
+           --forwarder=192.168.181.254
+           --skip-conncheck
+           --log-file=/var/log/ipainstall.log
+           /root/ipa_replica_{{inventory_hostname}}.gpg
+           creates=/etc/ipa/default.conf
+  tags:
+  - ipa/server
+  - config
+  when: not inventory_hostname.startswith("ipa01") and not replication_status.stat.exists
+
+- name: Disable rewrites
+  copy: src=ipa-rewrite.conf dest=/etc/httpd/conf.d/ipa-rewrite.conf
+  notify:
+  - reload httpd
+  tags:
+  - ipa/server
+  - config
+
+- name: Deploy configuration script
+  copy: src=configure-ipa.sh dest=/root/configure-ipa.sh mode=0700 owner=root group=root
+  register: config_deployed
+  tags:
+  - ipa/server
+  - config
+  when: inventory_hostname.startswith("ipa01")
+
+- name: Run configuration script
+  command: /bin/bash /root/configure-ipa.sh {{ipa_admin_password}}
+  tags:
+  - ipa/server
+  - config
+  when: inventory_hostname.startswith("ipa01") and config_deployed.changed
+
+- name: Get admin ticket
+  shell: echo "{{ipa_admin_password}}" | kinit admin
+  tags:
+  - ipa/server
+  - keytab
+  - config
+  - krb5
+  when: inventory_hostname.startswith("ipa01")
+
+- name: Create fas_sync user
+  command: ipa user-add fas_sync --first=FAS --last=Sync
+  tags:
+  - ipa/server
+  - config
+  when: inventory_hostname.startswith("ipa01")
+  register: create_output
+  changed_when: "'already exists' not in create_output.stderr"
+  failed_when: "'already exists' not in create_output.stderr and create_output.rc != 0"
+
+- name: Promote fas_sync user
+  command: ipa group-add-member admins --users=fas_sync
+  tags:
+  - ipa/server
+  - config
+  when: inventory_hostname.startswith("ipa01")
+  register: promote_output
+  changed_when: "'already a member' not in promote_output.stdout"
+  failed_when: "'already a member' not in promote_output.stdout and promote_output.rc != 0"
+
+- name: Configure password policy
+  command: ipa pwpolicy-mod global_policy --maxlife=0 --minlife=0 --history=0 --minclasses=0 --minlength=0 --maxfail=0
+  tags:
+  - ipa/server
+  - config
+  when: inventory_hostname.startswith("ipa01")
+  register: pwpolicy_output
+  changed_when: "'no modifications to be performed' not in pwpolicy_output.stderr"
+  failed_when: "'no modifications to be performed' not in pwpolicy_output.stderr and pwpolicy_output.rc != 0"
+
+- name: Destroy admin ticket
+  command: kdestroy -A
+  tags:
+  - ipa/server
+  - keytab
+  - config
+  - krb5
+  when: inventory_hostname.startswith("ipa01")
+
+- name: Create LDIF directory
+  file: path=/root/ldif state=directory owner=root group=root mode=0750
+  tags:
+  - ipa/server
+  - config
+
+- name: Copy LDIF files
+  copy: src={{item}} dest=/root/ldif/{{item}}
+  with_items:
+  - grant_anonymous_replication_view.ldif
+  - grant_fas_sync.ldif
+  - use_id_fp_o.ldif
+  tags:
+  - ipa/server
+  - config
+
+- name: Apply LDIF files
+  command: ldapmodify -Y EXTERNAL -H {{ ipa_ldap_socket }}
+           -f /root/ldif/{{item}}.ldif
+  with_items:
+  - grant_fas_sync
+  - use_id_fp_o
+  when: inventory_hostname.startswith("ipa01")
+  tags:
+  - ipa/server
+  - config
+  register: apply_output
+  changed_when: "'Type or value exists' not in apply_output.stderr"
+  failed_when: "'Type or value exists' not in apply_output.stderr and 'modifying entry' not in apply_output.stdout"
+
+# This is a special one, in that it needs to apply on each master since it's non-replicated.
+- name: Grant access to replication status
+  command: ldapmodify -Y EXTERNAL -H {{ ipa_ldap_socket }}
+           -f /root/ldif/grant_anonymous_replication_view.ldif
+  tags:
+  - ipa/server
+  - config
+  register: grant_repl_status_output
+  changed_when: "'Type or value exists' not in grant_repl_status_output.stderr"
+  failed_when: "'Type or value exists' not in grant_repl_status_output.stderr and 'modifying entry' not in grant_repl_status_output.stdout"
+
+# Make some httpd changes
+- name: Configure referer override
+  template: src=referer-override.conf
+            dest=/etc/httpd/conf.d/referer-override.conf
+  notify:
+  - reload apache
+  tags:
+  - ipa/server
+  - config
+
+- name: Update xmlrpc_uri
+  lineinfile: dest=/etc/ipa/default.conf
+              regexp='xmlrpc_uri ='
+              line='xmlrpc_uri = https://id{{env_suffix}}.rpmfusion.org/ipa/xml'
+  tags:
+  - ipa/server
+  - config
