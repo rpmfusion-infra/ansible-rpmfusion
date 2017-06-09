@@ -123,6 +123,7 @@ class Config(multiconfig.DefaultConfig):
     # short or too easy passwords. If you don't like this and your site has
     # rather low security requirements, feel free to DISABLE the checker by:
     #password_checker = None # None means "don't do any password strength checks"
+    password_scheme = "{SSHA}"
 
     # Link spam protection for public wikis (Uncomment to enable)
     # Needs a reliable internet connection.
@@ -214,4 +215,9 @@ class Config(multiconfig.DefaultConfig):
     # Disable rdns https://moinmo.in/HowTo/Tune%20Performance
     log_reverse_dns_lookups = False
 
+    # https://master19.moinmo.in/HelpOnRobots
+    html_head_normal = '<meta name="robots" content="index,follow">\n'
+
+    # https://moinmo.in/ActionMarket/SiteMap
+    html_head = '<meta name="google-site-verification" content="4srSOTHB6Y0gbPm7vjFz3A0BEcMUqucE1pRdqYpMqW0" />'
 
