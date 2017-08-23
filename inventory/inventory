@@ -48,7 +48,10 @@ pkgdb02.online.rpmfusion.net
 pkgs01.online.rpmfusion.net
 
 [proxies]
-pkgs01.online.rpmfusion.net
+proxy01.scaleway.rpmfusion.net
+bastion02.linaro.rpmfusion.net ansible_user=centos ansible_become=yes
+buildppc-01.osuosl.rpmfusion.net
+buildppcle-01.osuosl.rpmfusion.net
 
 [releng-compose]
 bodhi-backend01.online.rpmfusion.net
