@@ -709,7 +709,13 @@ virtual_alias_maps =
 
 # SMTP restrictions (block bogus stuff)
 
-smtpd_helo_restrictions = reject_unknown_helo_hostname
+smtpd_delay_reject = yes
+smtpd_helo_required = yes
+smtpd_helo_restrictions =
+    permit_mynetworks,
+    reject_non_fqdn_helo_hostname,
+    reject_invalid_helo_hostname,
+    permit
 
 smtpd_sender_restrictions =
   permit_mynetworks,
