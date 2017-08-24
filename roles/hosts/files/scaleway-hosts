@@ -17,4 +17,7 @@
 192.168.181.141 bodhi01.online.rpmfusion.net bodhi01
 
 # hv01 online - vpn
-192.168.182.1 hv01.vpn.rpmfusion.net proxy.vpn.rpmfusion.net nfs-server.vpn.rpmfusion.net nfs-server proxy
+192.168.182.1 hv01.vpn.rpmfusion.net proxy.vpn.rpmfusion.net nfs-server.vpn.rpmfusion.net nfs-server
+
+# scaleway
+10.2.10.75 proxy01.scaleway.rpmfusion.net proxy01 proxy
