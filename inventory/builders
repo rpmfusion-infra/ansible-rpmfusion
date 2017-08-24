@@ -1,6 +1,6 @@
 [buildaarch64]
-aarch64-01.linaro.rpmfusion.net
-aarch64-02.linaro.rpmfusion.net
+aarch64-01.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes
+aarch64-02.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes
 
 [buildvm]
 buildvm-01.online.rpmfusion.net
