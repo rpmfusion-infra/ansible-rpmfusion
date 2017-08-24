@@ -708,6 +708,9 @@ virtual_alias_maps =
   hash:/etc/postfix/package-owner,
 
 # SMTP restrictions (block bogus stuff)
+
+smtpd_helo_restrictions = reject_unknown_helo_hostname
+
 smtpd_sender_restrictions =
   permit_mynetworks,
   reject_unknown_sender_domain,
