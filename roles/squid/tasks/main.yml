@@ -1,0 +1,54 @@
+---
+# tasks file for squid
+
+- name: install squid (yum)
+  yum: name=squid state=present
+  tags:
+  - squid
+  - packages
+  when: ansible_distribution_major_version|int < 22
+
+- name: install squid (dnf)
+  dnf: name=squid state=present
+  tags:
+  - squid
+  - packages
+  when: ansible_distribution_major_version|int > 21 and ansible_cmdline.ostree is not defined
+
+- name: set squid running/enabled
+  service: name=squid enabled=yes
+  ignore_errors: true
+  tags:
+  - service
+  - squid
+
+- name: custom_redirect
+  file: src="{{files}}/squid/custom_redirect.py" dest=/etc/squid/custom_redirect.py mode=0750
+        owner=root group=squid
+  notify:
+  - reload squid
+  tags:
+  - squid
+  - config
+  when: inventory_hostname.startswith('hv01.online')
+
+- name: squid.conf
+  template: src={{item}} dest=/etc/squid/squid.conf mode=0640 owner=root group=squid
+  with_first_found:
+  - "{{files}}/squid/squid.conf.{{ansible_hostname}}"
+  - "{{files}}/squid/squid.conf.{{datacenter}}"
+  - "{{files}}/squid/squid.conf"
+  notify:
+  - reload squid
+  tags:
+  - squid
+  - config
+
+- name: create squid swap files
+  command: /usr/sbin/squid -z creates="/var/spool/squid/00"
+  notify:
+  - reload squid
+  tags:
+  - squid
+  - config
+
