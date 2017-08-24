@@ -1,1 +1,4 @@
 datacenter: linaro
+
+tcp_ports: ['22', '25', '3128']
+udp_ports: []
