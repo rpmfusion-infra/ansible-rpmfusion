@@ -59,6 +59,7 @@ koji01.online.rpmfusion.net
 sign-vault01.online.rpmfusion.net
 
 [squid]
+hv01.online.rpmfusion.net
 proxy01.scaleway.rpmfusion.net
 bastion02.linaro.rpmfusion.net ansible_user=centos ansible_become=yes
 buildppc-01.osuosl.rpmfusion.net
