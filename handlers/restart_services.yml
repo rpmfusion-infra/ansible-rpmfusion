@@ -92,6 +92,9 @@
 - name: restart glusterd
   service: name=glusterd state=restarted
 
+- name: reload squid
+  service: name=squid state=reloaded
+
 - name: restart supervisord
   service: name=supervisord state=restarted
 
