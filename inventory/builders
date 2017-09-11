@@ -6,6 +6,9 @@ aarch64-02.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes
 buildvm-01.online.rpmfusion.net
 buildvm-02.online.rpmfusion.net
 
+[buildhw-x86]
+buildvm-03.online.rpmfusion.net
+
 [buildvm-ppc64]
 buildppc-01.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
 #buildppc-02.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
@@ -20,6 +23,8 @@ buildppcle-01.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
 buildvm-ppc64
 buildvm-ppc64le
 buildaarch64
+buildarm
+buildhw-x86
 
 [buildarm:children]
 scaleway-c1
