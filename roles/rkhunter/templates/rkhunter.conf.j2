@@ -200,7 +200,8 @@ ALLOW_SSH_PROT_V1=0
 # tests, the test names, and how rkhunter behaves when these options are used.
 #
 ENABLE_TESTS="all"
-DISABLE_TESTS="suspscan hidden_procs deleted_files packet_cap_apps apps"
+# Disable the promisc test here as openstack has it set on interfaces
+DISABLE_TESTS="suspscan hidden_procs deleted_files packet_cap_apps apps promisc"
 
 #
 # The HASH_FUNC option can be used to specify the command to use
@@ -303,9 +304,8 @@ ALLOWHIDDENDIR=/dev/.udevdb
 ALLOWHIDDENDIR=/dev/.udev.tdb
 ALLOWHIDDENDIR=/dev/.udev/db
 ALLOWHIDDENDIR=/dev/.udev/rules.d
-{% if ansible_hostname.startswith('cloud') %}
 ALLOWHIDDENDIR=/etc/.git
-{% endif %}
+ALLOWHIDDENDIR=/etc/.java
 
 #
 # Allow the specified hidden files.
@@ -326,10 +326,8 @@ ALLOWHIDDENFILE=/dev/.udev/queue.bin
 ALLOWHIDDENFILE=/dev/.udev/uevent_seqnum
 # Fedora 21+ and RHEL 7.2+ have a /etc/.updated file
 ALLOWHIDDENFILE=/etc/.updated
-{% if ansible_hostname.startswith('cloud') %}
 ALLOWHIDDENFILE=/etc/.etckeeper
 ALLOWHIDDENFILE=/etc/.gitignore
-{% endif %}
 
 #
 # Allow the specified processes to use deleted files.
@@ -375,14 +373,24 @@ ALLOWDEVFILE=/dev/.udev/rules.d/99-root.rules
 ALLOWDEVFILE=/dev/.udev/uevent_seqnum
 ALLOWDEVFILE=/dev/md/autorebuild.pid
 ALLOWDEVFILE=/dev/shm/fmn-cache.dbm
-{% if ansible_hostname.startswith('kojipkgs') %}
 ALLOWDEVFILE=/dev/shm/squid-squid-page-pool.shm
 ALLOWDEVFILE=/dev/shm/squid-cache_mem.shm
-{% endif %}
-{% if inventory_hostname in groups['virtservers'] %}
+ALLOWDEVFILE=/dev/shm/squid-ssl_session_cache.shm
+ALLOWDEVFILE=/dev/shm/squid-cache_mem_ex.shm
+ALLOWDEVFILE=/dev/shm/squid-cache_mem_map_slices.shm
+ALLOWDEVFILE=/dev/shm/squid-cache_mem_map_anchors.shm
+ALLOWDEVFILE=/dev/shm/squid-cache_mem_space.shm
+ALLOWDEVFILE=/dev/shm/squid-cf__readers.shm
+ALLOWDEVFILE=/dev/shm/squid-cf__queues.shm
+ALLOWDEVFILE=/dev/shm/squid-cf__metadata.shm
+{% if inventory_hostname in groups['virtservers'] or inventory_hostname in groups['openqa-workers'] or inventory_hostname in groups['openqa-stg-workers'] or inventory_hostname in groups['taskotron-stg-client-hosts'] or inventory_hostname in groups['taskotron-dev-client-hosts']  %}
 # libvirt spice device makes a /dev/shm/spice file
 ALLOWDEVFILE=/dev/shm/spice.*
 {% endif %}
+{% if inventory_hostname in groups['ipa'] or inventory_hostname in groups['ipa-stg'] %}
+ALLOWDEVFILE=/dev/shm/sem.slapd*.stats
+{% endif %}
+ALLOWDEVFILE=/dev/shm/PostgreSQL*
 
 #
 # This setting tells rkhunter where the inetd configuration
@@ -594,6 +602,8 @@ OS_VERSION_FILE=/etc/{{ ansible_distribution|lower }}-release
 #
 #RTKT_DIR_WHITELIST=""
 #RTKT_FILE_WHITELIST=""
+RTKT_FILE_WHITELIST="/var/log/pki/pki-tomcat/ca/system"
+RTKT_FILE_WHITELIST="/var/log/pki/pki-tomcat/kra/system"
 
 #
 # To force rkhunter to use the supplied script for the 'stat' or 'readlink'
