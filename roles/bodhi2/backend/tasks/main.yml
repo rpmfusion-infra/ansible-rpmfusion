@@ -99,10 +99,6 @@
   - f24-nonfree-updates.mash
   - f24-free-updates-testing.mash
   - f24-nonfree-updates-testing.mash
-  - f25-free-updates.mash
-  - f25-nonfree-updates.mash
-  - f25-free-updates-testing.mash
-  - f25-nonfree-updates-testing.mash
   tags:
   - config
   - bodhi
