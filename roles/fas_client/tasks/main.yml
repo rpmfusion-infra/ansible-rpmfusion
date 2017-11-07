@@ -30,7 +30,8 @@
 
 - name: install nss_db on rhel hosts only
   yum: state=present name=nss_db
-  when: ansible_distribution_major_version|int == 6
+  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version|int >= 6) or
+        (ansible_distribution == "Fedora" and ansible_distribution_major_version|int >= 24)
   tags:
   - packages
   - fas_client
