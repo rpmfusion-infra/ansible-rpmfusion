@@ -1,10 +1,16 @@
 #
 # This is a base koji_builder role.
 #
+- name: set hostname
+  hostname: name="{{inventory_hostname}}"
+  tags:
+  - koji_builder
+
 - name: set root passwd
   user: name=root password={{ builder_rootpw }} state=present
   tags:
   - koji_builder
+  - rootpw
 
 - name: add mock user as 425
   user: name=mock uid=425 state=present home=/var/lib/mock createhome=yes system=yes
@@ -57,19 +63,24 @@
   - koji_builder
 
 - name: add pkgs
-  yum: state=present pkg={{ item }}
+  dnf: state=present pkg={{ item }}
   with_items:
     - yum-utils
     - koji-builder
+    - python-osbs-client
     - koji-containerbuild-builder
     - strace
     - mock
     - kernel-firmware
+    - kernel-modules
     - nosync
     - ntp
     - ntpdate
     - rsyslog
     - audit
+    - pycdio
+    - python-kickstart
+    - libvirt-client
     - oz
     - imagefactory
     - imagefactory-plugins-TinMan
@@ -85,13 +96,14 @@
     - pykickstart
   tags:
   - koji_builder
-  when: ansible_distribution_major_version|int < 22
+  when: ansible_architecture != 's390x'
 
-- name: add pkgs
+- name: add pkgs (s390x)
   dnf: state=present pkg={{ item }}
   with_items:
     - yum-utils
     - koji-builder
+    - python-osbs-client
     - koji-containerbuild-builder
     - strace
     - mock
@@ -101,38 +113,28 @@
     - rsyslog
     - audit
     - pycdio
-#    - python-kickstart
-    - oz
-    - imagefactory
-    - imagefactory-plugins-TinMan
-    - imagefactory-plugins-Docker
-    - imagefactory-plugins-vSphere
-    - imagefactory-plugins-ovfcommon
-    - imagefactory-plugins
-    - imagefactory-plugins-OVA
-    - imagefactory-plugins-EC2
-    - imagefactory-plugins-RHEVM
-    - python-psphere
-    - VMDKstream
+    - python-kickstart
     - pykickstart
   tags:
   - koji_builder
-  when: ansible_distribution_major_version|int > 21
+  when: ansible_architecture == 's390x'
 
+- name: enable virtlogd service
+  service: name=virtlogd state=started enabled=yes
+  tags:
+  - koji_builder
+  when: ansible_distribution_major_version|int > 23 and ansible_architecture != 's390x'
 
 - name: create kojid service override directory
   file: path=/etc/systemd/system/kojid.service.d state=directory
   tags:
   - koji_buidler
   when: ansible_distribution_major_version|int > 6
-
+ 
 - name: systemd kojid service override
   copy: src=builders/kojid.service.d.override.conf dest=/etc/systemd/system/kojid.service.d/override.conf
   notify:
   - reload systemd
-  tags:
-  - koji_buidler
-  when: ansible_distribution_major_version|int > 6
 
 - name: build /etc/kojid/kojid.conf from group vars
   template: src=kojid.conf dest=/etc/kojid/kojid.conf
@@ -147,9 +149,17 @@
   - koji_builder
 
 - name: config for the kojid runroot plugin (only some builders)
-  template: src=runroot.conf.j2 dest=/etc/kojid/runroot.conf
+  template: src=runroot.conf.j2 dest=/etc/kojid/plugins/runroot.conf
   when: "'runroot' in group_names"
   notify:
+  - restart kojid
+  tags:
+  - koji_builder
+
+- name: override kojid.service file to set TasksMax to unlimited
+  copy: src=kojid.service dest=/etc/systemd/system/kojid.service
+  notify:
+  - reload systemd
   - restart kojid
   tags:
   - koji_builder
@@ -169,6 +179,7 @@
   copy: src={{ private }}/files/koji/config.yaml dest=/root/.psphere/config.yaml
   tags:
   - koji_builder
+  when: ansible_architecture != 's390x'
 # done oz/imagefactory
 
 - name: copy over koji ca cert
@@ -181,78 +192,39 @@
 
 - name: copy over builder cert to /etc/kojid/kojibuilder.pem
   copy: src="{{ private }}/files/koji/buildercerts/{{ inventory_hostname }}.pem" dest=/etc/kojid/kojibuilder.pem mode=600
-  tags:
-  - koji_builder
-
-# idmapd and make sure it's set to run
-- name: idmapd.conf
-  copy: src=idmapd.conf dest=/etc/idmapd.conf
-  tags:
-  - configs
-  - koji_builder
 
 # oz.cfg  upstream ram and cpu definitions are not enough
 - name: oz.cfg
   copy: src=oz.cfg dest=/etc/oz/oz.cfg
-  when: not inventory_hostname.startswith('buildppc')
+  when: not inventory_hostname.startswith(('buildppc','buildvm-s390x'))
   tags:
   - koji_builder
+
+# install libvirtd.conf
+#
+# This provides us with the ability to use virt-manager from non root accounts.
+# This is useful in the oz/imagefactory context for debugging
+
+- name: install libvirtd.conf
+  copy: src="{{ files }}/virthost/libvirtd.conf" dest=/etc/libvirt/libvirtd.conf
+  notify:
+  - restart libvirtd
+  tags:
+  - koji_builder
+  when: ansible_architecture != 's390x'
+
+#
+# On primary we want to make a /mnt/koji link to /mnt/rpmfusion_koji/koji
+#
 
 - name: make a mnt/koji link
   file: state=link src=/mnt/rpmfusion_koji/koji dest=/mnt/koji
   tags:
   - koji_builder
 
-# mock configs for pungify job
-- name: put extra special  mock configs in
-  copy: src=builders/{{ item }} dest="/etc/mock/{{ item }}" mode=644
-  with_items:
-    - fedora-branched-pungi-armhfp.cfg
-    - fedora-branched-pungi-i386.cfg
-    - fedora-branched-pungi-x86_64.cfg
-    - fedora-branched-pungi-aarch64.cfg
-    - fedora-branched-pungi-ppc64.cfg
-    - fedora-branched-pungi-ppc64le.cfg
-    - fedora-rawhide-pungi-i386.cfg
-    - fedora-rawhide-pungi-x86_64.cfg
-    - fedora-rawhide-pungi-armhfp.cfg
-    - fedora-rawhide-pungi-aarch64.cfg
-    - fedora-rawhide-pungi-ppc64.cfg
-    - fedora-rawhide-pungi-ppc64le.cfg
-  tags:
-  - koji_builder
-
 - name: mock site-defaults.cfg
-  copy: src=builders/site-defaults.cfg dest=/etc/mock/site-defaults.cfg mode=0644 owner=root group=mock
+  template: src=builders/site-defaults.cfg dest=/etc/mock/site-defaults.cfg mode=0644 owner=root group=mock
   when: not inventory_hostname.startswith('bkernel')
-  tags:
-  - koji_builder
-
-#
-# We want more loop devices on builders to allow more image creates
-#
-
-- name: check for max_loop with grub2
-  command: cat /etc/grub2.cfg
-  register: max_loop
-  always_run: yes
-  changed_when: '1 != 1'
-  when: ansible_distribution_major_version|int != 6 and ansible_architecture == 'x86_64'
-  tags:
-  - koji_builder
-
-- name: check for max_loop with grub1
-  command: cat /etc/grub.conf
-  register: max_loop
-  always_run: yes
-  changed_when: '1 != 1'
-  when: ansible_distribution == 'RedHat' and ansible_architecture == 'x86_64' and ansible_distribution_major_version|int == 6
-  tags:
-  - koji_builder
-
-- name: set kernel params for more loops
-  command: /sbin/grubby --update-kernel=ALL --args=max_loop=64
-  when: max_loop is defined and max_loop.stdout.find("max_loop=64") == -1
   tags:
   - koji_builder
 
@@ -262,9 +234,45 @@
 #
 
 - name: special pkgs for the x86_64 builders
-  yum: state=present pkg={{ item }}
+  package: state=present pkg={{ item }}
   with_items:
   - kmod-hfsplus
   when: is_rhel is defined and ansible_architecture == 'x86_64' and ansible_distribution_major_version|int == '6'
   tags:
   - koji_builder
+
+# Before, the builders had the "apache" role. This is a temporary play to remove the httpd daemon everywhere
+- name: Uninstall httpd
+  package: name=httpd
+           state=absent
+  tags:
+  - koji_builder
+  - removehttpd
+
+- name: Add the Apache group
+  group: name=apache
+         gid=48
+         system=yes
+         state=present
+  tags:
+  - koji_builder
+  - removehttpd
+
+- name: Create the apache user
+  user: name=apache
+        uid=48
+        createhome=no
+        group=apache
+        home=/usr/share/httpd
+        shell=/sbin/nologin
+        system=yes
+        state=present
+  tags:
+  - koji_builder
+  - removehttpd
+
+- name: make sure we are in permissive selinux mode
+  selinux: policy=targeted state=permissive
+  tags:
+  - koji_builder
+  - selinux
