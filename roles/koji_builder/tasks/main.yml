@@ -170,7 +170,7 @@
   copy: src={{ private }}/files/koji/config.yaml dest=/root/.psphere/config.yaml
   tags:
   - koji_builder
-  when: ansible_architecture != 's390x'
+  when: ansible_architecture != 'armv7l'
 # done oz/imagefactory
 
 - name: copy over koji ca cert
@@ -214,7 +214,7 @@
   - koji_builder
 
 - name: mock site-defaults.cfg
-  template: src=builders/site-defaults.cfg dest=/etc/mock/site-defaults.cfg mode=0644 owner=root group=mock
+  file: src=builders/site-defaults.cfg dest=/etc/mock/site-defaults.cfg mode=0644 owner=root group=mock
   when: not inventory_hostname.startswith('bkernel')
   tags:
   - koji_builder
