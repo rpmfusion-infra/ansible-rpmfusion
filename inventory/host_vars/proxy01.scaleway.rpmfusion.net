@@ -1,4 +1,4 @@
 datacenter: scaleway
 
 # Neeed for builders to access proxy
-custom_rules: [ '-A INPUT -p tcp -m tcp -s 10.1.0.228 --dport 3128 -j ACCEPT', '-A INPUT -p tcp -m tcp -s 10.1.32.225 --dport 3128 -j ACCEPT', '-A INPUT -p tcp -m tcp -s 10.1.0.204 --dport 3128 -j ACCEPT', '-A INPUT -p tcp -m tcp -s 10.1.48.151 --dport 3128 -j ACCEPT', '-A INPUT -p tcp -m tcp -s 10.1.41.76 --dport 3128 -j ACCEPT', '-A INPUT -p tcp -m tcp -s 10.1.34.85 --dport 3128 -j ACCEPT' ]
+custom_rules: [ '-A INPUT -p tcp -m tcp -s 10.1.17.90 --dport 3128 -j ACCEPT', '-A INPUT -p tcp -m tcp -s 10.1.17.88 --dport 3128 -j ACCEPT', '-A INPUT -p tcp -m tcp -s 10.1.32.118 --dport 3128 -j ACCEPT', '-A INPUT -p tcp -m tcp -s 10.1.48.151 --dport 3128 -j ACCEPT']
