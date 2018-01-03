@@ -731,7 +731,10 @@ smtpd_recipient_restrictions =
    reject_unauth_destination,
    check_sender_access
          hash:/etc/postfix/sender_access,
+   reject_rbl_client zen.spamhaus.org,
+   reject_rbl_client bl.spamcop.net,
 #  check_policy_service unix:postgrey/socket,
+   permit
 
 body_checks = regexp:/etc/postfix/body_checks
 
