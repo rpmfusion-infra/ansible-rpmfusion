@@ -1,0 +1,2 @@
+default._domainkey	IN	TXT	( "v=DKIM1; k=rsa; "
+	  "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC8wVULGQX5DGJ5Wm1za1AzYl5zg7iaywao+5TL9caGh060L8HTvn7wNZ91D5ZWXqY4XRdOuJKggzVdKO5+7pSG/aBwO8/mSezn1tioNwxnRTiO25SdEtLqq1mG2ZMASehKcGMH7w4RITqAA3rPzeB/WKTKiSV1eW/Y2OKLOOjRmwIDAQAB" )  ; ----- DKIM key default for rpmfusion.org
