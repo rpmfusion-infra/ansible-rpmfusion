@@ -57,8 +57,6 @@
   with_items:
     - /pub
     - /mnt/rpmfusion_koji
-    - /pub/fedora
-    - /pub/epel
   tags:
   - koji_builder
 
