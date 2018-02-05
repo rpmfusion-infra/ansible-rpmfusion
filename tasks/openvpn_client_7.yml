@@ -1,7 +1,7 @@
 ---
 # openvpn - ftw - or something
 - name: install openvpn
-  yum: name=openvpn state=present
+  package: name=openvpn state=present
   tags:
   - packages
 
@@ -41,6 +41,6 @@
   - restart openvpn 7
 
 - name: enable openvpn service for rhel 7 or fedora
-  service: name=openvpn@openvpn state=running enabled=true
+  service: name=openvpn@openvpn state=started enabled=true
   tags:
   - service
