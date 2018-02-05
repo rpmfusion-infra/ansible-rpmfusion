@@ -26,6 +26,9 @@
 - name: restart fedmsg-relay
   command: /usr/local/bin/conditional-restart.sh fedmsg-relay fedmsg-relay
 
+- name: restart koji-sync-listener
+  action: service name=koji-sync-listener state=restarted
+
 - name: reload httpd
   command: /usr/local/bin/conditional-reload.sh httpd httpd
 
@@ -52,7 +55,7 @@
 
 - name: restart openvpn (Fedora)
   when: ansible_distribution == "Fedora"
-  action: service name=openvpn@openvpn state=restarted
+  action: service name=openvpn-client@openvpn state=restarted
   #notify:
   #- fix openvpn routing
 
@@ -64,7 +67,7 @@
 
 - name: restart openvpn (RHEL7)
   when: ansible_distribution == "RedHat" and ansible_distribution_major_version|int == 7
-  action: service name=openvpn@openvpn state=restarted
+  action: service name=openvpn-client@openvpn state=restarted
   #notify:
   #- fix openvpn routing
 
@@ -88,6 +91,9 @@
 
 - name: restart postfix
   service: name=postfix state=restarted
+
+- name: reload proxyhttpd
+  command: /usr/local/bin/proxy-conditional-reload.sh httpd httpd
 
 - name: restart glusterd
   service: name=glusterd state=restarted
@@ -123,6 +129,9 @@
   service: name=libvirtd state=reloaded
   ignore_errors: true
   when: ansible_virtualization_role == 'host'
+
+- name: restart pagure_ev
+  service: name=pagure_ev state=restarted
 
 - name: "update ca-trust"
   command: /usr/bin/update-ca-trust
@@ -163,3 +172,12 @@
 
 - name: flush journald tmpfiles to persistent store
   command: pkill -f -USR1 systemd-journald
+
+- name: restart idmapd
+  service: name=nfs-idmapd state=restarted
+
+- name: restart darkserver
+  service: name=darkserver state=restarted
+
+- name: restart buildmaster
+  service: name=buildmaster state=restarted
