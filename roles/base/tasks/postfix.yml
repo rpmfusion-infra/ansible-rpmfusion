@@ -30,8 +30,25 @@
   - config
   - base
 
+- name: Deploy sender_access file
+  copy: src="{{private}}/files/smtpd/sender_access" dest="/etc/postfix/sender_access"
+  when: postfix_group == "smtp-mm"
+  tags:
+  - postfix
+  - config
+  - base
+
+- name: Create sender_access hash
+  command: postmap hash:/etc/postfix/sender_access
+  changed_when: false
+  when: postfix_group == "smtp-mm"
+  tags:
+  - postfix
+  - config
+  - base
+
 - name: enable postfix to start
-  service: name=postfix state=running enabled=true
+  service: name=postfix state=started enabled=true
   tags:
   - service
   - base
@@ -47,3 +64,37 @@
   - base
   - config
 
+- name: create /etc/postfix/tls_policy
+  copy: src="postfix/tls_policy" dest=/etc/postfix/tls_policy
+  when: inventory_hostname.startswith(('bastion','smtp-mm'))
+  notify:
+  - rebuild postfix tls_policy
+  - restart postfix
+  tags:
+  - postfix
+  
+- name: install /etc/pki/tls/certs/gateway.crt
+  copy: 
+    src="{{private}}/files/smtpd/gateway.complete.crt"
+    dest=/etc/pki/tls/certs/gateway.crt
+    owner=root
+    group=root
+    mode=0644
+  when: inventory_hostname.startswith(('bastion','smtp-mm'))
+  notify:
+  - restart postfix
+  tags:
+  - postfix
+
+- name: Copy gateway.key
+  copy: 
+    src="{{private}}/files/smtpd/gateway.key"
+    dest=/etc/pki/tls/private/
+    owner=root
+    group=postfix
+    mode=0640
+  when: inventory_hostname.startswith(('bastion','smtp-mm'))
+  notify:
+  - restart postfix
+  tags:
+  - postfix

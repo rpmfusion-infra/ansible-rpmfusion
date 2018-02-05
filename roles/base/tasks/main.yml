@@ -6,7 +6,7 @@
 #
 
 - name: ensure packages required for semanage are installed (yum)
-  yum: name={{ item }} state=present
+  package: name={{ item }} state=present
   when: ansible_distribution_major_version|int < 22
   with_items:
   - policycoreutils-python
@@ -24,6 +24,7 @@
 # XXX fixme # a datacenter 'fact' from setup
 - name: /etc/resolv.conf
   copy: src={{ item }} dest=/etc/resolv.conf
+  when: not nm_controlled_resolv
   with_first_found:
   - "{{ resolvconf }}"
   - resolv.conf/{{ inventory_hostname }}
@@ -53,7 +54,7 @@
   ini_file: dest=/etc/NetworkManager/NetworkManager.conf section=main option=dns value=none
   notify:
   - restart NetworkManager
-  when: ansible_distribution_major_version|int >=7 and nmclitest|success and ( not ansible_ifcfg_blacklist)
+  when: ansible_distribution_major_version|int >=7 and nmclitest|success and ( not ansible_ifcfg_blacklist) and not nm_controlled_resolv
   tags:
    - config
    - resolvconf
@@ -80,14 +81,14 @@
 #  - restart NetworkManager
   - reload NetworkManager-connections
   - apply interface-changes
-  when: (virthost is not defined) and (item.startswith(('eth','br'))) and (hostvars[inventory_hostname]['ansible_' + item.replace('-','_')]['type'] == 'ether') and (ansible_distribution_major_version|int >=7) and hostvars[inventory_hostname]['ansible_' + item.replace('-','_')]['active'] and nmclitest|success and ( not ansible_ifcfg_blacklist ) and ( ansible_ifcfg_whitelist is not defined or item in ansible_ifcfg_whitelist )
+  when: (virthost is not defined) and (item.startswith(('eth','br','enc'))) and (hostvars[inventory_hostname]['ansible_' + item.replace('-','_')]['type'] == 'ether') and (ansible_distribution_major_version|int >=7) and hostvars[inventory_hostname]['ansible_' + item.replace('-','_')]['active'] and nmclitest|success and ( not ansible_ifcfg_blacklist ) and ( ansible_ifcfg_whitelist is not defined or item in ansible_ifcfg_whitelist )
   tags:
    - config
    - ifcfg
    - base
 
 - name: global default packages to install (yum)
-  yum: state=present name={{ item }}
+  package: state=present name={{ item }}
   with_items:
    - "{{ global_pkgs_inst }}"
   tags:
@@ -107,52 +108,16 @@
 - name: make sure hostname is set right on rhel7 hosts
   hostname: name="{{inventory_hostname}}"
 
-- name: check if sshd port is already known by selinux
-  shell: semanage port -l | grep ssh
-  register: sshd_selinux_port
-  check_mode: no
-  changed_when: false
-  tags:
-  - sshd_config
-  - config
-  - sshd
-  - selinux
-  - base
-
-- name: allow alternate sshd port
-  command: semanage port -a -t ssh_port_t -p tcp {{ sshd_port }}
-  when: sshd_selinux_port.stdout.find('{{ sshd_port }}') == -1
-  tags:
-  - sshd_config
-  - config
-  - sshd
-  - selinux
-  - base
-
-- name: sshd_config
-  copy: src={{ item }} dest=/etc/ssh/sshd_config mode=0600
-  with_first_found:
-    - "{{ sshd_config }}"
-    - ssh/sshd_config.{{ inventory_hostname }}
-    - ssh/sshd_config.{{ host_group }}
-    - ssh/sshd_config.{{ dist_tag }}
-    - ssh/sshd_config.{{ ansible_distribution }}
-    - ssh/sshd_config.{{ ansible_distribution_version }}
-    - ssh/sshd_config.default
-  notify:
-  - restart sshd
-  tags:
-  - sshd_config
-  - config
-  - sshd
-  - base
+#
+# We set builders root password in the koji_builder role, so do not set those here
+#
 
 - name: set root passwd
   user: name=root password={{ rootpw }} state=present
   tags:
   - rootpw
   - base
-  when: not (inventory_hostname.startswith('rawhide') or inventory_hostname.startswith('branched') or inventory_hostname.startswith('compose') or inventory_hostname.startswith('build') or inventory_hostname.startswith('arm') or inventory_hostname.startswith('bkernel') or inventory_hostname.startswith('koji01.stg') or inventory_hostname.startswith('aarch64') or inventory_hostname.startswith('s390') or inventory_hostname.startswith('fed-cloud09') or inventory_hostname.startswith('ppc8-04'))
+  when: not inventory_hostname.startswith(('build','bkernel','koji01.stg','s390','fed-cloud09'))
 
 - name: add ansible root key
   authorized_key: user=root key="{{ item }}"
@@ -164,12 +129,13 @@
 
 - name: make sure our resolv.conf is the one being used - set RESOLV_MODS=no in /etc/sysconfig/network
   lineinfile: dest=/etc/sysconfig/network create=yes backup=yes state=present line='RESOLV_MODS=no' regexp=^RESOLV_MODS=
+  when: not nm_controlled_resolv
   tags:
   - config
   - base
 
 - name: dist pkgs to remove (yum)
-  yum: state=absent name={{ item }}
+  package: state=absent name={{ item }}
   with_items:
    - "{{ base_pkgs_erase }}"
   tags:
@@ -178,7 +144,7 @@
   when: ansible_distribution_major_version|int < 22
 
 - name: dist pkgs to install (yum)
-  yum: state=present name={{ item }}
+  package: state=present name={{ item }}
   with_items:
    - "{{ base_pkgs_inst }}"
   tags:
@@ -214,7 +180,7 @@
   - base
 
 - name: dist enabled services
-  service: state=running enabled=true name={{ item }}
+  service: state=started enabled=true name={{ item }}
   with_items:
    - "{{ service_enabled }}"
   tags:
@@ -230,10 +196,11 @@
    - iptables/iptables.{{ host_group }}
    - iptables/iptables.{{ env }}
    - iptables/iptables
-  when: not inventory_hostname.startswith(('fed-cloud09','osbs'))
+  when: baseiptables
   notify:
   - restart iptables
   - reload libvirtd
+  - restart docker
   tags:
   - iptables
   - config
@@ -245,6 +212,7 @@
   - iptables
   - service
   - base
+  when: baseiptables
 
 - name: ip6tables
   template: src={{ item }} dest=/etc/sysconfig/ip6tables mode=0600 backup=yes
@@ -254,7 +222,7 @@
    - iptables/ip6tables.{{ host_group }}
    - iptables/ip6tables.{{ env }}
    - iptables/ip6tables
-  when: not inventory_hostname.startswith('arm-build')
+  when: baseiptables
   notify:
   - restart ip6tables
   - reload libvirtd
@@ -269,7 +237,7 @@
   - ip6tables
   - service
   - base
-  when: not inventory_hostname.startswith('arm-build')
+  when: baseiptables
 
 - name: enable journald persistence
   file: path=/var/log/journal state=directory
@@ -346,8 +314,48 @@
   - rsyslogd
   - config
 
+# Custom selinux policy to allow rsyslog to read and send audit to log01
+- name: ensure a directory exists for our custom selinux module
+  file: dest=/usr/local/share/rsyslog state=directory
+  tags:
+  - rsyslogd
+  - config
+  - rsyslog-audit
+
+- name: copy over our custom selinux module
+  copy: src=selinux/rsyslog-audit.pp dest=/usr/local/share/rsyslog/rsyslog-audit.pp
+  register: selinux_module
+  tags:
+  - rsyslogd
+  - config
+  - rsyslog-audit
+
+- name: install our custom selinux module
+  command: semodule -i /usr/local/share/rsyslog/rsyslog-audit.pp
+  when: selinux_module|changed
+  tags:
+  - rsyslogd
+  - config
+  - rsyslog-audit
+
+# Custom selinux policy to allow unix_chkpwd to map PAM database
+- name: copy over our custom selinux module
+  copy: src=selinux/mapchkpwd.pp dest=/usr/local/share/mapchkpwd.pp
+  register: selinux_module
+  when: ansible_distribution_major_version|int >= 27
+  tags:
+  - config
+  - selinux
+
+- name: install our custom selinux module
+  command: semodule -i /usr/local/share/mapchkpwd.pp
+  when: selinux_module|changed
+  tags:
+  - selinux
+  - config
+
 - name: Setup postfix
-  include: postfix.yml
+  import_tasks: postfix.yml
 
 #
 # This task installs some common scripts to /usr/local/bin
@@ -361,6 +369,7 @@
   tags:
   - config
   - base
+  - common-scripts
 
 - name: install a sync httpd logs cron script only on log01
   copy: src=syncHttpLogs.sh dest=/etc/cron.daily/syncHttpLogs.sh mode=0755
@@ -390,7 +399,7 @@
 # Watchdog stuff
 #
 - name: Set up watchdog
-  include: watchdog.yml
+  import_tasks: watchdog.yml
 
 
 #Set PS1 to show stage environment at PS1
@@ -441,5 +450,5 @@
   - krb5
 
 - name: Setup host keytab
-  include: keytab.yml
+  import_tasks: keytab.yml
   when: env == 'DISABLED'
