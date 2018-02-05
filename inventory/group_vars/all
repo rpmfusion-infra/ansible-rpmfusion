@@ -18,6 +18,7 @@ openshift_ansible: /srv/web/infra/openshift-ansible/
 freezes: true
 # most of our systems are in online
 datacenter: online
+postfix_group: "none"
 # for httpd/website
 server_admin: root@rpmfusion.org
 
@@ -61,6 +62,8 @@ br0_nm: 255.255.255.0
 br1_nm: 255.255.255.0
 # Default to managing the network, we want to not do this on select hosts (like cloud nodes)
 ansible_ifcfg_blacklist: false
+# List of interfaces to explicitly disable
+ansible_ifcfg_disabled: []
 #
 # The default virt-install works for rhel7 or fedora with 1 nic
 #
@@ -69,20 +72,20 @@ virt_install_command: "{{ virt_install_command_one_nic }}"
 main_bridge: br0
 nfs_bridge: br1
 
-virt_install_command_one_nic: virt-install -n {{ inventory_hostname }} 
+virt_install_command_one_nic: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
-                 --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }}  -l {{ ks_repo }} -x
+                 --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
                  'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyS0
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
                  --network bridge={{ main_bridge }},model=virtio
                  --autostart --noautoconsole --watchdog default
 
-virt_install_command_two_nic: virt-install -n {{ inventory_hostname }} 
+virt_install_command_two_nic: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
-                 --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }}  -l {{ ks_repo }} -x
+                 --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
                  'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyS0
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none
@@ -93,7 +96,7 @@ virt_install_command_two_nic: virt-install -n {{ inventory_hostname }}
 virt_install_command_aarch64_one_nic: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
-                 --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }}  -l {{ ks_repo }} -x
+                 --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
                  'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyAMA0
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
@@ -103,7 +106,7 @@ virt_install_command_aarch64_one_nic: virt-install -n {{ inventory_hostname }}
 virt_install_command_aarch64_two_nic: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
-                 --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }}  -l {{ ks_repo }} -x
+                 --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
                  'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyAMA0
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none
@@ -111,13 +114,23 @@ virt_install_command_aarch64_two_nic: virt-install -n {{ inventory_hostname }}
                  --network bridge={{ main_bridge }},model=virtio --network=bridge={{ nfs_bridge }},model=virtio
                  --autostart --noautoconsole
 
+virt_install_command_armv7_one_nic: virt-install -n {{ inventory_hostname }} --arch armv7l
+                 --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
+                 --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
+                 --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
+                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyAMA0
+                  hostname={{ inventory_hostname }} nameserver={{ dns }}
+                  ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
+                 --network bridge={{ main_bridge }},model=virtio
+                 --autostart --noautoconsole
+
 virt_install_command_rhel6: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }}
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
-                 --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }}  -l {{ ks_repo }} -x 
-                 "ksdevice=eth0 ks={{ ks_url }} ip={{ eth0_ip }} netmask={{ nm }} 
+                 --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
+                 "ksdevice=eth0 ks={{ ks_url }} ip={{ eth0_ip }} netmask={{ nm }}
                   gateway={{ gw }} dns={{ dns }} console=tty0 console=ttyS0
-                  hostname={{ inventory_hostname }}" 
+                  hostname={{ inventory_hostname }}"
                  --network=bridge=br1 --autostart --noautoconsole --watchdog default
 
 max_mem_size: "{{ mem_size * 1 }}"
@@ -155,6 +168,9 @@ fedmsg_active: False
 fedmsg_prefix: org.rpmfusion
 fedmsg_env: prod
 
+# Amount of time to wait for connections after a socket is first established.
+fedmsg_post_init_sleep: 1.0
+
 # A special flag that, when set to true, will disconnect the host from the
 # global fedmsg-relay instance and set it up with its own local one.  You can
 # temporarily set this to true for a specific host to do some debugging -- so
@@ -186,7 +202,7 @@ env: production
 env_suffix:
 
 # nfs mount options, override at the group/host level
-nfs_mount_opts: "ro,hard,bg,intr,noatime,nodev,nosuid,nfsvers=4"
+nfs_mount_opts: "ro,hard,bg,intr,noatime,nodev,nosuid,nfsvers=3"
 
 # by default set become to false here We can override it as needed.
 # Note that if become is true, you need to unset requiretty for
@@ -210,17 +226,6 @@ csi_relationship: |
 
     To update this text, add the csi_* vars to group_vars/ in ansible.
 
-
-# docker images required by OpenShift Origin
-openshift_required_images:
-  - "openshift/origin-pod"
-
-# docker images required by OSBS for builds
-fedora_required_images:
-  - "fedora:24"
-  - "fedora:25"
-  - "fedora:latest"
-
 #
 # say if we want the apache role dependency for mod_wsgi or not
 # In some cases we want mod_wsgi and no apache (for python3 httpaio stuff)
@@ -236,8 +241,37 @@ ipa_admin_password: "{{ ipa_prod_admin_password }}"
 # Normal default sshd port is 22
 sshd_port: 22
 
+# List of names under which the host is available
+ssh_hostnames: []
+
 # assume collectd apache
 collectd_apache: true
 
 # assume vpn is false
 vpn: False
+
+# assume createrepo is true and this builder has the koji nfs mount to do that
+createrepo: True
+
+# Nagios global variables
+nagios_Check_Services:
+  nrpe: true
+  sshd: true
+  named: false
+  dhcpd: false
+  httpd: false
+  swap: true
+  ping: true
+
+# Set variable if we want to use our global iptables defaults
+# Some things need to set their own.
+baseiptables: True
+
+# Most of our machines have manual resolv.conf files
+# These settings are for machines where NM is supposed to control resolv.conf.
+nm_controlled_resolv: False
+dns1: "192.168.181.254"
+dns2: "62.210.16.6"
+
+# This is a list of services that need to wait for VPN to be up before getting started.
+postvpnservices: []
