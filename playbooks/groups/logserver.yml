@@ -1,4 +1,4 @@
-#- include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=log01.rpmfusion.org"
+#- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=log01.rpmfusion.org"
 
 - name: make the box be real
   hosts: hv01.online.rpmfusion.org

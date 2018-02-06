@@ -1,4 +1,4 @@
-- include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=pkgs-stg:pkgs02.rpmfusion.org"
+- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=pkgs-stg:pkgs02.rpmfusion.org"
 
 - name: make the box be real
   hosts: pkgs-stg:pkgs01.online.rpmfusion.net
@@ -40,12 +40,12 @@
   - import_tasks: "{{ handlers_path }}/restart_services.yml"
 
 # setup minimal proxy includes
-- include: /srv/web/infra/ansible/playbooks/include/proxies-certificates.yml
-- include: /srv/web/infra/ansible/playbooks/include/proxies-websites.yml
-- include: /srv/web/infra/ansible/playbooks/include/proxies-reverseproxy.yml
-- include: /srv/web/infra/ansible/playbooks/include/proxies-rewrites.yml
-- include: /srv/web/infra/ansible/playbooks/include/proxies-redirects.yml
-- include: /srv/web/infra/ansible/playbooks/include/proxies-fedora-web.yml
+- import_playbook: /srv/web/infra/ansible/playbooks/include/proxies-certificates.yml
+- import_playbook: /srv/web/infra/ansible/playbooks/include/proxies-websites.yml
+- import_playbook: /srv/web/infra/ansible/playbooks/include/proxies-reverseproxy.yml
+- import_playbook: /srv/web/infra/ansible/playbooks/include/proxies-rewrites.yml
+- import_playbook: /srv/web/infra/ansible/playbooks/include/proxies-redirects.yml
+- import_playbook: /srv/web/infra/ansible/playbooks/include/proxies-fedora-web.yml
 
 - name: setup fedmsg on pkgs
   hosts: pkgs-stg:pkgs01.online.rpmfusion.net

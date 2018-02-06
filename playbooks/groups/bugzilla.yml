@@ -2,7 +2,7 @@
 # NOTE: should be used with --limit most of the time
 # NOTE: make sure there is room/space for this server on the vmhost
 # NOTE: most of these vars_path come from group_vars/bugzilla* or from hostvars
-- include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=bugzilla:bugzilla-stg"
+- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=bugzilla:bugzilla-stg"
 
 - name: make the box be real
   hosts: bugzilla-stg:bugzilla

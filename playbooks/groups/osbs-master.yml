@@ -1,5 +1,5 @@
 # create an osbs server
-- include:  "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=osbs:osbs-stg"
+- import_playbook:  "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=osbs:osbs-stg"
 
 - name: make the box be real
   hosts: osbs:osbs-stg
@@ -38,7 +38,7 @@
     - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
 
   tasks:
-    - include: "{{tasks}}/osbs_repos.yml"
+    - import_playbook: "{{tasks}}/osbs_repos.yml"
 
     - name: copy docker-storage-setup config
       copy:

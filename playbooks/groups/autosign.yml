@@ -2,7 +2,7 @@
 #
 # This server looks for rawhide builds and requests they be signed. 
 #
-- include: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=autosign"
+- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=autosign"
 
 - name: make the box be real
   hosts: autosign:autosign-hardware
