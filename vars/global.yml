@@ -3,9 +3,9 @@ basedir: /srv/web/infra/ansible
 private: /srv/private/ansible
 bigfiles: /srv/web/infra/bigfiles
 files: /srv/web/infra/ansible/files
-roles: /srv/web/infra/ansible/roles
-handlers: /srv/web/infra/ansible/handlers
-tasks: /srv/web/infra/ansible/tasks
+roles_path: /srv/web/infra/ansible/roles
+handlers_path: /srv/web/infra/ansible/handlers
+tasks_path: /srv/web/infra/ansible/tasks
 vars_path: "/srv/web/infra/ansible/vars"
 dist_tag: unknown
 auth_keys_from_fas: '/srv/web/infra/ansible/scripts/auth-keys-from-fas'
