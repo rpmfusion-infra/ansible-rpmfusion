@@ -16,6 +16,7 @@
 
 - name: Check swap file type
   command: file {{ swap_file_path }}
+  check_mode: no
   register: swapfile
 
 - name: Make swap file
