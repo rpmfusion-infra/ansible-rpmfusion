@@ -155,14 +155,6 @@
   tags:
   - koji_builder
 
-- name: override kojid.service file to set TasksMax to unlimited
-  copy: src=kojid.service dest=/etc/systemd/system/kojid.service
-  notify:
-  - reload systemd
-  - restart kojid
-  tags:
-  - koji_builder
-
 # setup for oz/imagefactory
 - name: make .psphere dir
   file: state=directory path=/root/.psphere mode=775 owner=root group=root
