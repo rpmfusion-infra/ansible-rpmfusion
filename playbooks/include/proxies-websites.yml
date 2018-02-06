@@ -14,7 +14,7 @@
 
   pre_tasks:
   - name: Install policycoreutils-python
-    yum: pkg=policycoreutils-python state=present
+    package: name=policycoreutils-python state=present
 
   - name: Create /srv/web/ for all the goodies.
     file: >
@@ -27,7 +27,7 @@
   - name: check the selinux context of webdir
     command: matchpathcon /srv/web
     register: webdir
-    always_run: yes
+    check_mode: no
     changed_when: "1 != 1"
     tags:
     - config
