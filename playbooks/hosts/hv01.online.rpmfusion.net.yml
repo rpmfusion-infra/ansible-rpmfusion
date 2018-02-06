@@ -28,8 +28,8 @@
 
   
   tasks:
-  - include: "{{ tasks }}/yumrepos.yml"
-  - include: "{{ tasks }}/motd.yml"
+  - import_tasks: "{{ tasks_path }}/yumrepos.yml"
+  - import_tasks: "{{ tasks_path }}/motd.yml"
 
   handlers:
-  - include: "{{ handlers }}/restart_services.yml"
+  - import_tasks: "{{ handlers_path }}/restart_services.yml"

@@ -16,7 +16,7 @@
    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
 
   pre_tasks:
-  - include: "{{ tasks }}/yumrepos.yml"
+  - import_tasks: "{{ tasks_path }}/yumrepos.yml"
 
   roles:
   - base
@@ -28,15 +28,15 @@
   - koji_builder
 
   tasks:
-  - include: "{{ tasks }}/2fa_client.yml"
+  - import_tasks: "{{ tasks_path }}/2fa_client.yml"
     when: not inventory_hostname.startswith('bkernel')
-  - include: "{{ tasks }}/motd.yml"
+  - import_tasks: "{{ tasks_path }}/motd.yml"
     when: not inventory_hostname.startswith('bkernel')
-  - include: "{{ tasks }}/openvpn_client.yml"
+  - import_tasks: "{{ tasks_path }}/openvpn_client.yml"
     when: not datacenter == 'online'
 
   - name: make sure kojid is running
     service: name=kojid state=running enabled=yes
 
   handlers:
-  - include: "{{ handlers }}/restart_services.yml"
+  - import_tasks: "{{ handlers_path }}/restart_services.yml"

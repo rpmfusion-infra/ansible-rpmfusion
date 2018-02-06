@@ -24,8 +24,8 @@
     tags:
     - packages
     - base
-  - include: "{{ tasks }}/yumrepos.yml"
-  - include: "{{ tasks }}/mod_wsgi.yml"
+  - import_tasks: "{{ tasks_path }}/yumrepos.yml"
+  - import_tasks: "{{ tasks_path }}/mod_wsgi.yml"
   - name: Install policycoreutils-python
     yum: pkg=policycoreutils-python state=present
 
@@ -42,7 +42,7 @@
 
   tasks:
   # this is how you include other task lists
-  - include: "{{ tasks }}/motd.yml"
+  - import_tasks: "{{ tasks_path }}/motd.yml"
 
   roles:
   - hosts
@@ -50,4 +50,4 @@
   - mirrormanager/mirrorlist2
 
   handlers:
-  - include: "{{ handlers }}/restart_services.yml"
+  - import_tasks: "{{ handlers_path }}/restart_services.yml"

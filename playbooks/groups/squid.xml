@@ -24,8 +24,8 @@
   - squid
 
   tasks:
-  - include: "{{ tasks }}/yumrepos.yml"
-  - include: "{{ tasks }}/motd.yml"
+  - include: "{{ tasks_path }}/yumrepos.yml"
+  - include: "{{ tasks_path }}/motd.yml"
 
   handlers:
   - include: "{{ handlers }}/restart_services.yml"
