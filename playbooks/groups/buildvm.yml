@@ -22,6 +22,7 @@
   - base
   - hosts
   - apache
+  - { role: openvpn/client, when: datacenter != "online" }
   - { role: nfs/client, mnt_dir: '/mnt/rpmfusion_koji',  nfs_src_dir: "{{ koji_hub_nfs }}" }
   - { role: fas_client, when: not inventory_hostname.startswith('bkernel') }
   - { role: sudo, when: not inventory_hostname.startswith('bkernel') }
@@ -32,8 +33,6 @@
     when: not inventory_hostname.startswith('bkernel')
   - import_tasks: "{{ tasks_path }}/motd.yml"
     when: not inventory_hostname.startswith('bkernel')
-  - import_tasks: "{{ tasks_path }}/openvpn_client.yml"
-    when: not datacenter == 'online'
 
   - name: make sure kojid is running
     service: name=kojid state=running enabled=yes

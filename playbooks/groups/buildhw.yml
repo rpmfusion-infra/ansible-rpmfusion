@@ -33,8 +33,6 @@
     when: not inventory_hostname.startswith('bkernel')
   - import_tasks: "{{ tasks_path }}/create_swap_file.yml swap_file_path=/var/swap-file swap_file_bs=1M swap_file_count=4096"
     when: inventory_hostname.endswith('scaleway.rpmfusion.net')
-  - import_tasks: "{{ tasks_path }}/openvpn_client.yml"
-    when: not datacenter == 'online'
 
   - name: make sure kojid is running
     service: name=kojid state=started enabled=yes
