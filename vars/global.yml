@@ -55,6 +55,3 @@ global_pkgs_inst: ['bind-utils', 'mailx', 'nc', 'openssh-clients',
                    'tmpwatch', 'traceroute', 'vim-enhanced', 'xz', 'zsh',
                    'libselinux-python', 'ntpdate', 'bash-completion', 'telnet',
                    'htop', 'rsyslog' ]
-
-# become: False by default so ansible doesn't try and check for it and hang
-become: False
