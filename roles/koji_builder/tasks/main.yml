@@ -65,6 +65,7 @@
   with_items:
     - yum-utils
     - koji-builder
+    - python2-koji
     - python-osbs-client
     - koji-containerbuild-builder
     - strace
@@ -101,6 +102,7 @@
   with_items:
     - yum-utils
     - koji-builder
+    - python2-koji
     - python-osbs-client
     - koji-containerbuild-builder
     - strace
@@ -149,6 +151,14 @@
   template: src=runroot.conf.j2 dest=/etc/kojid/plugins/runroot.conf
   when: "'runroot' in group_names"
   notify:
+  - restart kojid
+  tags:
+  - koji_builder
+
+- name: override kojid.service file to set TasksMax to unlimited
+  copy: src=kojid.service dest=/etc/systemd/system/kojid.service
+  notify:
+  - reload systemd
   - restart kojid
   tags:
   - koji_builder
@@ -265,3 +275,20 @@
   tags:
   - koji_builder
   - selinux
+
+- name: Create directory for shared secrets
+  file:
+    path: /etc/kojid/secrets
+    state: directory
+    owner: root
+    group: root
+    mode: 0660
+  tags:
+  - koji_builder
+
+# https://pagure.io/fedora-infrastructure/issue/6636
+- name: install libkcapi to get increased sockets on armv7
+  dnf: name=libkcapi enablerepo=updates-testing state=present
+  tags:
+  - koji_builder
+  when: ansible_architecture == 'armv7l'
