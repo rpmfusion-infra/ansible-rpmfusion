@@ -1,13 +1,13 @@
 # create a new bodhi-backend system
 #
 # This group makes bodhi-backend servers.
-# They are used by releng to push updates with bodhi. 
+# They are used by releng to push updates with bodhi.
 # They also run some misc releng scripts.
 #
 
 - import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=bodhi-backend:bodhi-backend-stg"
 
-# Once the instance exists, configure it. 
+# Once the instance exists, configure it.
 
 - name: make bodhi-backend server system
   hosts: bodhi-backend:bodhi-backend-stg
@@ -18,6 +18,9 @@
   - /srv/web/infra/ansible/vars/global.yml
   - "/srv/private/ansible/vars.yml"
   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  pre_tasks:
+  - import_tasks: "{{ tasks_path }}/yumrepos.yml"
 
   roles:
   - base
@@ -33,6 +36,7 @@
     mnt_dir: '/pub/'
     nfs_src_dir: 'rpmfusion_ftp/download0.rpmfusion.org/pub/'
 
+    # In staging, we mount fedora_koji as read only (see nfs_mount_opts)
   - role: nfs/client
     mnt_dir: '/mnt/rpmfusion_koji'
     nfs_src_dir: 'rpmfusion_koji'
@@ -55,7 +59,6 @@
     tags: bodhi
     when: env == 'staging'
   - import_tasks: "{{ tasks_path }}/2fa_client.yml"
-  - import_tasks: "{{ tasks_path }}/yumrepos.yml"
   - import_tasks: "{{ tasks_path }}/motd.yml"
 
   handlers:
