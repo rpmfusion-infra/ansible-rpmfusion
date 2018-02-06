@@ -1,37 +1,67 @@
 ---
 
 #
-# This role adds dnf automatic package and configuration. 
-# We want this on any public facing Fedora installs so we 
-# can pick up security updates. 
+# This role adds dnf automatic package and configuration.
+# We want this on any public facing Fedora installs so we
+# can pick up security updates.
 #
+- block:
+  - name: install dnf-automatic
+    dnf:
+      name: dnf-automatic
+      state: present
+    tags:
+    - packages
 
-- name: install dnf-automatic
-  dnf: name=dnf-automatic state=present
-  tags:
-  - packages
-  when: ansible_distribution == 'Fedora' and ansible_distribution_major_version|int > 21
+  - name: install /etc/dnf/automatic.conf
+    template:
+      src: automatic.conf.j2
+      dest: /etc/dnf/automatic.conf
+      mode: 0644
+    tags:
+    - config
 
-- name: install /etc/dnf/automatic.conf
-  template: src=automatic.conf.j2 dest=/etc/dnf/automatic.conf mode=0644
-  tags:
-  - config
-  when: ansible_distribution == 'Fedora' and ansible_distribution_major_version|int > 21
+  - name: enable and start dnf-automatic
+    command: systemctl enable dnf-automatic.timer
+    when: ansible_distribution_major_version|int < 26
+    args:
+      creates: /etc/systemd/system/basic.target.wants/dnf-automatic.timer
+    tags:
+    - config
 
-- name: enable and start dnf-automatic
-  command: systemctl enable dnf-automatic.timer creates=/etc/systemd/system/basic.target.wants/dnf-automatic.timer
-  tags:
-  - config
-  when: ansible_distribution == 'Fedora' and ansible_distribution_major_version|int > 21
+  - name: check if dnf-automatic.timer is active
+    command: systemctl is-active dnf-automatic.timer
+    register: automaticative
+    check_mode: no
+    changed_when: 1 != 1
+    ignore_errors: true
+    when: ansible_distribution_major_version|int < 26
 
-- name: check if dnf-automatic.timer is active
-  command: systemctl is-active dnf-automatic.timer
-  register: automaticative
-  always_run: yes
-  changed_when: 1 != 1
-  ignore_errors: true
-  when: ansible_distribution == 'Fedora' and ansible_distribution_major_version|int > 21
+  - name: start dnf-automatic.timer if it is not active
+    command: systemctl start dnf-automatic.timer
+    when: automaticative|failed and ansible_distribution_major_version|int < 26
 
-- name: start dnf-automatic.timer if it is not active
-  command: systemctl start dnf-automatic.timer
-  when: automaticative|failed and ansible_distribution == 'Fedora' and ansible_distribution_major_version|int > 21
+  - name: enable and start dnf-automatic f26+
+    command: systemctl enable dnf-automatic-install.timer
+    when: ansible_distribution_major_version|int >= 26
+    args:
+      creates: /etc/systemd/system/basic.target.wants/dnf-automatic-install.timer
+    tags:
+    - config
+
+  - name: check if dnf-automatic-install.timer is active
+    command: systemctl is-active dnf-automatic-install.timer
+    register: automaticative
+    check_mode: no
+    changed_when: 1 != 1
+    ignore_errors: true
+    when: ansible_distribution_major_version|int >= 26
+
+  - name: start dnf-automatic-install.timer if it is not active
+    command: systemctl start dnf-automatic-install.timer
+    when: automaticative|failed and ansible_distribution_major_version|int >= 26
+
+  - name: disable silly makecache timer
+    systemd: name=dnf-makecache masked=yes
+
+  when: ansible_pkg_mgr == 'dnf'
