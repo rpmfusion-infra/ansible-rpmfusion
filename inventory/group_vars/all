@@ -49,7 +49,7 @@ custom6_rules: []
 # defaults for virt installs
 ks_url: http://infrastructure.rpmfusion.org/repo/rhel/ks/kvm-rhel-7
 ks_repo: http://mirror.centos.org/centos/7/os/x86_64/
-mem_size: 1024
+mem_size: 2048
 num_cpus: 1
 lvm_size: 20000
 
