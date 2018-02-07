@@ -13,4 +13,4 @@
 192.168.182.1 hv01.vpn.rpmfusion.net proxy.vpn.rpmfusion.net nfs-server.vpn.rpmfusion.net nfs-server
 
 # scaleway
-192.168.122.1 bastion03.virt.rpmfusion.net bastion03 proxy
+192.168.122.103 bastion03.virt.rpmfusion.net bastion03 proxy
