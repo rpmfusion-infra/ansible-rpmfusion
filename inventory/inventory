@@ -67,7 +67,9 @@ proxy01.scaleway.rpmfusion.net
 bastion02.linaro.rpmfusion.net ansible_user=centos ansible_become=yes
 bastion03.virt.rpmfusion.net
 buildppc-01.osuosl.rpmfusion.net
+buildppc-02.osuosl.rpmfusion.net
 buildppcle-01.osuosl.rpmfusion.net
+buildppcle-02.osuosl.rpmfusion.net
 
 [bvirthost]
 
