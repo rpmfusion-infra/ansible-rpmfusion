@@ -122,7 +122,7 @@
   service: name=virtlogd state=started enabled=yes
   tags:
   - koji_builder
-  when: ansible_distribution_major_version|int > 23 and ansible_architecture != 's390x'
+  when: ansible_distribution_major_version|int > 23 and ansible_architecture != 'armv7l'
 
 - name: create kojid service override directory
   file: path=/etc/systemd/system/kojid.service.d state=directory
@@ -187,7 +187,7 @@
 # oz.cfg  upstream ram and cpu definitions are not enough
 - name: oz.cfg
   copy: src=oz.cfg dest=/etc/oz/oz.cfg
-  when: not inventory_hostname.startswith(('buildppc','buildvm-s390x'))
+  when: ansible_architecture != 'armv7l'
   tags:
   - koji_builder
 
@@ -202,7 +202,7 @@
   - restart libvirtd
   tags:
   - koji_builder
-  when: ansible_architecture != 's390x'
+  when: ansible_architecture != 'armv7l'
 
 #
 # On primary we want to make a /mnt/koji link to /mnt/rpmfusion_koji/koji
