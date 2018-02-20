@@ -50,6 +50,7 @@ arm-builder03.scaleway.rpmfusion.net
 arm-builder04.scaleway.rpmfusion.net
 
 [home-arm]
+arm-builder01.home.rpmfusion.net
 arm-jetson-tk1.home.rpmfusion.net
 arm-jetson-tx1.home.rpmfusion.net
 
