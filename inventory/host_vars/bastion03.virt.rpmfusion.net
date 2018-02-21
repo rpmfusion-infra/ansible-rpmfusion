@@ -1,0 +1,24 @@
+---
+vmhost: srv03.kwizart.net
+eth0_ip: 192.168.122.103
+gw: 192.168.122.1
+#ks_url: http://192.168.181.254/install/ks/buildvm-05.ks
+ks_repo: http://dl.fedoraproject.org/pub/fedora/linux/releases/27/Server/x86_64/os/
+nm: 255.255.255.0
+gw: 192.168.122.1
+dns: 8.8.8.8
+ks_url: http://dl.kwizart.net/bastion03.ks
+volgroup: /dev/vg_kvm
+datacenter: virt
+
+
+tcp_ports: [ 25, 3128 ]
+udp_ports: [ ]
+custom_rules: [ ]
+
+#
+# We need to mount koji storage rw here so run_root can work.
+# The rest of the group can be ro, it's only builders in the
+# compose channel that need a rw mount
+
+nfs_mount_opts: "rw,hard,bg,intr,noatime,nodev,nosuid,nfsvers=3"
