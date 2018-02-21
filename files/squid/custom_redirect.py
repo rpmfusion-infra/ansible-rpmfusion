@@ -14,24 +14,33 @@ def modify_url(line):
     # do remember that the new_url should contain a '\n' at the end.
     if 'dl.fedoraproject.org' in old_url:
         #if 'rawhide' or '/26/' or '/27/' in old_url:
-        if '/fedora/linux/' in old_url:
-            if '/25/' not in old_url:
-                if '/i386/' in old_url:
+        if '/fedora/' in old_url:
+            if '/i386/' in old_url:
+                new_url = old_url.replace('/fedora/linux/', '/fedora-secondary/') + '\n'
+                return new_url
+
+            elif '/ppc64' in old_url:
+                new_url = old_url.replace('/fedora/linux/', '/fedora-secondary/') + '\n'
+                return new_url
+
+            if '/27/' in old_url or '/26/' in old_url :
+                if '/aarch64/' in old_url:
                     new_url = old_url.replace('/fedora/linux/', '/fedora-secondary/') + '\n'
-                elif '/ppc64' in old_url:
-                    new_url = old_url.replace('/fedora/linux/', '/fedora-secondary/') + '\n'
-                elif '/aarch64/' in old_url:
-                    new_url = old_url.replace('/fedora/linux/', '/fedora-secondary/') + '\n'
+                return new_url
 
         if '/epel/7/' in old_url:
             if '/i386/' in old_url:
                 new_url = old_url.replace('/i386/', '/x86_64/') + '\n'
+                return new_url
+
+        return new_url
 
     #altarch support for centos
     if 'mirror.centos.org' in old_url:
         if '/centos/6/' not in old_url:
             if '/x86_64/' not in old_url:
                 new_url = old_url.replace('/centos/', '/altarch/') + '\n'
+                return new_url
 
     return new_url
  
