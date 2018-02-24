@@ -103,4 +103,9 @@ retired-packages:       /dev/null
 control-center-maint:   /dev/null
 gecko-bugs-nobody:      /dev/null
 
+# Services Accounts
+twitter:                twitter-members
+paypal:                 paypal-members
+
+
 # Account System
