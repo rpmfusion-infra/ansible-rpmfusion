@@ -252,7 +252,7 @@
 
 - name: directory sizes update cron job.
   cron: name="directory-sizes-update" minute="30" hour="23" user="root"
-        job="/usr/bin/find /pub/free/alt/ /pub/free/archive/ /pub/free/fedora-secondary/ /pub/free/fedora/ /pub/free/el/ /pub/nonfree/alt/ /pub/nonfree/archive/ /pub/nonfree/fedora-secondary/ /pub/nonfree/fedora/ /pub/nonfree/el/ -type d | grep -v snapshot | /usr/bin/xargs -n 1 /usr/bin/du --exclude=.snapshot -sh > /tmp/DIRECTORY_SIZES.txt 2> /dev/null; cp /tmp/DIRECTORY_SIZES.txt /pub/ ; chown root:sysadmin-build /pub/DIRECTORY_SIZES.txt ; chmod 644 /pub/DIRECTORY_SIZES.txt"
+        job="/usr/bin/find /pub/free/fedora/ /pub/free/el/ /pub/nonfree/fedora/ /pub/nonfree/el/ -type d | grep -v snapshot | /usr/bin/xargs -n 1 /usr/bin/du --exclude=.snapshot -sh > /tmp/DIRECTORY_SIZES.txt 2> /dev/null; cp /tmp/DIRECTORY_SIZES.txt /pub/ ; chown root:sysadmin-build /pub/DIRECTORY_SIZES.txt ; chmod 644 /pub/DIRECTORY_SIZES.txt"
         cron_file=directory-sizes-update
   when: inventory_hostname.startswith('bodhi-backend01') and env == "production"
   tags:
