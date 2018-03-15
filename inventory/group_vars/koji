@@ -6,9 +6,7 @@ num_cpus: 16
 
 # for systems that do not match the above - specify the same parameter in
 # the host_vars/$hostname file
-tcp_ports: [ 80, 443,
-    # These 8 ports are used by fedmsg.  One for each wsgi thread.
-    3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007]
+tcp_ports: [ 80, 443]
 
 udp_ports: []
 
