@@ -8,9 +8,11 @@ jad
 libCg
 lpf-skype
 pcsx2
+pipelight
 steam
 steam-noruntime
 unace
 -xorg-x11-drv-nvidia-304xx-kmodsrc
 -xorg-x11-drv-nvidia-340xx-kmodsrc
+-xorg-x11-drv-nvidia-390xx-kmodsrc
 -xorg-x11-drv-nvidia-kmodsrc
