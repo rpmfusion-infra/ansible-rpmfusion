@@ -7,7 +7,7 @@
 212.129.31.198 pkgs.rpmfusion.org pkgs
 
 # hv01 online - lan
-192.168.181.254 hv01.online.rpmfusion.net hv01 nfs-server.online.rpmfusion.net log01.online.rpmfusion.net proxy.online.rpmfusion.net hub.online.rpmfusion.net
+192.168.181.254 hv01.online.rpmfusion.net hv01 nfs-server.online.rpmfusion.net proxy.online.rpmfusion.net hub.online.rpmfusion.net
 192.168.181.101 buildvm-01.online.rpmfusion.net buildvm-01
 192.168.181.102 buildvm-02.online.rpmfusion.net buildvm-02
 192.168.181.130 db02.online.rpmfusion.net db02
