@@ -186,8 +186,7 @@
 
 # oz.cfg  upstream ram and cpu definitions are not enough
 - name: oz.cfg
-  copy: src=oz.cfg dest=/etc/oz/oz.cfg
-  when: ansible_architecture != 'armv7l'
+  template: src=oz.cfg.j2 dest=/etc/oz/oz.cfg
   tags:
   - koji_builder
 
@@ -202,7 +201,6 @@
   - restart libvirtd
   tags:
   - koji_builder
-  when: ansible_architecture != 'armv7l'
 
 #
 # On primary we want to make a /mnt/koji link to /mnt/rpmfusion_koji/koji
@@ -229,6 +227,16 @@
   with_items:
   - kmod-hfsplus
   when: is_rhel is defined and ansible_architecture == 'x86_64' and ansible_distribution_major_version|int == '6'
+  tags:
+  - koji_builder
+
+# non-bkernel x86_64 builders run container_build, which needs osbs
+- name: special pkgs for the x86_64 builders
+  package: state=present pkg={{ item }}
+  with_items:
+  - python2-osbs-client.noarch
+  - python3-osbs-client.noarch
+  when: "ansible_architecture == 'x86_64' and not inventory_hostname.startswith('bkernel')"
   tags:
   - koji_builder
 
@@ -284,3 +292,28 @@
   tags:
   - koji_builder
   when: ansible_architecture == 'armv7l'
+
+# set highmem_is_dirtyable in compose armv7 machines.
+# see: https://bugzilla.redhat.com/show_bug.cgi?id=1504264
+#
+- name: set highmem_is_dirtyable on armv7 builders that are in the compose channel.
+  sysctl: name=vm.highmem_is_dirtyable value=1 state=present sysctl_set=yes reload=yes
+  tags:
+  - koji_builder
+  when: inventory_hostname.startswith(('arm-'))
+
+#
+# Add rngd so that virtual maachines have enough randomness to boot in our lifetimes
+#
+- name: Install rng-tools for entropy
+  package: name=rng-tools state=present
+  tags:
+  - koji_builder
+  - koji_builder/rngd
+
+- name: Start rngd
+  service: name=rngd state=started enabled=yes
+  tags:
+  - koji_builder
+  - koji_builder/rngd
+  when: ansible_architecture != 's390x'

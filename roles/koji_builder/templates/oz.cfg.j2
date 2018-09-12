@@ -9,8 +9,13 @@ uri = qemu:///system
 image_type = raw
 # type = kvm
 # bridge_name = virbr0
+{% if ansible_architecture == 'armv7l' or ansible_architecture == 'aarch64' %}
+cpus = 1
+memory = 1024
+{% else %}
 cpus = 2
 memory = 3096
+{% endif %}
 
 [cache]
 original_media = yes
