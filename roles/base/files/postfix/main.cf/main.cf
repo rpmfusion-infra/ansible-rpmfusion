@@ -313,7 +313,7 @@ unknown_local_recipient_reject_code = 550
 #relayhost = [mailserver.isp.tld]
 #relayhost = uucphost
 #relayhost = [an.ip.add.ress]
-relayhost =  [mx1.rpmfusion.net]
+relayhost =  [smtp-relay]
 
 
 # REJECTING UNKNOWN RELAY USERS
@@ -353,7 +353,7 @@ relayhost =  [mx1.rpmfusion.net]
 # address masquerading or other forms of address rewriting including
 # username->Firstname.Lastname mapping.
 
-masquerade_domains = rpmfusion.org
+masquerade_domains = !lists.rpmfusion.org rpmfusion.org
 masquerade_exceptions = root apache
 
 # ADDRESS REDIRECTION (VIRTUAL DOMAIN)
@@ -682,6 +682,9 @@ readme_directory = /usr/share/doc/postfix-2.4.5/README_FILES
 # add this to new postfix to get it to add proper message-id and other 
 # headers to outgoing emails via the gateway. 
 
+smtpd_relay_restrictions = permit_mynetworks,
+   permit_sasl_authenticated,
+   reject_unauth_destination
 
 message_size_limit = 20971520
 #inet_protocols = ipv4
