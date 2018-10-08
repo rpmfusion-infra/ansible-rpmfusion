@@ -43,6 +43,9 @@ buildaarch64
 buildvm-ppc64
 buildvm-ppc64le
 
+[home:children]
+home-arm
+
 [scaleway-c1]
 arm-builder01.scaleway.rpmfusion.net
 arm-builder02.scaleway.rpmfusion.net
