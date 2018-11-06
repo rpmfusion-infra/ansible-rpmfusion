@@ -95,28 +95,7 @@
     - pykickstart
   tags:
   - koji_builder
-  when: ansible_architecture != 'armv7l'
 
-- name: add pkgs (armv7l)
-  dnf: state=present pkg={{ item }}
-  with_items:
-    - yum-utils
-    - koji-builder
-    - python2-koji
-    - python-osbs-client
-    - koji-containerbuild-builder
-    - strace
-    - mock
-    - ntp
-    - ntpdate
-    - rsyslog
-    - audit
-    - pycdio
-    - python-kickstart
-    - pykickstart
-  tags:
-  - koji_builder
-  when: ansible_architecture == 'armv7l'
 
 - name: enable virtlogd service
   service: name=virtlogd state=started enabled=yes
