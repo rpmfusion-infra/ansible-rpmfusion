@@ -27,7 +27,6 @@
   - nagios/client
   - collectd/base
   - hosts
-  - builder_repo
   - fas_client
   - sudo
   - rkhunter

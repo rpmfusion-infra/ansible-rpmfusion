@@ -26,7 +26,6 @@
   - nagios/client
   - hosts
   - fas_client
-  - builder_repo
   - collectd/base
   - apache
   - fedmsg/base
