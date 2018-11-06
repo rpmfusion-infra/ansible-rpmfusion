@@ -79,7 +79,7 @@ username_blacklist = "abuse,accounts,adm,admin,amanda,apache,askfedora,asterisk,
 email_domain_blacklist = "{{ fas_blocked_emails }}"
 
 # Valid SSH Key
-valid_ssh_key = "rsa,ssh-rsa,ecdsa,ecdsa-sha2"
+valid_ssh_key = "rsa,ssh-rsa,ssh-ed25519,ecdsa-sha2-nistp256"
 
 # admingroup has powers to change anything in the fas UI
 admingroup = 'accounts'
@@ -253,7 +253,7 @@ gpghome = "/etc/fas-gpg"
 # a gpg key registered.  It's currently broken
 gpg_fingerprint = "0FC4 A51E 379A C050 5112  8DF5 94D7 5B22 5B01 F801"
 #gpg_passphrase = "{{ fasGpgPassphrase }}"
-gpg_keyserver = "hkp://keys.fedoraproject.org"
+gpg_keyserver = "hkp://subkeys.pgp.net"
 
 [/rpmfusion-server-ca.cert]
 static_filter.on = True
