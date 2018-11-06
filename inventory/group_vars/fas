@@ -11,7 +11,7 @@ ks_repo: http://mirror.centos.org/centos/6/os/x86_64/
 # the host_vars/$hostname file
 
 wsgi_fedmsg_service: fas
-wsgi_procs: 40
+wsgi_procs: 8
 wsgi_threads: 1
 
 tcp_ports: [ 80, 873, 8443, 8444 ]
