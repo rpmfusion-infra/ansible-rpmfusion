@@ -81,6 +81,12 @@ channel =
     method createrepo :: use createrepo
     has req_channel :: req
     is_child_task :: parent
+# Policy to move build to powerfull builders
+    source */chromium-* :: use powerbuilder
+    source */kodi* :: use powerbuilder
+    source */qt5-qtwebengine-freeworld* :: use powerbuilder
+    source */telegram-desktop* :: use powerbuilder
+
     method build && bool scratch :: use default
 
     all :: use default
