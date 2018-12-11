@@ -75,7 +75,17 @@ tag =
     has_perm secure-boot && package kernel shim grub2 fedora-release fedora-repos pesign :: allow
     package kernel shim grub2 fedora-release fedora-repos pesign :: deny
     has_perm admin :: allow
-    all :: allow
+    tag *-updates || el*free :: {
+        operation move :: {
+            fromtag *-candidate :: deny
+            fromtag *-testing :: allow
+            all :: deny
+        }
+        operation tag && hastag *-candidate *-testing :: deny
+    }
+    tag *-override :: allow
+    tag *-candidate :: allow
+    all :: deny
 
 channel =
     method createrepo :: use createrepo
