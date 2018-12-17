@@ -149,15 +149,16 @@ def main():
         print >> sys.stderr, '[username=%s] Processing upload request: NAME=%s FILENAME=%s %sSUM=%s' % (username, name, filename, hash_type.upper(), checksum)
 
     # first test if the module really exists
-    section = 'free'
-    git_dir = os.path.join(GITREPO, section , '%s.git' %  name)
-    if not os.path.isdir(git_dir):
-        section = 'nonfree'
+    sections = ['free', 'nonfree', 'rpi', 'cuda' ]
+    for section in sections :
         git_dir = os.path.join(GITREPO, section , '%s.git' %  name)
-        if not os.path.isdir(git_dir):
-             print >> sys.stderr, '[username=%s] Unknown module: %s' % (username, name)
-             send_error('Module "%s" does not exist!' % name,
-                       status='404 Not Found')
+        if os.path.isdir(git_dir):
+            break
+
+    if not os.path.isdir(git_dir):
+         print >> sys.stderr, '[username=%s] Unknown module: %s' % (username, name)
+         send_error('Module "%s" does not exist!' % name,
+                   status='404 Not Found')
 
     module_dir = os.path.join(CACHE_DIR, section, name)
     hash_dir = os.path.join(module_dir, filename, hash_type, checksum)
