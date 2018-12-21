@@ -1,0 +1,54 @@
+---
+# Configuration for simple-koji-ci
+
+- name: install needed packages
+  package: name={{ item }} state=present
+  with_items:
+  - simple-koji-ci
+  - python-qpid
+  - koji
+  - git
+  - fedpkg
+  - mock
+  tags:
+  - packages
+  - simple-koji-ci
+
+- name: copy simple-koji-ci configuration
+  template: src={{ item.file }}
+            dest={{ item.location }}/{{ item.file }}
+            owner=root group=fedmsg mode=0640
+  with_items:
+  - { file: simple_koji_ci.py, location: /etc/fedmsg.d }
+  - { file: endpoints.py, location: /etc/fedmsg.d }
+  changed_when: "1 != 1"
+  tags:
+  - config
+  - simple-koji-ci
+  notify:
+  - restart fedmsg-hub
+
+- user:
+    name: fedmsg
+    groups: mock
+    append: yes
+  tags:
+  - config
+  - simple-koji-ci
+
+- name: Create /usr/share/fedmsg since apparently fedmsg doesn't do it anymore
+  file: state=directory
+         path=/usr/share/fedmsg
+         owner=fedmsg group=fedmsg mode=0775
+  tags:
+  - config
+  - simple-koji-ci
+
+- name: Start and enable the services we want
+  service: name={{ item }} enabled=yes state=started
+  with_items:
+  - fedmsg-hub
+  tags:
+  - service
+  - simple-koji-ci
+
