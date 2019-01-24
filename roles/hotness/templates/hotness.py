@@ -55,17 +55,16 @@ config = {
 {% endif %}
         'git_url': 'https://pkgs.rpmfusion.org/git/free/{package}.git',
 
-        'krb_principal': 'hotness/hotness01{{env_suffix}}.phx2.fedoraproject.org@{{ipa_realm}}',
-        'krb_keytab': '/etc/krb5.hotness_hotness01{{env_suffix}}.phx2.fedoraproject.org.keytab',
-        'krb_ccache': None,
-        'krb_proxyuser': None,
-        'krb_sessionopts': {'timeout': 3600, 'krb_rdns': False},
+        'authtype': 'ssl',
+        'cert': '/etc/koji.conf.d/hotness.pem',
+        'ca': '/etc/pki/tls/certs/rpmfusion-upload-ca.cert',
+        'serverca': '/etc/pki/tls/certs/rpmfusion-server-ca.cert',
 
         'user_email': ('RPM Fusion Release Monitoring ',
                        '<release-monitoring@rpmfusion.org>'),
         'opts': {'scratch': True},
         'priority': 30,
-        'target_tag': 'rawhide',
+        'target_tag': 'rawhide-free',
     },
 
     'hotness.anitya': {
@@ -82,7 +81,7 @@ config = {
 {% else %}
     "hotness.mdapi_url": "https://apps.fedoraproject.org/mdapi",
     'hotness.pdc_url': 'https://pdc.fedoraproject.org',
-    'hotness.dist_git_url': 'https://src.fedoraproject.org',
+    'hotness.dist_git_url': 'https://pkgs.rpmfusion.org/git/free',
 {% endif %}
 
     'hotness.yumconfig': '/etc/hotness-yum.conf',
