@@ -16,7 +16,7 @@ inventory       = {{ ansible_base }}/ansible/inventory
 #library        = /usr/share/my_modules/
 library         = {{ ansible_base }}/ansible/library:/usr/share/ansible
 #module_utils   = /usr/share/my_module_utils/
-#remote_tmp     = ~/.ansible/tmp
+remote_tmp      = /tmp
 #local_tmp      = ~/.ansible/tmp
 #forks          = 5
 forks           = 150
@@ -35,7 +35,7 @@ forks           = 150
 # smart - gather by default, but don't regather if already gathered
 # implicit - gather by default, turn off with gather_facts: False
 # explicit - do not gather by default, must say gather_facts: True
-#gathering = implicit
+gathering = smart
 
 # This only affects the gathering done by a play's gather_facts directive,
 # by default gathering retrieves all facts subsets
@@ -241,7 +241,9 @@ filter_plugins     = /srv/web/infra/ansible/filter_plugins:/usr/lib/python2.7/si
 # without having to talk to them in the same playbook run to get their
 # current IP information.
 #fact_caching = memory
-
+fact_caching = jsonfile
+fact_caching_connection = ~/.ansible_facts_cache
+fact_caching_timeout = 86400
 
 # retry files
 # When a playbook fails by default a .retry file will be created in ~/
@@ -325,6 +327,7 @@ retry_files_enabled = False
 [inventory]
 # enable inventory plugins, default: 'host_list', 'script', 'yaml', 'ini'
 #enable_plugins = host_list, virtualbox, yaml, constructed
+enable_plugins = ini, constructed
 
 # ignore these extensions when parsing a directory as inventory source
 #ignore_extensions = '.pyc', '.pyo', '.swp', '.bak', '~', '.rpm', '.md', '.txt', '~', '.orig', '.ini', '.cfg', '.retry'
@@ -459,7 +462,7 @@ pipelining = True
 # file systems that require special treatment when dealing with security context
 # the default behaviour that copies the existing context or uses the user default
 # needs to be changed to use the file system dependent context.
-#special_context_filesystems=nfs,vboxsf,fuse,ramfs,9p
+special_context_filesystems=nfs,vboxsf,fuse,ramfs,9p,fuse.glusterfs
 
 # Set this to yes to allow libvirt_lxc connections to work without SELinux.
 #libvirt_lxc_noseclabel = yes
