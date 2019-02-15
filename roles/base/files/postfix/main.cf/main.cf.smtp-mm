@@ -122,7 +122,6 @@ myorigin = rpmfusion.org
 #inet_interfaces = all
 #inet_interfaces = $myhostname
 #inet_interfaces = $myhostname, localhost
-
 inet_interfaces = all
 
 # The proxy_interfaces parameter specifies the network interface
@@ -257,7 +256,6 @@ unknown_local_recipient_reject_code = 550
 #mynetworks_style = class
 #mynetworks_style = subnet
 #mynetworks_style = host
-
 
 # Alternatively, you can specify the mynetworks list by hand, in
 # which case Postfix ignores the mynetworks_style setting.
@@ -501,8 +499,6 @@ recipient_delimiter = +
 # To use the old cyrus deliver program you have to set:
 #mailbox_transport = cyrus
 
-
-
 # The fallback_transport specifies the optional transport in master.cf
 # to use for recipients that are not found in the UNIX passwd database.
 # This parameter has precedence over the luser_relay parameter.
@@ -685,11 +681,12 @@ manpage_directory = /usr/share/man
 # sample_directory: The location of the Postfix sample configuration files.
 # This parameter is obsolete as of Postfix 2.1.
 #
-sample_directory = /usr/share/doc/postfix-2.5.6/samples
+sample_directory = /usr/share/doc/postfix-2.10.1/samples
 
 # readme_directory: The location of the Postfix README files.
 #
-readme_directory = /usr/share/doc/postfix-2.5.6/README_FILES
+readme_directory = /usr/share/doc/postfix-2.10.1/README_FILES
+
 # Enable IPv4, and IPv6 if supported
 inet_protocols = all
 
