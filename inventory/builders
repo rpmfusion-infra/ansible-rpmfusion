@@ -3,6 +3,10 @@ aarch64-01.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes
 aarch64-02.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes
 aarch64-jetson-tx1.home.rpmfusion.net
 
+[buildppc]
+
+[buildppc64]
+
 [buildvm]
 buildvm-01.online.rpmfusion.net
 buildvm-02.online.rpmfusion.net
@@ -35,6 +39,8 @@ buildhw-x86
 [buildarm:children]
 home-arm
 scaleway-c1
+
+[bkernel]
 
 [linaro:children]
 buildaarch64
