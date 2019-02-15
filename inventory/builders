@@ -17,7 +17,7 @@ buildvm-08.virt.rpmfusion.net
 
 [buildvm-ppc64]
 buildppc-01.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
-buildppc-02.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
+#buildppc-02.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
 
 [buildvm-ppc64le]
 buildppcle-01.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
