@@ -64,7 +64,7 @@ sign-vault01.online.rpmfusion.net
 [squid]
 hv01.online.rpmfusion.net
 proxy01.scaleway.rpmfusion.net
-bastion02.linaro.rpmfusion.net ansible_user=centos ansible_become=yes
+bastion02.linaro.rpmfusion.net ansible_become=yes ansible_ssh_user=fedora ansible_python_interpreter=/usr/bin/python3
 bastion03.virt.rpmfusion.net
 buildppc-01.osuosl.rpmfusion.net
 buildppc-02.osuosl.rpmfusion.net
