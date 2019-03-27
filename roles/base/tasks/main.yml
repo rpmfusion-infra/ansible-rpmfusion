@@ -7,17 +7,15 @@
 
 - name: ensure packages required for semanage are installed (yum)
   package: name={{ item }} state=present
-  when: ansible_distribution_major_version|int < 22
   with_items:
   - policycoreutils-python
   tags:
   - selinux
+  when: ansible_distribution_major_version|int != 8
 
 - name: ensure packages required for semanage are installed (dnf)
-  dnf: name={{ item }} state=present
+  dnf: name=['policycoreutils-python-utils'] state=present
   when: ansible_distribution_major_version|int > 21 and ansible_cmdline.ostree is not defined
-  with_items:
-  - policycoreutils-python-utils
   tags:
   - selinux
 
@@ -54,7 +52,7 @@
   ini_file: dest=/etc/NetworkManager/NetworkManager.conf section=main option=dns value=none
   notify:
   - restart NetworkManager
-  when: ansible_distribution_major_version|int >=7 and nmclitest.rc == 0 and ( not ansible_ifcfg_blacklist) and not nm_controlled_resolv
+  when: ansible_distribution_major_version|int >=7 and nmclitest is success and ( not ansible_ifcfg_blacklist) and not nm_controlled_resolv
   tags:
    - config
    - resolvconf
@@ -62,12 +60,12 @@
    - ifcfg
 
 - name: get interface uuid
-  shell: nmcli -f "DEVICE,UUID" c show --active | grep -E '^eth|^br|^en'
+  shell: nmcli -f "DEVICE,UUID" c show --active | grep -E '^eth|^br|^em'
   register: if_uuid
   changed_when: false
   failed_when: 'if_uuid.stdout == ""'
   check_mode: no
-  when: ansible_distribution_major_version|int >=7 and nmclitest.rc == 0 and ( not ansible_ifcfg_blacklist )
+  when: ansible_distribution_major_version|int >=7 and nmclitest is success and ( not ansible_ifcfg_blacklist )
   tags:
    - config
    - ifcfg
@@ -81,7 +79,7 @@
 #  - restart NetworkManager
   - reload NetworkManager-connections
   - apply interface-changes
-  when: (virthost is not defined) and (item.startswith(('eth','br','enc'))) and (hostvars[inventory_hostname]['ansible_' + item.replace('-','_')]['type'] == 'ether') and (ansible_distribution_major_version|int >=7) and hostvars[inventory_hostname]['ansible_' + item.replace('-','_')]['active'] and nmclitest.rc == 0 and ( not ansible_ifcfg_blacklist ) and ( ansible_ifcfg_whitelist is not defined or item in ansible_ifcfg_whitelist )
+  when: (virthost is not defined) and (item.startswith(('eth','br','enc','em'))) and (hostvars[inventory_hostname]['ansible_' + item.replace('-','_')]['type'] == 'ether') and (ansible_distribution_major_version|int >=7) and hostvars[inventory_hostname]['ansible_' + item.replace('-','_')]['active'] and nmclitest is success and ( not ansible_ifcfg_blacklist ) and ( ansible_ifcfg_whitelist is not defined or item in ansible_ifcfg_whitelist )
   tags:
    - config
    - ifcfg
@@ -94,12 +92,10 @@
   tags:
   - packages
   - base
-  when: ansible_distribution_major_version|int < 22
+  when: ansible_distribution_major_version|int < 22 and ansible_distribution_major_version|int != 8
 
 - name: global default packages to install (dnf)
-  dnf: state=present name={{ item }}
-  with_items:
-   - "{{ global_pkgs_inst }}"
+  dnf: state=present name="{{ global_pkgs_inst }}"
   tags:
   - packages
   - base
@@ -153,18 +149,14 @@
   when: ansible_distribution_major_version|int < 22
 
 - name: dist pkgs to remove (dnf)
-  dnf: state=absent name={{ item }}
-  with_items:
-   - "{{ base_pkgs_erase }}"
+  dnf: state=absent name="{{ base_pkgs_erase }}"
   tags:
   - packages
   - base
   when: ansible_distribution_major_version|int > 21 and ansible_cmdline.ostree is not defined
 
 - name: dist pkgs to install (dnf)
-  dnf: state=present name={{ item }}
-  with_items:
-   - "{{ base_pkgs_inst }}"
+  dnf: state=present name="{{ base_pkgs_inst }}"
   tags:
   - packages
   - base
@@ -189,7 +181,7 @@
   - base
 
 - name: iptables
-  template: src={{ item }} dest=/etc/sysconfig/iptables mode=0600 validate="/sbin/iptables-restore %s"
+  template: src={{ item }} dest=/etc/sysconfig/iptables mode=0600 validate="/sbin/iptables-restore --test %s"
   with_first_found:
    - iptables/iptables.{{ datacenter }}
    - iptables/iptables.{{ inventory_hostname }}
@@ -284,6 +276,18 @@
   - config
   - base
 
+- name: rsyslog-audit.conf
+  copy: src={{ item }} dest=/etc/rsyslog.d/rsyslog-audit.conf owner=root group=root mode=0644
+  with_first_found:
+    - rsyslog/rsyslog-audit.conf.{{ datacenter }}
+    - rsyslog/rsyslog-audit.conf.default
+  notify:
+  - restart rsyslog
+  tags:
+  - rsyslogd
+  - config
+  - base
+
 - name: log everything to log01 except on mirrorlist, do not log local4 there.
   copy: src=rsyslog/rsyslog-log01 dest=/etc/rsyslog.d/rsyslog-log01.conf mode=0644
   when: not inventory_hostname.startswith(('mirrorlist','copr','jenkins'))
@@ -332,7 +336,7 @@
 
 - name: install our custom selinux module
   command: semodule -i /usr/local/share/rsyslog/rsyslog-audit.pp
-  when: selinux_module|changed
+  when: selinux_module is changed
   tags:
   - rsyslogd
   - config
@@ -349,7 +353,7 @@
 
 - name: install our custom selinux module
   command: semodule -i /usr/local/share/mapchkpwd.pp
-  when: selinux_module|changed
+  when: selinux_module is changed
   tags:
   - selinux
   - config
@@ -389,7 +393,7 @@
 #
 - name: Blacklist cdc_ether module
   copy: src=blacklist-cdc_ether.conf dest=/etc/modprobe.d/blacklist-cdc_ether.conf
-  when: ansible_virtualization_role == 'host'
+  when: ansible_virtualization_role is defined and ansible_virtualization_role == 'host'
   tags:
   - config
   - base
