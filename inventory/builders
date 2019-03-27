@@ -2,6 +2,7 @@
 aarch64-01.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes
 aarch64-02.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes
 aarch64-03.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes
+aarch64-04.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes
 aarch64-jetson-tx1.home.rpmfusion.net
 
 [buildppc]
