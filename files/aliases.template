@@ -81,7 +81,6 @@ ftp-admin:	ftp
 www:		webmaster
 webmaster:	root
 noc:		root
-security:	root
 hostmaster:	root
 
 
@@ -106,6 +105,6 @@ gecko-bugs-nobody:      /dev/null
 # Services Accounts
 twitter:                twitter-members
 paypal:                 paypal-members
-
+security:               security-members
 
 # Account System
