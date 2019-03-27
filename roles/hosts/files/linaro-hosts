@@ -10,7 +10,8 @@
 192.168.182.1 hv01.vpn.rpmfusion.net proxy.vpn.rpmfusion.net nfs-server.vpn.rpmfusion.net nfs-server
 
 # linaro hosts
-192.168.1.8 bastion02.linaro.rpmfusion.net bastion02 proxy
+192.168.1.7  bastion02.linaro.rpmfusion.net bastion02 proxy
 192.168.1.10 aarch64-01.linaro.rpmfusion.net aarch64-01
 192.168.1.14 aarch64-02.linaro.rpmfusion.net aarch64-02
-192.168.1.12 aarch64-03.linaro.rpmfusion.net aarch64-03
+192.168.1.6  aarch64-03.linaro.rpmfusion.net aarch64-03
+192.168.1.8  aarch64-03.linaro.rpmfusion.net aarch64-03
