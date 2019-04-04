@@ -50,7 +50,7 @@ unix-group: sigul
 nss-dir: /var/lib/sigul
 # Password for accessing the NSS database.  If not specified, the server will
 # ask on startup
-; nss-password is not specified by default
+nss-password: {{ sigulServerPassword }}
 # Minimum and maximum versions of TLS used
 nss-min-tls: tls1.2
 nss-max-tls: tls1.2
