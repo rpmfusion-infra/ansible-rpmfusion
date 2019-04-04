@@ -4,6 +4,8 @@
 # Nickname of the bridge's certificate in the NSS database specified below
 bridge-cert-nickname: sign-bridge1 - RPM Fusion Project
 
+# Maximum accepted total size of all RPM payloads stored on disk for one request
+max-rpms-payload-size: 70737418240
 # Port on which the bridge expects client connections
 client-listen-port: 44334
 # Port on which the bridge expects server connections
@@ -19,6 +21,7 @@ fas-password: {{ fedoraDummyUserPassword }}
 [koji]
 koji-instances: primary
 koji-config-primary: /etc/koji-primary.conf
+koji-config: /etc/koji-primary.conf
 
 [daemon]
 # The user to run as

@@ -21,12 +21,13 @@
   - rpm-sign
   - bzip2
   - p11-kit
-  - engine_pkcs11
+  - openssl-pkcs11
   - gnutls-utils
   - ykpers
   - yubico-piv-tool
   - pcsc-lite
   - opensc
+  - tar
   tags:
   - packages
 
@@ -69,5 +70,10 @@
   with_items:
   - rpmfusion-server-ca.cert
   - rpmfusion-upload-ca.cert
+  tags:
+  - config
+
+- name: mask tmpfs tmp
+  systemd: masked=yes name=tmp.mount
   tags:
   - config
