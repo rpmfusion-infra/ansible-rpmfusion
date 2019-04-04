@@ -38,7 +38,7 @@
 - name: check the selinux context of the distgit root directory
   command: matchpathcon /srv/git
   register: distgitcontext
-  always_run: yes
+  check_mode: no
   changed_when: false
   tags:
   - config
@@ -298,7 +298,7 @@
 - name: check the selinux context of the Lookaside Cache root directory
   command: matchpathcon /srv/cache
   register: lcachecontext
-  always_run: yes
+  check_mode: no
   changed_when: false
   tags:
   - config
@@ -352,7 +352,7 @@
 - name: check the selinux context of the upload CGI script
   command: matchpathcon /srv/web/upload.cgi
   register: upcgicontext
-  always_run: yes
+  check_mode: no
   changed_when: false
   tags:
   - config
