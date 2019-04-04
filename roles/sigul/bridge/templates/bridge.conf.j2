@@ -12,16 +12,16 @@ client-listen-port: 44334
 server-listen-port: 44333
 # A RPM Fusion account system group required for access to the signing server.  If
 # empty, no RPM Fusion account check is done.
-required-fas-group: signers
+required-fas-group: rpmfusion-signers
 # User name and password for an account on the RPM Fusion account system that can
 # be used to verify group memberships
 fas-user-name: {{ fedoraDummyUser }}
 fas-password: {{ fedoraDummyUserPassword }}
 
 [koji]
-koji-instances: primary
-koji-config-primary: /etc/koji-primary.conf
-koji-config: /etc/koji-primary.conf
+koji-instances: rpmfusion
+koji-config-rpmfusion: /etc/sigul/koji-rpmfusion.conf
+
 
 [daemon]
 # The user to run as
@@ -35,7 +35,7 @@ nss-dir: /var/lib/sigul
 # Password for accessing the NSS database.  If not specified, the bridge will
 # ask on startup
 # Currently no password is used
-nss-password:
+nss-password: {{ sigulBridgePassword }}
 # Minimum and maximum versions of TLS used
 nss-min-tls: tls1.2
 nss-max-tls: tls1.2
