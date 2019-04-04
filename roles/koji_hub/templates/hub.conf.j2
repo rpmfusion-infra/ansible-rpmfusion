@@ -12,7 +12,9 @@ DBPass = {{ armkojiPassword }}
 {% endif %}
 KojiDir = /mnt/koji
 MemoryWarnThreshold = 10000
-MaxRequestLength = 83886080
+MaxRequestLength = 167772160
+RLIMIT_AS = 10737418240
+CheckClientIP = False
 
 ##  SSL client certificate auth configuration  ##
 #note: ssl auth may also require editing the httpd config (conf.d/kojihub.conf)
@@ -64,12 +66,11 @@ DisableNotifications = False
 
 #Plugins = koji-disable-builds-plugin
 #Plugins = darkserver-plugin
-#Plugins = fedmsg-koji-plugin runroot_hub hub_containerbuild
-Plugins = runroot_hub
-#
+Plugins = runroot_hub hub_containerbuild
 
 {% if inventory_hostname.startswith('koji') %}
 [policy]
+
 
 tag =
     has_perm secure-boot && package kernel shim grub2 fedora-release fedora-repos pesign :: allow
@@ -89,7 +90,9 @@ tag =
 
 channel =
     method createrepo :: use createrepo
-    has req_channel :: req
+    method createdistrepo :: use createrepo
+    method buildContainer :: use powerbuilder
+    has req_channel && has_perm customchannel :: req
     is_child_task :: parent
 # Policy to move build to powerfull builders
     source */chromium-* :: use powerbuilder
