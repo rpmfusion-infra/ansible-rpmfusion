@@ -1,6 +1,7 @@
 #
 # This task is the thing that creates a vm for later use
 #
+- include_vars: dir=/srv/web/infra/ansible/vars/all/ ignore_files=README
 
 - name: get vm list
   delegate_to: "{{ vmhost }}"
@@ -24,7 +25,7 @@
   until: vmstatus.status == 'shutdown'
   delegate_to: "{{ vmhost }}"
   retries: 1500
-  delay: 10
+  delay: 20
   when: inventory_hostname not in result.list_vms
 
 - name: ARMv7 copy the kernel out
