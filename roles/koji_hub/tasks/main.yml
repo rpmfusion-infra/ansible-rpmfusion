@@ -3,7 +3,7 @@
 # Setup koji hub server.
 #
 - name: install koji hub server packages
-  yum: name={{ item }} state=present
+  package: name={{ item }} state=present
   with_items:
   - koji-hub
   - koji-hub-plugins
@@ -307,7 +307,7 @@
   command: matchpathcon /mnt/rpmfusion_koji
   register: mnt_rpmfusion_koji_context
   when: env == "staging"
-  always_run: yes
+  check_mode: no
   changed_when: "1 != 1"
   tags:
   - koji_hub
