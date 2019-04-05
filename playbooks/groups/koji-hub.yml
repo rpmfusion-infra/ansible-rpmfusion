@@ -2,7 +2,7 @@
 # NOTE: should be used with --limit most of the time
 # NOTE: most of these vars_path come from group_vars/koji-hub or from hostvars
 
-- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=koji-stg:koji"
+#- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=koji-stg:koji"
 
 # Once the instance exists, configure it.
 
@@ -23,14 +23,14 @@
     - import_tasks: "{{ tasks_path }}/yumrepos.yml"
 
   roles:
-  - base
+#  - base
   - rkhunter
   - nagios/client
   - hosts
   - fas_client
-  - collectd/base
+#  - collectd/base
   - apache
-  - fedmsg/base
+#  - fedmsg/base
   - { role: nfs/server, when: env == "staging" }
 #  - { role: keepalived, when: env == "production" and inventory_hostname.startswith('koji') }
   - role: nfs/client
