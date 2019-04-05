@@ -101,13 +101,12 @@
   service: name=virtlogd state=started enabled=yes
   tags:
   - koji_builder
-  when: ansible_distribution_major_version|int > 23 and ansible_architecture != 'armv7l'
+  when: ansible_architecture != 'armv7l'
 
 - name: create kojid service override directory
   file: path=/etc/systemd/system/kojid.service.d state=directory
   tags:
   - koji_buidler
-  when: ansible_distribution_major_version|int > 6
  
 - name: systemd kojid service override
   copy: src=builders/kojid.service.d.override.conf dest=/etc/systemd/system/kojid.service.d/override.conf
