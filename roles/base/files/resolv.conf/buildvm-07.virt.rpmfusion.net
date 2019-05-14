@@ -1,0 +1,4 @@
+domain virt.rpmfusion.net
+nameserver 194.168.4.100
+nameserver 194.168.8.100
+options rotate
