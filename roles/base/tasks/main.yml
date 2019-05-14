@@ -113,7 +113,7 @@
   tags:
   - rootpw
   - base
-  when: not inventory_hostname.startswith(('build','bkernel','koji01.stg','s390','fed-cloud09'))
+  when: not inventory_hostname.startswith(('build','arm-build','aarch64'))
 
 - name: add ansible root key
   authorized_key: user=root key="{{ item }}"
@@ -122,6 +122,7 @@
   tags:
   - config
   - base
+  when: not inventory_hostname.startswith(('build','arm-build','aarch64'))
 
 - name: make sure our resolv.conf is the one being used - set RESOLV_MODS=no in /etc/sysconfig/network
   lineinfile: dest=/etc/sysconfig/network create=yes backup=yes state=present line='RESOLV_MODS=no' regexp=^RESOLV_MODS=
