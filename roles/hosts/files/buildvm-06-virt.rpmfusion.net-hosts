@@ -10,5 +10,7 @@
 192.168.181.254 hv01.online.rpmfusion.net hv01 nfs-server.online.rpmfusion.net proxy.online.rpmfusion.net hub.online.rpmfusion.net
 
 # hv01 online - vpn
-192.168.182.1 hv01.vpn.rpmfusion.net proxy.vpn.rpmfusion.net nfs-server.vpn.rpmfusion.net nfs-server log01 proxy
+192.168.182.1 hv01.vpn.rpmfusion.net proxy.vpn.rpmfusion.net nfs-server.vpn.rpmfusion.net nfs-server log01
 
+# virt
+192.168.122.103 bastion03.virt.rpmfusion.net bastion03 proxy
