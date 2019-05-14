@@ -76,3 +76,6 @@ buildvm
 buildvm-ppc64
 buildvm-ppc64le
 buildarm
+
+[builders:vars]
+ansible_python_interpreter=/usr/bin/python3
