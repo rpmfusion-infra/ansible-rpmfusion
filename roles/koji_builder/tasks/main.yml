@@ -73,16 +73,14 @@
 - name: add pkgs
   dnf: state=present pkg={{ item }}
   with_items:
-    - dnf-utils
     - koji-builder
     - python2-koji
-    - python-osbs-client
+    - python2-krbv
     - koji-containerbuild-builder
     - strace
     - mock
     - kernel-firmware
     - kernel-modules
-    - nosync
     - ntp
     - ntpdate
     - rsyslog
@@ -103,8 +101,24 @@
     - python-psphere
     - VMDKstream
     - pykickstart
+    - nosync
+    - yum
   tags:
   - koji_builder
+
+- name: add pkgs on new builders
+  dnf: state=present pkg={{ item }}
+  with_items:
+    - koji-builder-plugins
+  tags:
+  - koji_builder
+  when: ansible_distribution_major_version|int >= 28
+
+- name: Install arm UEFI firmware package (aarch64 only)
+  dnf: name=edk2-arm state=present
+  tags:
+  - koji_builder
+  when: "ansible_architecture is defined and ansible_architecture == 'aarch64'"
 
 
 - name: enable virtlogd service
@@ -210,11 +224,13 @@
 # The efi/mac images. This module is only needed on rhel.
 #
 
+# x86_64 builders run both x86_64 and i686 builds, that requires multilib
+# version of nosync installed to fully take advantage of nosync
 - name: special pkgs for the x86_64 builders
   package: state=present pkg={{ item }}
   with_items:
-  - kmod-hfsplus
-  when: is_rhel is defined and ansible_architecture == 'x86_64' and ansible_distribution_major_version|int == '6'
+  - nosync.i686
+  when: ansible_architecture == 'x86_64'
   tags:
   - koji_builder
 
