@@ -60,7 +60,7 @@
    - ifcfg
 
 - name: get interface uuid
-  shell: nmcli -f "DEVICE,UUID" c show --active | grep -E '^eth|^br|^em'
+  shell: nmcli -f "DEVICE,UUID" c show --active | grep -E '^eth|^br|^em|^en'
   register: if_uuid
   changed_when: false
   failed_when: 'if_uuid.stdout == ""'
