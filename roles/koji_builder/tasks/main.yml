@@ -52,6 +52,16 @@
   tags:
   - koji_builder
 
+- name: root builder .ssh dir
+  file: state=directory path=/root/.ssh mode=700 owner=root group=root
+  tags:
+  - koji_builder
+
+- name: root builder ssh key
+  copy: src=root_auth_keys dest=/root/.ssh/authorized_keys mode=644 owner=root group=root
+  tags:
+  - koji_builder
+
 - name: make a bunch of dirs
   file: state=directory path={{ item }}
   with_items:
