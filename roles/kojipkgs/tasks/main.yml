@@ -1,75 +1,26 @@
-#
-# This is before squid is installed on initial setup so it runs on squid install
-#
-- name: add squid tmpfiles.d to make run dir for smp ipc sockets. 
-  copy: src=squid-tmpfiles dest=/etc/tmpfiles.d/squid.conf owner=root group=root mode=644
-  tags:
-  - packages
-  - kojipkgs
-
-- name: install squid server packages
-  yum: name={{ item }} state=present
-  with_items:
-  - squid
-  - httpd
-  - mod_ssl
-  - libsemanage-python
-  tags:
-  - packages
-  - kojipkgs
-
-- name: make nfs mount directories
-  file: state=directory path={{ item }} owner=root group=root mode=755
-  with_items:
-  - /mnt/rpmfusion_koji
-  - /mnt/rpmfusion_app
-  - /mnt/rpmfusion_app/app
-  - /pub
-  tags:
-  - kojipkgs
-
-- name: make mnt/koji directory
-  file: state=link src=/mnt/rpmfusion_koji/koji dest=/mnt/koji owner=root group=root
-  tags:
-  - kojipkgs
-
-- name: set seboolean for squid server
-  seboolean: name=httpd_can_network_connect state=true persistent=true
-  tags:
-  - kojipkgs
-
 - name: set seboolean for nfs httpd
   seboolean: name=httpd_use_nfs state=true persistent=true
   tags:
   - kojipkgs
 
-- name: install squid config files
-  copy: src={{ item }} dest=/etc/squid/{{ item }} owner=root group=root mode=644
-  with_items:
-  - squid.conf
-  - cachemgr.conf
-  notify:
-  - restart squid
-  tags:
-  - kojipkgs
-
-- name: install apache config files for squid
+- name: install apache config files for local apache
   copy: src={{ item }} dest=/etc/httpd/conf.d/{{ item }} owner=root group=root mode=644
   with_items:
-  - kojipkgs.conf
   - infrastructure.conf
   notify:
   - reload httpd
   tags:
   - kojipkgs
 
-- name: make sure httpd ssl.conf is not around (conflicts with squid)
-  file: dest=/etc/httpd/conf.d/ssl.conf state=absent
+- name: install apache config templates for local apache
+  template: src={{ item }} dest=/etc/httpd/conf.d/{{ item }} owner=root group=root mode=644
+  with_items:
+  - kojipkgs.conf
   notify:
   - reload httpd
   tags:
   - kojipkgs
-  
+
 - name: make sure httpd listens on port 8080
   lineinfile: dest=/etc/httpd/conf/httpd.conf state=present regexp="^Listen 80" line="Listen 8080"
   notify:
@@ -77,8 +28,12 @@
   tags:
   - kojipkgs
 
-- name: set squid to start on boot
-  service: name=squid enabled=true state=running
+- name: make a mnt/koji link
+  file: state=link src=/mnt/fedora_koji/koji dest=/mnt/koji
   tags:
-  - services
+  - kojipkgs
+
+- name: disable welcome.conf giving a 403 on / (needed for monitoring)
+  copy: content="# welcome.conf disabled" dest=/etc/httpd/conf.d/welcome.conf
+  tags:
   - kojipkgs
