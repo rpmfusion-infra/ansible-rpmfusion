@@ -1,6 +1,6 @@
 ---
 - name: install memcached server package
-  yum: state=present name=memcached
+  package: state=present name=memcached
   tags:
   - packages
   - memcached
@@ -14,7 +14,7 @@
   - memcached
 
 - name: enable memcached service
-  service: state=running enabled=true name=memcached
+  service: state=started enabled=true name=memcached
   tags:
   - service
   - config
