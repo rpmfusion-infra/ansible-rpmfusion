@@ -160,9 +160,7 @@
 
 - name: Create directory for storing pubkeys
   file: path="{{pubkeydir}}"
-        owner=root
-        group=root
-        mode=0600
+        mode=0700
         state=directory
   delegate_to: localhost
   run_once: true
