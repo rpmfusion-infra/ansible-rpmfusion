@@ -1,4 +1,4 @@
-[buildaarch64]
+[buildhw_aarch64]
 aarch64-01.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_python_interpreter=/usr/bin/python3
 aarch64-02.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_python_interpreter=/usr/bin/python3
 aarch64-03.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_python_interpreter=/usr/bin/python3
@@ -6,62 +6,48 @@ aarch64-04.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_p
 aarch64-jetson-tx1.home.rpmfusion.net
 aarch64-10.home.rpmfusion.net
 
-[buildppc]
-
-[buildppc64]
-
 [buildvm]
 buildvm-01.online.rpmfusion.net
 buildvm-02.online.rpmfusion.net
+
+[buildhw]
+buildvm-03.online.rpmfusion.net
 buildvm-05.virt.rpmfusion.net
 buildvm-06.virt.rpmfusion.net
-
-[buildhw-x86]
-buildvm-03.online.rpmfusion.net
-buildvm-04.online.rpmfusion.net
 buildvm-07.virt.rpmfusion.net
-buildvm-08.virt.rpmfusion.net
+#buildvm-08.virt.rpmfusion.net
 
-[buildvm-ppc64]
+[buildhw_ppc64]
 buildppc-01.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
-#buildppc-02.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
 
-[buildvm-ppc64le]
+[buildhw_ppc64le]
 buildppcle-01.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
 buildppcle-02.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
 
-[buildvmhost]
-
-[buildhw:children]
-buildvm-ppc64
-buildvm-ppc64le
-buildaarch64
-buildarm
-buildhw-x86
-
-[buildarm:children]
-home-arm
-scaleway-c1
+[buildhw_armv7:children]
+home_arm
+scaleway_c1
 
 [bkernel]
 
+
 [linaro:children]
-buildaarch64
+buildhw_aarch64
 
 [osuosl:children]
-buildvm-ppc64
-buildvm-ppc64le
+buildhw_ppc64
+buildhw_ppc64le
 
 [home:children]
-home-arm
+home_arm
 
-[scaleway-c1]
+[scaleway_c1]
 arm-builder01.scaleway.rpmfusion.net
 arm-builder02.scaleway.rpmfusion.net
 arm-builder03.scaleway.rpmfusion.net
 arm-builder04.scaleway.rpmfusion.net
 
-[home-arm]
+[home_arm]
 arm-builder09.home.rpmfusion.net
 arm-builder10.home.rpmfusion.net
 arm-builder11.home.rpmfusion.net
@@ -69,13 +55,15 @@ arm-builder12.home.rpmfusion.net
 arm-jetson-tk1.home.rpmfusion.net
 arm-jetson-tx1.home.rpmfusion.net
 
+
 [builders:children]
-buildaarch64
 buildhw
+buildhw_armv7
+buildhw_ppc64
+buildhw_ppc64le
+buildhw_aarch64
 buildvm
-buildvm-ppc64
-buildvm-ppc64le
-buildarm
+buildvm_aarch64
 
 [builders:vars]
 ansible_python_interpreter=/usr/bin/python3
