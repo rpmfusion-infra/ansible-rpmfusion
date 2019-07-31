@@ -41,9 +41,14 @@ nrpe_procs_crit: 1200
 # See http://infrastructure.fedoraproject.org/csi/security-policy/
 
 csi_security_category: High
+csi_primary_contact: sysadmin-main root@rpmfusion.org
 csi_purpose: SSH proxy to access infrastructure not exposed to the web
 csi_relationship: |
   - Provides ssh access to all online/vpn connected servers.
   - Bastion is the hub for all infrastructure's VPN connections.
   - All incoming SMTP from online and VPN, as well as outgoing SMTP, pass or are filtered here.
   - Bastion does not accept any mail outside online/vpn.
+
+nagios_Check_Services:
+  nrpe: true
+  mail: false

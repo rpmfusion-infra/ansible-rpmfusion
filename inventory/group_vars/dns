@@ -21,3 +21,4 @@ csi_security_category: High
 csi_primary_contact: RPM Fusion Admins - root@rpmfusion.org
 csi_purpose: Domain Name Service
 
+nagios_has_named: true
