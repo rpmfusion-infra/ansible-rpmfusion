@@ -71,11 +71,13 @@
   - koji_builder
 
 - name: add pkgs
-  dnf: state=present pkg={{ item }}
-  with_items:
+  package:
+    state: present
+    name:
     - koji-builder
+    - koji-builder-plugins
     - python2-koji
-    - python2-krbv
+    - python-krbV
     - koji-containerbuild-builder
     - strace
     - mock
@@ -106,20 +108,20 @@
   tags:
   - koji_builder
 
-- name: add pkgs on new builders
-  dnf: state=present pkg={{ item }}
-  with_items:
-    - koji-builder-plugins
-  tags:
-  - koji_builder
-  when: ansible_distribution_major_version|int >= 28
-
 - name: Install arm UEFI firmware package (aarch64 only)
-  dnf: name=edk2-arm state=present
+  package: name=edk2-arm state=present
   tags:
   - koji_builder
   when: "ansible_architecture is defined and ansible_architecture == 'aarch64'"
 
+- name: Re byte compile Guest.py (if needed)
+  command: python2 -m compileall /usr/lib/python2.7/site-packages/oz/Guest.py
+  register: compileGuestpy
+  changed_when: "'Compiling ' in compileGuestpy.stdout"
+  tags:
+  - koji_builder
+  notify:
+  - restart kojid
 
 - name: enable virtlogd service
   service: name=virtlogd state=started enabled=yes
@@ -227,19 +229,20 @@
 # x86_64 builders run both x86_64 and i686 builds, that requires multilib
 # version of nosync installed to fully take advantage of nosync
 - name: special pkgs for the x86_64 builders
-  package: state=present pkg={{ item }}
-  with_items:
-  - nosync.i686
+  package:
+    state: present
+    name:
+    - nosync.i686
   when: ansible_architecture == 'x86_64'
   tags:
   - koji_builder
 
 # non-bkernel x86_64 builders run container_build, which needs osbs
 - name: special pkgs for the x86_64 builders
-  package: state=present pkg={{ item }}
-  with_items:
-  - python2-osbs-client.noarch
-  - python3-osbs-client.noarch
+  package:
+    state: present
+    name:
+    - python3-osbs-client.noarch
   when: "ansible_architecture == 'x86_64' and not inventory_hostname.startswith('bkernel')"
   tags:
   - koji_builder
