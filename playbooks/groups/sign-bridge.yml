@@ -6,10 +6,10 @@
 # Access is via management interface only. This playbook does initial setup.
 # Please check with rel-eng before doing anything here.
 
-#- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=sign-bridge"
+- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=sign_bridge"
 
 - name: configure sign bridge server
-  hosts: sign-bridge
+  hosts: sign_bridge
   user: root
   gather_facts: true
 
@@ -30,9 +30,11 @@
 #    owner_group: sigul
   - sigul/bridge
 
+ pre_tasks:
+  - import_tasks: "{{ tasks_path
+
   tasks:
   - import_tasks: "{{ tasks_path }}/motd.yml"
-  - import_tasks: "{{ tasks_path }}/yumrepos.yml"
   - import_tasks: "{{ tasks_path }}/2fa_client.yml"
 
   handlers:

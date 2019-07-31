@@ -8,7 +8,7 @@
   user: root
   gather_facts: True
 
-  vars_files: 
+  vars_files:
    - /srv/web/infra/ansible/vars/global.yml
    - "/srv/private/ansible/vars.yml"
    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
@@ -27,8 +27,10 @@
       nfs_src_dir: 'fedora_backups' }
   - openvpn/client
 
-  tasks:
+  pre_tasks:
   - import_tasks: "{{ tasks_path }}/yumrepos.yml"
+
+  tasks:
   - import_tasks: "{{ tasks_path }}/2fa_client.yml"
   - import_tasks: "{{ tasks_path }}/motd.yml"
   - import_tasks: "{{ tasks_path }}/rdiff_backup_server.yml"

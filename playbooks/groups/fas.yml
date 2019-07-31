@@ -1,9 +1,9 @@
 # create a new fas server
 
-- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=fas:fas-stg"
+- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=fas:fas_stg"
 
 - name: make the box be real
-  hosts: fas-stg:fas
+  hosts: fas_stg:fas
   user: root
   gather_facts: True
 
@@ -28,8 +28,10 @@
 #  - yubikey
 #  - totpcgi
 
-  tasks:
+  pre_tasks:
   - import_tasks: "{{ tasks_path }}/yumrepos.yml"
+
+  tasks:
   - import_tasks: "{{ tasks_path }}/2fa_client.yml"
   - import_tasks: "{{ tasks_path }}/motd.yml"
 
