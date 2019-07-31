@@ -1,0 +1,21 @@
+---
+# for systems that do not match the above - specify the same parameter in
+# the host_vars/$hostname file
+host_group: kojibuilder
+fas_client_groups: sysadmin-releng
+sudoers: "{{ private }}/files/sudo/00releng-sudoers"
+
+koji_hub_nfs: "rpmfusion_koji"
+koji_server_url: "http://koji.rpmfusion.org/kojihub"
+koji_weburl: "http://koji.rpmfusion.org/koji"
+koji_topurl: "http://koji.rpmfusion.org/kojifiles"
+
+csi_security_category: High
+csi_primary_contact: RPM Fusion Admins - sysadmin@lists.rpmfusion.org
+csi_purpose: Koji service employs a set of machines to build packages for the RPM Fusion project. This playbook builds vm builders.
+csi_relationship: |
+  * VMs built on top of buildvmhost
+  * Relies on koji-hub, Packages, PkgDB, apache, fedmsg, fas, virthost, and is monitored by nagios
+  * Several services rely on the builders, including koschei, Bodhi, Tagger, SCM, Darkserver.
+  * Produces automated builds of packages for the architecture listed. Builders can be scaled by adding new
+
