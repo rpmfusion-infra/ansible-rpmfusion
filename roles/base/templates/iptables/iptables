@@ -50,19 +50,15 @@
 -A FORWARD -j REJECT --reject-with icmp-host-prohibited
 COMMIT
 
-# nat table
+{% if nat_rules %}
 *nat
-:PREROUTING ACCEPT [0:0]
-:INPUT ACCEPT [0:0]
+:PREROUTING ACCEPT [0:]
+:INPUT ACCEPT [0:]
 :OUTPUT ACCEPT [0:0]
 :POSTROUTING ACCEPT [0:0]
 
-# custom_nat_rules
-{% if custom_nat_rules is defined %}
-{% for rule in custom_nat_rules %}
+{% for rule in nat_rules %}
 {{ rule }}
 {% endfor %}
-{% endif %}
-
 COMMIT
-
+{% endif %}
