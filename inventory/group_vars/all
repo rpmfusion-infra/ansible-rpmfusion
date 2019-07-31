@@ -313,9 +313,6 @@ redirectmatch_enabled: True
 # not on most of them, so default to false
 sshd_sftp: false
 
-# Disable ssh pub key by default
-sshd_host_certificate: False
-
 #
 # Autodetect python version
 #
