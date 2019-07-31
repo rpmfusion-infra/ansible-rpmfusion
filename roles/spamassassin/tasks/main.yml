@@ -2,7 +2,7 @@
 # tasklist for setting up a SpamAssassin server
 
 - name: install the package
-  yum: pkg={{ item }} state=present
+  package: name={{ item }} state=present
   with_items:
   - spamassassin
   - perl-Razor-Agent
@@ -39,6 +39,6 @@
   - config
 
 - name: set the service running/enabled
-  service: name=spamassassin enabled=true state=running
+  service: name=spamassassin enabled=true state=started
   tags:
   - service
