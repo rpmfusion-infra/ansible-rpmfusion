@@ -1,9 +1,9 @@
 ---
-# collectd client setup 
+# collectd client setup
 
 # install pkg
 - name: install collectd
-  yum: name=collectd state=present
+  package: name=collectd state=present
   tags:
   - collectd
   when: ansible_distribution_major_version|int < 22
@@ -15,11 +15,12 @@
   - collectd
   when: ansible_distribution_major_version|int > 21
 
-# enable collectd
-- name: enable collectd svc
-  service: state=running enabled=true name=collectd
+# install collectd-disk on F25+ (it was split out)
+- name: install collectd-disk
+  dnf: name=collectd-disk state=present
   tags:
   - collectd
+  when: ansible_distribution_major_version|int > 24
 
 # install collected.conf
 - name: /etc/collectd.conf
@@ -48,13 +49,21 @@
   when: inventory_hostname.startswith('hv01')
 
 # apache - localhost only - pretty much any apache server
-- name: install collectd-apache
-  yum: state=present name=collectd-apache
+- name: install collectd-apache (yum)
+  package: state=present name=collectd-apache
   tags:
   - collectd
   notify:
   - restart collectd
-  when: collectd_apache is defined and ansible_distribution_major_version|int < 22
+  when: collectd_apache and ansible_distribution_major_version|int < 22
+
+- name: install collectd-apache (dnf)
+  dnf: state=present name=collectd-apache
+  tags:
+  - collectd
+  notify:
+  - restart collectd
+  when: collectd_apache and ansible_distribution_major_version|int > 21
 
 - name: /etc/collectd/apache.conf
   copy: src=apache.conf dest=/etc/collectd.d/apache.conf
@@ -62,20 +71,10 @@
   - collectd
   notify:
   - restart collectd
-  when: collectd_apache is defined
-
-- name: /etc/collectd/graphite.conf
-  template: src=graphite.conf dest=/etc/collectd.d/graphite.conf
-  tags:
-  - collectd
-  - graphite
-  - graphite-collectd
-  notify:
-  - restart collectd
-  when: collectd_graphite is defined and ansible_distribution_major_version != '6'
+  when: collectd_apache
 
 - name: Install libsemanage-python so we can set an sebool below
-  yum: name=libsemanage-python state=present
+  package: name=libsemanage-python state=present
   tags:
   - collectd
   when: collectd_apache is defined and ansible_distribution_major_version|int < 22
@@ -87,7 +86,7 @@
   ignore_errors: True
   notify:
   - restart collectd
-  when: collectd_apache is defined or collectd_graphite is defined
+  when: ( collectd_apache is defined ) and ansible_selinux.status != "disabled"
 
 - name: enable collectd nfs module
   copy: src=nfs.conf dest=/etc/collectd.d/nfs.conf
@@ -113,7 +112,7 @@
 - name: check to see if its even installed yet
   shell: semodule -l | grep fi-collectd | wc -l
   register: ficgeneral_grep
-  check_mode: False
+  check_mode: no
   changed_when: "'0' in ficgeneral_grep.stdout"
   tags:
   - collectd
@@ -121,7 +120,7 @@
 
 - name: install our general collectd selinux module
   command: semodule -i /usr/share/collectd/fi-collectd.pp
-  when: ficgeneral_module|changed or ficgeneral_grep|changed
+  when: ficgeneral_module is changed or ficgeneral_grep is changed
   tags:
   - collectd
   - selinux
@@ -138,7 +137,7 @@
   shell: semodule -l | grep fi-pstorefs | wc -l
   when: ansible_distribution_major_version|int != 6
   register: ficpstorefs_grep
-  check_mode: False
+  check_mode: no
   changed_when: "'0' in ficpstorefs_grep.stdout"
   tags:
   - collectd
@@ -146,25 +145,23 @@
 
 - name: install our pstorefs/collectd selinux module
   command: semodule -i /usr/share/collectd/fi-pstorefs.pp
-  when: ansible_distribution_major_version|int != 6 and (ficpstorefs_module|changed or ficpstorefs_grep|changed)
+  when: ansible_distribution_major_version|int != 6 and (ficpstorefs_module is changed or ficpstorefs_grep is changed)
   tags:
   - collectd
   - selinux
 
 
-  
+
 # each of the below should move to a separate task list
 # since they are odd-balls and one-offs
 
-# bind - localhost only - ns servers only
-
 # fedmsg - busgateway## only
   # add /usr/share/collectd/fedmsg-types.db
-  
+
 # memcached - memcached only
 
 # postgres - this is a conn check
-## add /usr/share/collectd/pgconn-types.db 
+## add /usr/share/collectd/pgconn-types.db
 
 # openvpn - for bastion/openvpn gateways only
 
@@ -174,8 +171,12 @@
 # haproxy
 ## add /usr/share/collectd/haproxy-types.db
 ## add socat pkg
-## 
+##
 
 # webproxy
 
-  
+# enable collectd
+- name: enable collectd svc
+  service: state=started enabled=true name=collectd
+  tags:
+  - collectd
