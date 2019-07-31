@@ -86,16 +86,18 @@
    - base
 
 - name: global default packages to install (yum)
-  package: state=present name={{ item }}
-  with_items:
-   - "{{ global_pkgs_inst }}"
+  package:
+    state: present
+    name: "{{ global_pkgs_inst }}"
   tags:
   - packages
   - base
   when: ansible_distribution_major_version|int < 22 and ansible_distribution_major_version|int != 8
 
 - name: global default packages to install (dnf)
-  dnf: state=present name="{{ global_pkgs_inst }}"
+  dnf:
+    state: present
+    name: "{{ global_pkgs_inst }}"
   tags:
   - packages
   - base
