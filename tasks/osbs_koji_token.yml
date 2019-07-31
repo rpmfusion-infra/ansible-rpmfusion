@@ -1,0 +1,11 @@
+---
+
+- name: make sure that /etc/osbs directory exists
+  file: path=/etc/osbs state=directory
+
+- name: put the koji token file in place
+  copy:
+    src: "{{ private }}/files/osbs/{{ env }}/x86-64-osbs-koji"
+    dest: "/etc/osbs/x86-64-osbs-koji"
+    owner: root
+    mode: 0400
