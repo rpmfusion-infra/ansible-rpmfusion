@@ -1,2 +1,2 @@
-datacenter: linaro
+datacenter: home
 ansible_ifcfg_blacklist: True

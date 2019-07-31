@@ -1,1 +1,2 @@
 datacenter: osuosl
+ansible_ifcfg_blacklist: True

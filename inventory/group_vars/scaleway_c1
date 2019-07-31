@@ -1,2 +1,2 @@
-datacenter: linaro
+datacenter: scaleway
 ansible_ifcfg_blacklist: True
