@@ -44,7 +44,11 @@ use_default_epel: true
 udp_ports: []
 tcp_ports: []
 custom_rules: []
+nat_rules: []
 custom6_rules: []
+
+# defaults for hw installs
+install_noc: none
 
 # defaults for virt installs
 ks_url: http://infrastructure.rpmfusion.org/repo/rhel/ks/kvm-rhel-7
@@ -52,6 +56,13 @@ ks_repo: http://mirror.centos.org/centos/7/os/x86_64/
 mem_size: 2048
 num_cpus: 1
 lvm_size: 20000
+
+# on MOST infra systems, the interface connected to the infra network
+# is eth0. but not on quite ALL systems. e.g. on s390 boxes it's enc900,
+# on openqa-ppc64le-01.qa it's eth2 for some reason, and on qa01.qa and
+# qa02.qa it's em3. currently this only affects whether GATEWAY, DOMAIN
+# and DNS1/DNS2 lines are put into ifcfg-(device).
+ansible_ifcfg_infra_net_devices: [ 'eth0', 'enc900' ]
 
 # Default netmask. Almost all our phx2 nets are /24's with the
 # exception of 10.5.124.128/25. Almost all of our non phx2 sites are
@@ -71,6 +82,8 @@ virt_install_command: "{{ virt_install_command_one_nic }}"
 
 main_bridge: br0
 nfs_bridge: br1
+mac_address: RANDOM
+mac_address1: RANDOM
 
 virt_install_command_one_nic: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
@@ -79,8 +92,8 @@ virt_install_command_one_nic: virt-install -n {{ inventory_hostname }}
                  'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyS0
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
-                 --network bridge={{ main_bridge }},model=virtio
-                 --autostart --noautoconsole --watchdog default
+                 --network bridge={{ main_bridge }},model=virtio,mac={{ mac_address }}
+                 --autostart --noautoconsole --watchdog default --rng /dev/random --cpu host
 
 virt_install_command_two_nic: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
@@ -90,29 +103,31 @@ virt_install_command_two_nic: virt-install -n {{ inventory_hostname }}
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none
                   ip={{ eth1_ip }}:::{{ nm }}:{{ inventory_hostname }}-nfs:eth1:none'
-                 --network bridge={{ main_bridge }},model=virtio --network=bridge={{ nfs_bridge }},model=virtio
-                 --autostart --noautoconsole --watchdog default
+                 --network bridge={{ main_bridge }},model=virtio,mac={{ mac_address }}
+                 --network=bridge={{ nfs_bridge }},model=virtio,mac={{ mac_address1 }}
+                 --autostart --noautoconsole --watchdog default --rng /dev/random
 
 virt_install_command_aarch64_one_nic: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
                  --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
-                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyAMA0
+                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }}
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
-                 --network bridge={{ main_bridge }},model=virtio
+                 --network bridge={{ main_bridge }},model=virtio,mac={{ mac_address }}
                  --autostart --noautoconsole
 
 virt_install_command_aarch64_two_nic: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
                  --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
-                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyAMA0
+                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }}
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none
                   ip={{ eth1_ip }}:::{{ nm }}:{{ inventory_hostname }}-nfs:eth1:none'
-                 --network bridge={{ main_bridge }},model=virtio --network=bridge={{ nfs_bridge }},model=virtio
-                 --autostart --noautoconsole
+                 --network bridge={{ main_bridge }},model=virtio,mac={{ mac_address }}
+                 --network=bridge={{ nfs_bridge }},model=virtio,mac={{ mac_address1 }}
+                 --autostart --noautoconsole --rng /dev/random
 
 virt_install_command_armv7_one_nic: virt-install -n {{ inventory_hostname }} --arch armv7l
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
@@ -199,7 +214,9 @@ nrpe_check_postfix_queue_crit: 5
 
 # env is staging or production, we default it to production here.
 env: production
+env_prefix:
 env_suffix:
+env_short: prod
 
 # nfs mount options, override at the group/host level
 nfs_mount_opts: "ro,hard,bg,intr,noatime,nodev,nosuid,nfsvers=3"
@@ -240,6 +257,9 @@ ipa_admin_password: "{{ ipa_prod_admin_password }}"
 
 # Normal default sshd port is 22
 sshd_port: 22
+# This enables/disables the SSH "keyhelper" used by Pagure for verifying users'
+# SSH keys from the Pagure database
+sshd_keyhelper: false
 
 # List of names under which the host is available
 ssh_hostnames: []
@@ -255,6 +275,7 @@ createrepo: True
 
 # Nagios global variables
 nagios_Check_Services:
+  mail: true
   nrpe: true
   sshd: true
   named: false
@@ -262,6 +283,7 @@ nagios_Check_Services:
   httpd: false
   swap: true
   ping: true
+  raid: false
 
 # Set variable if we want to use our global iptables defaults
 # Some things need to set their own.
@@ -275,3 +297,23 @@ dns2: "62.210.16.6"
 
 # This is a list of services that need to wait for VPN to be up before getting started.
 postvpnservices: []
+
+# true or false if we are or are not a copr build virthost. 
+# Default to false
+copr_build_virthost: false
+
+#
+# Set a redirectmatch variable we can use to disable some redirectmatches 
+# like the prerelease to final ones.
+#
+redirectmatch_enabled: True
+
+#
+# sshd can run a internal sftp server, we need this on some hosts, but 
+# not on most of them, so default to false
+sshd_sftp: false
+
+#
+# Autodetect python version
+#
+#ansible_python_interpreter: auto
