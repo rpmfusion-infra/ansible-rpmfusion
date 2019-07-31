@@ -2,7 +2,7 @@
 dist_tag: el{{ ansible_distribution_version[0] }}
 base_pkgs_inst: ['iptables-services']
 base_pkgs_erase: ['firstboot-tui','bluez-utils', 'sendmail', 'firewalld']
-service_disabled: [ ]
-service_enabled: [ ]
+service_disabled: []
+service_enabled: []
 is_rhel: True
 pythonsitelib: /usr/lib/python2.7/site-packages
