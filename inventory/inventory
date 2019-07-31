@@ -33,13 +33,11 @@ koji01.online.rpmfusion.net
 se01.online.rpmfusion.net
 
 [mailman-stg]
-test01.scaleway.rpmfusion.net
 
 [mailman-db]
 db02.online.rpmfusion.net
 
 [mailman-stg]
-test01.scaleway.rpmfusion.net
 
 [moin]
 moin01.online.rpmfusion.net
@@ -78,6 +76,10 @@ buildppcle-02.osuosl.rpmfusion.net
 [virthost]
 hv01.online.rpmfusion.net
 
+[scaleway]
+mirrorlist03.scaleway.rpmfusion.net
+proxy01.scaleway.rpmfusion.net
+test01.scaleway.rpmfusion.net
 
 [virtservers:children]
 virthost
