@@ -72,7 +72,10 @@
   - base
 
 - name: sshd_config
-  template: src=sshd_config dest=/etc/ssh/sshd_config mode=0600
+  template: 
+    src: sshd_config 
+    dest: /etc/ssh/sshd_config 
+    mode: 0600
   notify:
   - restart sshd
   tags:
