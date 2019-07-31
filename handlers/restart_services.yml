@@ -2,6 +2,9 @@
 # Handlers for restarting services
 #
 
+- name: reload systemd
+  command: systemctl daemon-reload
+
 - name: restart apache
   command: /usr/local/bin/conditional-restart.sh httpd httpd
 
@@ -52,6 +55,9 @@
 
 - name: restart ntpd
   action: service name=ntpd state=restarted
+
+- name: restart sshd
+  action: service name=sshd state=restarted
 
 - name: restart openvpn (Fedora)
   when: ansible_distribution == "Fedora"
@@ -116,9 +122,6 @@
 - name: restart memcached
   service: name=memcached state=restarted
 
-- name: reload systemd
-  command: systemctl daemon-reload
-
 - name: restart nagios
   shell: nagios -v /etc/nagios/nagios.cfg && systemctl restart nagios
 
@@ -181,3 +184,12 @@
 
 - name: restart buildmaster
   service: name=buildmaster state=restarted
+
+- name: restart rabbitmq
+  systemd:
+    name: rabbitmq-server
+    state: restarted
+    daemon_reload: yes
+
+- name: restart repoSpanner
+  action: service name=repoSpanner state=restarted
