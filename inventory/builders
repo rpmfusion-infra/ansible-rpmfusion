@@ -10,6 +10,8 @@ aarch64-10.home.rpmfusion.net
 buildvm-01.online.rpmfusion.net
 buildvm-02.online.rpmfusion.net
 
+[buildvm_stg]
+
 [buildvm_aarch64]
 
 [buildhw]

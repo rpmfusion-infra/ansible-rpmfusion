@@ -3,10 +3,10 @@
 # NOTE: make sure there is room/space for this builder on the buildvmhost
 # NOTE: most of these vars_path come from group_vars/buildvm or from hostvars
 
-- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=buildvm:buildvm-stg"
+- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=buildvm:buildvm_stg"
 
 - name: make koji builder(s)
-  hosts: buildvm:buildvm-stg:buildvm_aarch64
+  hosts: buildvm:buildvm_stg:buildvm_aarch64
   user: root
   gather_facts: True
 
