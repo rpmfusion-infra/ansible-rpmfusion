@@ -1,39 +1,35 @@
-# 
+- name: install network-scripts package
+  package: name=network-scripts state=installed
+  when: ansible_distribution_major_version|int >= 29
+  tags:
+  - nfs/client
+
+# Setup our idmapd.conf file. It should be loaded automagically.
+- name: idmapd.conf
+  copy: src=idmapd.conf dest=/etc/idmapd.conf
+  tags:
+  - nfs/client
+  notify:
+  - restart idmapd
+
+#
 # Install needed packages
 #
 - name: Install needed nfs packages
-  yum: pkg={{ item }} state=present
-  with_items: 
-  - nfs-utils
-  - rpcbind
+  package:
+    name:
+      - nfs-utils
+      - rpcbind
+    state: present
   tags:
   - nfs/client
-  when: ansible_distribution_major_version|int < 22
-#
-- name: Install needed nfs packages
-  dnf: pkg={{ item }} state=present
-  with_items: 
-  - nfs-utils
-  - rpcbind
-  tags:
-  - nfs/client
-  when: ansible_distribution_major_version|int > 21
 
-- name: enable nfs-related services and run them (fedora20 only)
+- name: enable nfs-related services and run them (rhel 7 and Fedora)
   service: name={{ item }}  enabled=true state=started
   with_items:
   - rpcbind
   - nfs-lock
-  when: ansible_distribution == 'Fedora' and ansible_distribution_major_version|int == 20
-  tags:
-  - nfs/client
-
-- name: enable nfs-related services and run them (rhel7)
-  service: name={{ item }}  enabled=true state=started
-  with_items:
-  - rpcbind
-  - nfs-lock
-  when: is_rhel is defined and ansible_distribution_major_version|int == 7
+  when: ansible_distribution_major_version|int == 7
   tags:
   - nfs/client
 
@@ -44,17 +40,17 @@
   - rpcbind
   - nfs
   - nfslock
-  when: is_rhel is defined and ansible_distribution_major_version|int == 6
+  when: ansible_distribution_major_version|int == 6
   tags:
   - nfs/client
 
 - name: nfs mount points (online)
   mount: >
-        name={{ mnt_dir }} 
+        name={{ mnt_dir }}
         src=nfs-server:/srv/nfs/{{ nfs_src_dir }}
-        fstype=nfs 
+        fstype=nfs
         opts={{nfs_mount_opts}}
-        passno=0 
+        passno=0
         dump=0
         state=mounted
   tags:
