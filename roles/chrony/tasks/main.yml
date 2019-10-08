@@ -12,14 +12,6 @@
   - config
   - base
 
-- name: disable and stop ntp
-  service: name=ntpd state=stopped enabled=no
-  tags:
-  - chrony
-  - service
-  - base
-  when: ansible_distribution_major_version|int != 8
-
 - name: Start and enable chrony
   service: name=chronyd state=started enabled=yes
   tags:
