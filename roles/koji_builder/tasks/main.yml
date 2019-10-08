@@ -76,19 +76,15 @@
     name:
     - koji-builder
     - koji-builder-plugins
-    - python2-koji
-    - python-krbV
+    - python3-koji
     - koji-containerbuild-builder
     - strace
     - mock
     - kernel-firmware
     - kernel-modules
-    - ntp
-    - ntpdate
     - rsyslog
     - audit
-    - pycdio
-    - python-kickstart
+    - python3-kickstart
     - libvirt-client
     - oz
     - imagefactory
@@ -100,11 +96,7 @@
     - imagefactory-plugins-OVA
     - imagefactory-plugins-EC2
     - imagefactory-plugins-RHEVM
-    - python-psphere
-    - VMDKstream
-    - pykickstart
     - nosync
-    - yum
   tags:
   - koji_builder
 
@@ -187,6 +179,8 @@
 
 - name: copy over builder cert to /etc/kojid/kojibuilder.pem
   copy: src="{{ private }}/files/koji/buildercerts/{{ inventory_hostname }}.pem" dest=/etc/kojid/kojibuilder.pem mode=600
+  tags:
+  - koji_builder_certs
 
 # oz.cfg  upstream ram and cpu definitions are not enough
 - name: oz.cfg
