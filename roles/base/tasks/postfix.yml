@@ -31,8 +31,10 @@
   - base
 
 - name: Deploy sender_access file
-  copy: src="{{private}}/files/smtpd/sender_access" dest="/etc/postfix/sender_access"
-  when: postfix_group == "smtp-mm"
+  copy: src="{{private}}/files/smtpd/sender_access.{{postfix_group}}" dest="/etc/postfix/sender_access"
+  when: postfix_group == "smtp-mm" or postfix_group == "mailman" or postfix_group == "gateway"
+  notify:
+  - restart postfix
   tags:
   - postfix
   - config
@@ -89,7 +91,7 @@
 - name: Copy gateway.key
   copy: 
     src="{{private}}/files/smtpd/gateway.key"
-    dest=/etc/pki/tls/private/
+    dest=/etc/pki/tls/private/gateway.key
     owner=root
     group=postfix
     mode=0640

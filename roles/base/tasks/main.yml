@@ -5,7 +5,7 @@
 # Things in here are things we want to do to every machine no matter what.
 #
 
-- name: ensure packages required for semanage are installed (yum)
+- name: ensure packages required for semanage are installed (rhel 6 and 7)
   package: name={{ item }} state=present
   with_items:
   - policycoreutils-python
@@ -13,7 +13,7 @@
   - selinux
   when: ansible_distribution_major_version|int < 8
 
-- name: ensure packages required for semanage are installed (dnf)
+- name: ensure packages required for semanage are installed (fedora/rhel8)
   package: name=policycoreutils-python-utils state=present
   when: ansible_distribution_major_version|int > 27 and ansible_cmdline.ostree is not defined
   tags:
@@ -52,7 +52,18 @@
   ini_file: dest=/etc/NetworkManager/NetworkManager.conf section=main option=dns value=none
   notify:
   - restart NetworkManager
-  when: ansible_distribution_major_version|int >=7 and nmclitest is success and ( not ansible_ifcfg_blacklist) and not nm_controlled_resolv
+  when: ansible_distribution_major_version|int >=7 and ansible_distribution == 'RedHat' and nmclitest is success and ( not ansible_ifcfg_blacklist) and not nm_controlled_resolv
+  tags:
+   - config
+   - resolvconf
+   - base
+   - ifcfg
+
+- name: disable resolv.conf control from NM
+  ini_file: dest=/etc/NetworkManager/NetworkManager.conf section=main option=dns value=none
+  notify:
+  - restart NetworkManager
+  when: ansible_distribution_major_version|int >=29 and ansible_distribution == 'Fedora' and nmclitest is success and ( not ansible_ifcfg_blacklist) and not nm_controlled_resolv
   tags:
    - config
    - resolvconf
@@ -79,7 +90,15 @@
 #  - restart NetworkManager
   - reload NetworkManager-connections
   - apply interface-changes
-  when: (virthost is not defined) and (item.startswith(('eth','br','enc','em'))) and (hostvars[inventory_hostname]['ansible_' + item.replace('-','_')]['type'] == 'ether') and (ansible_distribution_major_version|int >=7) and hostvars[inventory_hostname]['ansible_' + item.replace('-','_')]['active'] and nmclitest is success and ( not ansible_ifcfg_blacklist ) and ( ansible_ifcfg_whitelist is not defined or item in ansible_ifcfg_whitelist )
+  when: 
+  - virthost is not defined
+  - item.startswith(('eth','br','enc','em'))
+  - hostvars[inventory_hostname]['ansible_' + item.replace('-','_')]['type'] == 'ether'
+  - hostvars[inventory_hostname]['ansible_' + item.replace('-','_')]['active']
+  - ansible_distribution_major_version|int >=7
+  - nmclitest is success
+  - not ansible_ifcfg_blacklist
+  - ansible_ifcfg_whitelist is not defined or item in ansible_ifcfg_whitelist
   tags:
    - config
    - ifcfg
@@ -92,7 +111,7 @@
   tags:
   - packages
   - base
-  when: ansible_distribution_major_version|int < 22 and ansible_distribution_major_version|int != 8
+  when: ansible_distribution_major_version|int < 8
 
 - name: global default packages to install (dnf)
   dnf:
@@ -140,7 +159,7 @@
   tags:
   - packages
   - base
-  when: ansible_distribution_major_version|int < 22
+  when: ansible_distribution_major_version|int < 8
 
 - name: dist pkgs to install (yum)
   package:
@@ -149,16 +168,14 @@
   tags:
   - packages
   - base
-  when: ansible_distribution_major_version|int < 22
+  when: ansible_distribution_major_version|int < 8
 
 - name: dist pkgs to remove (dnf)
-  dnf:
-    state: absent
-    name: "{{ base_pkgs_erase }}"
+  dnf: state=absent name="{{ base_pkgs_erase }}"
   tags:
   - packages
   - base
-  when: ansible_distribution_major_version|int > 21 and ansible_cmdline.ostree is not defined
+  when: ansible_distribution_major_version|int > 7 and ansible_cmdline.ostree is not defined
 
 - name: dist pkgs to install (dnf)
   dnf:
@@ -343,7 +360,7 @@
 
 - name: install our custom selinux module
   command: semodule -i /usr/local/share/rsyslog/rsyslog-audit.pp
-  when: selinux_module is changed
+  when: selinux_module is changed and ansible_distribution_major_version|int < 31
   tags:
   - rsyslogd
   - config
@@ -463,3 +480,27 @@
 - name: Setup host keytab
   import_tasks: keytab.yml
   when: env == 'DISABLED'
+
+# SSSD-KCM has been showing way too many bugs with it saying "I have a ticket" while the ticket
+# is actually expired, and kinit's still not refreshing them and such alike.
+# Let's just nuke it for now.
+- name: We do NOT use sssd-kcm
+  file: path=/etc/krb5.conf.d/kcm_default_ccache state=absent
+  tags:
+  - base
+  - config
+  - krb5
+
+# rhel8 hosts do not have /usr/bin/python, but there are a few things we call 
+# with that because they also run the same on python2 hosts. 
+# So, we set python3 to /usr/bin/python on those hosts:
+- name: set /usr/bin/python to python3 on rhel8 hosts
+  alternatives:
+    name: python
+    link: /usr/bin/python
+    path: /usr/bin/python3
+  when: ansible_distribution == 'RedHat' and ansible_distribution_major_version|int == 8
+  tags:
+  - base
+  - config
+  - python3alternative
