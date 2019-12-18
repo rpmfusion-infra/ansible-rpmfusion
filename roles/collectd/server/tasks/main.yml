@@ -8,6 +8,9 @@
   - collectd-rrdtool
   - collectd-ping
   - collectd-web
+  - collectd-rabbitmq-data
+  notify:
+  - restart collectd
   tags:
   - config
   - collectd/server
@@ -54,6 +57,15 @@
 # create a link from /var/lib/collectd to /var/log/collectd
 - name: create link from /var/lib/collectd to /var/log/collectd
   file: state=link src=/var/log/collectd dest=/var/lib/collectd
+  tags:
+  - config
+  - collectd/server
+
+# push our custom config file for the graph CGIs
+- name: push the collection.conf file
+  copy:
+    src: collection.conf
+    dest: /etc/collection.conf
   tags:
   - config
   - collectd/server
