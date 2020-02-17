@@ -23,6 +23,7 @@ if __name__ == '__main__':
 #    S390 = grp.getgrnam('rpmfusion-s390')[3]
     PPC = grp.getgrnam('rpmfusion-ppc')[3]
     PROVEN = grp.getgrnam('provenpackager')[3]
+    CUDATEAM = grp.getgrnam('cudateam')[3]
 
     # Set the active branches to create ACLs for
     # Give them the git branch eqiv until pkgdb follows suite
@@ -33,6 +34,7 @@ if __name__ == '__main__':
         'f15', 'f16': 'f16', 'f17': 'f17', 'f18': 'f18', 'f19': 'f19',
         'f20': 'f20', 'f21': 'f21', 'f22': 'f22', 'f23': 'f23', 'f24': 'f24',
         'f25': 'f25', 'f26': 'f26', 'f27': 'f27', 'f28': 'f28', 'f29': 'f29',
+        'f30': 'f30', 'f31': 'f31', 'f32': 'f32',
         'devel': 'master', 'master': 'master'}
 
     # Create a "regex"ish list 0f the reserved branches
@@ -45,6 +47,7 @@ if __name__ == '__main__':
     # print out our user groups
     print '@admins = %s' % ' '.join(TRUSTED)
     print '@provenpackager = %s' % ' '.join(PROVEN)
+    print '@cudateam = %s' % ' '.join(CUDATEAM)
     print '@rpmfusion-arm = %s' % ' '.join(ARM)
 #    print '@rpmfusion-s390 = %s' % ' '.join(S390)
     print '@rpmfusion-ppc = %s' % ' '.join(PPC)
