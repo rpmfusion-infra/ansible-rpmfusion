@@ -6,8 +6,8 @@
 # Access is via management interface only. This playbook does initial setup.
 # Please check with rel-eng before doing anything here.
 
-- name: make sign-vault server vm (secondary and stg only)
-  hosts: sign-vault
+- name: make sign_vault server vm (secondary and stg only)
+  hosts: sign_vault
   user: root
   gather_facts: False
 
@@ -23,7 +23,7 @@
   - import_tasks: "{{ handlers_path }}/restart_services.yml"
 
 - name: make sign vault server
-  hosts: sign-vault
+  hosts: sign_vault
   user: root
   gather_facts: true
 

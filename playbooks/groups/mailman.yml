@@ -2,10 +2,10 @@
 # NOTE: make sure there is room/space for this server on the vmhost
 # NOTE: most of these vars_path come from group_vars/mirrorlist or from hostvars
 
-- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=mailman:mailman-stg"
+- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=mailman:mailman_stg"
 
 - name: make the box be real
-  hosts: mailman-stg:mailman
+  hosts: mailman_stg:mailman
   user: root
   gather_facts: True
 
@@ -41,7 +41,7 @@
 #
 
 - name: prepare setting up the database
-  hosts: mailman-db-stg:mailman-db
+  hosts: mailman_db-stg:mailman_db
   gather_facts: no
   user: root
 
@@ -52,7 +52,7 @@
     - packages
 
 - name: setup the database
-  hosts: mailman-db-stg:mailman-db
+  hosts: mailman_db-stg:mailman_db
   gather_facts: no
   become: yes
   become_user: postgres
@@ -81,7 +81,7 @@
 
 # Real MM/HK-specific work
 - name: setup mailman and hyperkitty
-  hosts: mailman-stg:mailman
+  hosts: mailman_stg:mailman
   user: root
   gather_facts: True
 

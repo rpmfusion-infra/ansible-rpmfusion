@@ -4,9 +4,9 @@ bastion02.linaro.rpmfusion.net
 bastion03.virt.rpmfusion.net
 
 [bodhi2]
-bodhi01.online.rpmfusion.net
+#bodhi01.online.rpmfusion.net
 
-[bodhi-backend]
+[bodhi_backend]
 bodhi-backend01.online.rpmfusion.net
 
 [bugzilla]
@@ -32,16 +32,15 @@ koji01.online.rpmfusion.net
 [mailman]
 se01.online.rpmfusion.net
 
-[mailman-stg]
+[mailman_stg]
 
-[mailman-db]
+[mailman_db]
 db02.online.rpmfusion.net
 
-[mailman-stg]
+[mailman_stg]
 
 [moin]
 moin01.online.rpmfusion.net
-test01.online.rpmfusion.net
 
 [pkgdb]
 pkgdb02.online.rpmfusion.net
@@ -51,21 +50,19 @@ pkgs01.online.rpmfusion.net
 
 [proxies]
 
-[releng-compose]
+[releng_compose]
 bodhi-backend01.online.rpmfusion.net
 
-[sign-bridge]
+[sign_bridge]
 koji01.online.rpmfusion.net
 
-[sign-vault]
-sign-vault01.online.rpmfusion.net
+[sign_vault]
+sign-vault01.online.rpmfusion.net ansible_ssh_user=root
 
 [squid]
 hv01.online.rpmfusion.net
-proxy01.scaleway.rpmfusion.net
 bastion02.linaro.rpmfusion.net ansible_become=yes ansible_ssh_user=cloud-user ansible_python_interpreter=/usr/bin/python3
 bastion03.virt.rpmfusion.net
-buildppc-01.osuosl.rpmfusion.net
 buildppcle-01.osuosl.rpmfusion.net
 buildppcle-02.osuosl.rpmfusion.net
 
@@ -79,7 +76,7 @@ hv01.online.rpmfusion.net
 [scaleway]
 mirrorlist03.scaleway.rpmfusion.net
 proxy01.scaleway.rpmfusion.net
-test01.scaleway.rpmfusion.net
+#test01.scaleway.rpmfusion.net
 
 [virtservers:children]
 virthost
