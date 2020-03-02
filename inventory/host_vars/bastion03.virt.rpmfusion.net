@@ -1,13 +1,11 @@
 ---
 vmhost: srv03.kwizart.net
 eth0_ip: 192.168.122.103
-gw: 192.168.122.1
-#ks_url: http://192.168.181.254/install/ks/buildvm-05.ks
-ks_repo: http://dl.fedoraproject.org/pub/fedora/linux/releases/27/Server/x86_64/os/
+ks_url: http://192.168.181.254/install/ks/buildvm-05.ks
+ks_repo: http://dl.fedoraproject.org/pub/fedora/linux/releases/30/Server/x86_64/os/
 nm: 255.255.255.0
 gw: 192.168.122.1
 dns: 8.8.8.8
-ks_url: http://dl.kwizart.net/bastion03.ks
 volgroup: /dev/vg_kvm
 datacenter: virt
 
