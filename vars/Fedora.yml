@@ -3,6 +3,6 @@ dist_tag: f{{ ansible_distribution_version }}
 base_pkgs_inst: ['iptables-services' ]
 base_pkgs_erase: ['firewalld', 'sendmail', 'at']
 service_disabled: [ ]
-service_enabled: ['auditd']
+service_enabled: ['postfix']
 is_fedora: True
 pythonsitelib: /usr/lib/python2.7/site-packages
