@@ -33,13 +33,13 @@
     command: systemctl is-active dnf-automatic.timer
     register: automaticative
     check_mode: no
-    changed_when: 1 != 1
+    changed_when: automaticative.rc != 0
     ignore_errors: true
     when: ansible_distribution_major_version|int < 8
 
   - name: start dnf-automatic.timer if it is not active
     command: systemctl start dnf-automatic.timer
-    when: automaticative is failed and ansible_distribution_major_version|int < 8
+    when: automaticative is defined and ansible_distribution_major_version|int < 8
 
   - name: enable and start dnf-automatic f26+
     command: systemctl enable dnf-automatic-install.timer
