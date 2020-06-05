@@ -275,7 +275,7 @@
   tags:
   - koji_builder
   - selinux
-  when: ansible_architecture != 'armv7l' && ansible_architecture != 'aarch64'
+  when: ansible_architecture != 'armv7l' and ansible_architecture != 'aarch64'
 
 - name: Create directory for shared secrets
   file:
