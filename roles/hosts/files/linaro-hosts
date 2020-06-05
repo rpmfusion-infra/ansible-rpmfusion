@@ -1,5 +1,5 @@
 127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
-::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+::1         localhost6 localhost6.localdomain6
 
 # hv01 online - public
 195.154.185.75 hv01.online.rpmfusion.net hv01

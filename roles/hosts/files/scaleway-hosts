@@ -1,5 +1,5 @@
 127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
-::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+::1         localhost6 localhost6.localdomain6
 
 # hv01 online - public
 #195.154.185.75 hv01.online.rpmfusion.net hv01
@@ -20,4 +20,4 @@
 192.168.182.1 hv01.vpn.rpmfusion.net proxy.vpn.rpmfusion.net nfs-server.vpn.rpmfusion.net nfs-server log01
 
 # scaleway
-10.2.10.75 proxy01.scaleway.rpmfusion.net proxy01 proxy
+10.64.174.105 proxy01.scaleway.rpmfusion.net proxy01 proxy
