@@ -8,7 +8,7 @@
   user: root
   gather_facts: True
 
-  vars_files: 
+  vars_files:
    - /srv/web/infra/ansible/vars/global.yml
    - "/srv/private/ansible/vars.yml"
    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
@@ -17,7 +17,7 @@
   - base
   - hosts
   - rkhunter
-  - nagios/client
+  - nagios_client
   - fas_client
   - collectd/base
   - rsyncd
@@ -25,8 +25,10 @@
   - { role: openvpn/client, when: datacenter != "online" }
   - dns
 
-  tasks:
+  pre_tasks:
   - import_tasks: "{{ tasks_path }}/yumrepos.yml"
+
+  tasks:
   - import_tasks: "{{ tasks_path }}/2fa_client.yml"
   - import_tasks: "{{ tasks_path }}/motd.yml"
 

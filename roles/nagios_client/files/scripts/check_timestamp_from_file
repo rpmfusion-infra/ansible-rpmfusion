@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+
+# Takes a path to a file and a delta. The file must simply contain an epoch
+# timestamp. It can be an integer or a float, as can the delta.
+#
+# Alerts critical if (now - timestamp contained in file) > delta.
+#
+# Rick Elrod <relrod@redhat.com>
+# MIT
+
+import sys
+import time
+
+if len(sys.argv) != 3:
+    print('UNKNOWN: Pass path to file and delta as parameters')
+    sys.exit(3)
+
+filename = sys.argv[1]
+delta = float(sys.argv[2])
+
+timestamp = None
+
+try:
+    with open(filename, 'r') as f:
+        timestamp = float(f.read().strip())
+except Exception as e:
+    print('UNKNOWN: Unable to open/read file path')
+    sys.exit(3)
+
+difference = round(time.time() - timestamp, 2)
+if difference > delta:
+    print(
+        'CRITICAL: Timestamp in file (%.2f) exceeds delta (%.2f) by %.2f seconds' % (
+            timestamp,
+            delta,
+            difference - delta))
+    sys.exit(2)
+
+print('OK: Timestamp in file (%.2f) is within delta (%.2f) of now, by %.2f seconds' % (
+    timestamp,
+    delta,
+    abs(difference - delta)))
+sys.exit(0)

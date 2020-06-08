@@ -1,0 +1,32 @@
+---
+# install mod_wsgi
+- name: install mod_wsgi
+  package:
+    name: mod_wsgi
+    state: present
+  tags:
+  - packages
+  when: ansible_distribution_major_version|int < 7 and ansible_distribution != 'Fedora'
+
+- name: install mod_wsgi
+  package:
+    name: python3-mod_wsgi
+    state: present
+  tags:
+  - packages
+  when: ansible_distribution_major_version|int == 8 and ansible_distribution != 'Fedora'
+
+- name: install mod_wsgi
+  package:
+    name: mod_wsgi
+    state: present
+  tags:
+  - packages
+  when: ansible_distribution == 'Fedora'
+
+- name: wsgi.conf
+  copy: src="wsgi.conf" dest=/etc/httpd/conf.d/wsgi.conf
+  notify:
+  - restart apache
+  tags:
+  - config

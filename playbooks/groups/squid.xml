@@ -8,13 +8,12 @@
   vars_files:
    - /srv/web/infra/ansible/vars/global.yml
    - "/srv/private/ansible/vars.yml"
-   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
 
   roles:
   - base
   - hosts
   - rkhunter
-  - nagios/client
+  - nagios_client
   - collectd/base
   - sudo
   - rsyncd

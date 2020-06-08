@@ -1,0 +1,5 @@
+{% if (( ansible_distribution_major_version == "8" ) and ( ansible_distribution == "RedHat" )) or ((ansible_distribution_major_version|int >= 30) and (ansible_distribution == "Fedora")) %}
+command[check_fedmsg_gateway_proc]={{ libdir }}/nagios/plugins/check_procs -c 1:1 --ereg-argument-array='fedmsg-gateway-3' -u fedmsg
+{% else %}
+command[check_fedmsg_gateway_proc]={{ libdir }}/nagios/plugins/check_procs -c 1:1 -C 'fedmsg-gateway' -u fedmsg
+{% endif %}

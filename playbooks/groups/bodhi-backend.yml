@@ -24,7 +24,7 @@
 
   roles:
   - base
-  - nagios/client
+  - nagios_client
   - collectd/base
   - hosts
   - fas_client

@@ -1,0 +1,15 @@
+# This playbook can be used to update to rebuild the buildroot image of
+# OSBS. This is useful when we want to update some dependencies in the image.
+
+- name: rebuild the osbs buildroot image.
+  hosts: osbs_nodes:osbs_nodes_stg:osbs_aarch64_nodes_stg
+  gather_facts: false
+  user: root
+
+  tasks:
+
+  - name: Backup the current buildroot
+    command: "docker tag buildroot:latest buildroot:backup"
+
+  - name: rebuild the buildroot container image.
+    command: "docker build /etc/osbs/buildroot -t buildroot --no-cache --pull"

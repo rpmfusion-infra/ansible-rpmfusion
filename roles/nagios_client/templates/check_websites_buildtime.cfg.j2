@@ -1,0 +1,2 @@
+# Alert if websites haven't been built in 3 hours
+command[check_websites_buildtime]={{ libdir }}/nagios/plugins/check_timestamp_from_file /srv/websites/getfedora.org/build.timestamp.txt 10800
