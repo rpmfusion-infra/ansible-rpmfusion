@@ -1,25 +1,15 @@
 ---
 # install apache(httpd)
-- name: install apache (yum)
-  yum: name={{ item }} state=present
-  with_items:
-  - httpd
-  - httpd-tools
+- name: install apache (package)
+  package:
+    state: present
+    name:
+    - httpd
+    - httpd-tools
   tags:
   - packages
   - apache
-  when: ansible_distribution_major_version|int < 22
-
-# install apache(httpd)
-- name: install apache (dnf)
-  dnf: name={{ item }} state=present
-  with_items:
-  - httpd
-  - httpd-tools
-  tags:
-  - packages
-  - apache
-  when: ansible_distribution_major_version|int > 21 and ansible_cmdline.ostree is not defined
+  when: ansible_cmdline.ostree is not defined
 
 - name: set apache running/enabled
   service: name=httpd enabled=yes
@@ -29,7 +19,41 @@
   tags:
   - service
   - apache
-  
+
+# install hash randomization hotfix
+- name: hotfix - copy over new httpd init script
+  copy: src="{{ files }}/hotfix/httpd/httpd.init" dest=/etc/init.d/httpd
+        owner=root group=root mode=0755
+  when: ansible_distribution_major_version|int < 30 and ansible_distribution == 'Fedora'
+  notify:
+  - reload apache
+  tags:
+  - config
+  - hotfix
+  - apache
+
+# install hash randomization hotfix
+- name: hotfix - copy over new httpd init script
+  copy: src="{{ files }}/hotfix/httpd/httpd.init" dest=/etc/init.d/httpd
+        owner=root group=root mode=0755
+  when: ansible_distribution_major_version|int <= 8 and ansible_distribution == 'RedHat'
+  notify:
+  - reload apache
+  tags:
+  - config
+  - hotfix
+  - apache
+
+- name: hotfix - copy over new httpd sysconfig (el6)
+  copy: src="{{ files }}/hotfix/httpd/httpd.sysconfig" dest=/etc/sysconfig/httpd
+  when: ansible_distribution_major_version|int == 6 and ansible_distribution == 'RedHat'
+  notify:
+  - reload apache
+  tags:
+  - config
+  - hotfix
+  - apache
+
 - name: hotfix - copy over new httpd sysconfig (el7)
   copy: src="{{ files }}/hotfix/httpd/httpd.sysconfig" dest=/etc/sysconfig/httpd
   when: ansible_distribution_major_version|int == 7
@@ -44,18 +68,30 @@
   template: src="{{ files }}/httpd/headers.conf.j2" dest=/etc/httpd/conf.d/headers.conf
   notify:
   - reload apache
-  tags: 
+  tags:
   - config
   - apache
+  - apache/headers
+
+- name: add appserver h2.conf
+  template: src="{{ files }}/httpd/h2.conf.j2" dest=/etc/httpd/conf.d/h2.conf
+  when: ansible_distribution == 'Fedora'
+  notify:
+  - reload apache
+  tags:
+  - config
+  - apache
+  - h2
 
 - name: add apache_status location for collectd
   template: src="{{ files }}/httpd/apachestatus.conf" dest=/etc/httpd/conf.d/apachestatus.conf
   notify:
   - reload apache
-  tags: 
+  tags:
   - config
   - apache
-  
+  - apachestatus
+
 - name: setup logrotate to our needs
   copy: src="{{ files }}/httpd/httpd.logrotate" dest=/etc/logrotate.d/httpd
   tags:
