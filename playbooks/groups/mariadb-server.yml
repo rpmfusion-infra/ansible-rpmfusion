@@ -4,14 +4,14 @@
 
 - import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=db03.rpmfusion.org:db03.stg.rpmfusion.org"
 
-# Once the instance exists, configure it. 
+# Once the instance exists, configure it.
 
 - name: configure mariadb server system
   hosts: db03.rpmfusion.org:db03.stg.rpmfusion.org
   user: root
   gather_facts: True
 
-  vars_files: 
+  vars_files:
    - /srv/web/infra/ansible/vars/global.yml
    - "/srv/private/ansible/vars.yml"
    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
@@ -26,8 +26,10 @@
   - collectd/base
   - sudo
 
-  tasks:
+  pre_tasks:
   - import_tasks: "{{ tasks_path }}/yumrepos.yml"
+
+  tasks:
   - import_tasks: "{{ tasks_path }}/2fa_client.yml"
   - import_tasks: "{{ tasks_path }}/motd.yml"
 

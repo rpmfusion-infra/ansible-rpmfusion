@@ -1,14 +1,18 @@
-- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=nagios:nagios-stg"
+# This is a basic playbook
+- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=nagios"
 
 - name: make the box be real
-  hosts: nagios:nagios-stg
+  hosts: nagios
   user: root
   gather_facts: True
 
-  vars_files: 
+  vars_files:
    - /srv/web/infra/ansible/vars/global.yml
    - "/srv/private/ansible/vars.yml"
    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  pre_tasks:
+  - import_tasks: "{{ tasks_path }}/yumrepos.yml"
 
   roles:
   - base
@@ -21,13 +25,11 @@
   - sudo
   - { role: openvpn/client,
       when: env != "staging" }
-  - apache
+  - mod_wsgi
 
   tasks:
-  - import_tasks: "{{ tasks_path }}/yumrepos.yml"
   - import_tasks: "{{ tasks_path }}/2fa_client.yml"
   - import_tasks: "{{ tasks_path }}/motd.yml"
-  - import_tasks: "{{ tasks_path }}/mod_wsgi.yml"
 
   handlers:
   - import_tasks: "{{ handlers_path }}/restart_services.yml"
@@ -37,7 +39,7 @@
   user: root
   gather_facts: True
 
-  vars_files: 
+  vars_files:
    - /srv/web/infra/ansible/vars/global.yml
    - "/srv/private/ansible/vars.yml"
    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
@@ -51,3 +53,12 @@
   - { role: tftp_server, when: datacenter == 'online' }
   - nagios/server
   - fedmsg/base
+
+
+  tasks:
+  - name: install some packages which arent in playbooks
+    package:
+      state: present
+      name:
+        - nmap
+        - tcpdump

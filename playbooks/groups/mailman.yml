@@ -23,14 +23,15 @@
   - collectd/base
   - sudo
   - spamassassin
-  - apache
+  - mod_wsgi
+
+  pre_tasks:
+  - import_tasks: "{{ tasks_path }}/yumrepos.yml"
 
   tasks:
   # this is how you include other task lists
-  - import_tasks: "{{ tasks_path }}/yumrepos.yml"
   - import_tasks: "{{ tasks_path }}/2fa_client.yml"
   - import_tasks: "{{ tasks_path }}/motd.yml"
-  - import_tasks: "{{ tasks_path }}/mod_wsgi.yml"
 
   handlers:
   - import_tasks: "{{ handlers_path }}/restart_services.yml"
@@ -47,7 +48,7 @@
 
   tasks:
   - name: install psycopg2 for the postgresql ansible modules
-    yum: pkg=python-psycopg2 state=present
+    package: name=python-psycopg2 state=present
     tags:
     - packages
 
@@ -100,9 +101,10 @@
 
   tasks:
   - name: install more needed packages
-    yum: pkg={{ item }} state=present
-    with_items:
-    - tar
+    package:
+      state: present
+      name:
+        - tar
     tags:
     - packages
 

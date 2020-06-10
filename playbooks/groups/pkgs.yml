@@ -1,7 +1,7 @@
-- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=pkgs-stg:pkgs02.rpmfusion.org"
+- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=pkgs_stg:pkgs"
 
 - name: make the box be real
-  hosts: pkgs-stg:pkgs01.online.rpmfusion.net
+  hosts: pkgs_stg:pkgs
   user: root
   gather_facts: True
 
@@ -12,6 +12,7 @@
 
   roles:
   - base
+  - hosts
   - rkhunter
   - nagios_client
   - fas_client
@@ -48,7 +49,7 @@
 - import_playbook: /srv/web/infra/ansible/playbooks/include/proxies-fedora-web.yml
 
 - name: setup fedmsg on pkgs
-  hosts: pkgs-stg:pkgs01.online.rpmfusion.net
+  hosts: pkgs_stg:pkgs01.online.rpmfusion.net
   user: root
   gather_facts: True
 
