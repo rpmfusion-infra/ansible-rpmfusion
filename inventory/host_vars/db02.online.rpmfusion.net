@@ -22,6 +22,9 @@ dbs_to_backup:
 - pkgdb2
 - koji
 - fas2
+- hyperkitty
+- mailman
+
 
 # These are normally group variables, but in this case db servers are often different
 lvm_size: 10240
