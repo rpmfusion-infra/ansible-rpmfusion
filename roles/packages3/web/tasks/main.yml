@@ -1,0 +1,167 @@
+---
+#
+# Configuration for the fedora-packages webapp
+- name: install needed packages
+  package: name={{ item }} state=present
+  with_items:
+  - fedora-packages
+  - python-memcached
+  tags:
+  - packages
+  - packages/web
+
+- name: Create some directories
+  file:
+      path={{ item }}
+      state=directory
+      owner=apache
+      group=fedmsg
+      mode=775
+  with_items:
+  - /etc/fedoracommunity
+  - /var/cache/fedoracommunity  # the gluster role usually creates this one
+  - /var/tmp/fedoracommunity
+  tags:
+  - packages
+  - packages/web
+
+- name: Create some more locked down directories
+  file: path={{ item }} state=directory owner=apache group=apache mode=700
+  with_items:
+  - /etc/pki/fedoracommunity
+  tags:
+  - packages
+  - packages/web
+
+- name: Copy over the app config
+  template: >
+    src=packages-app.ini.j2
+    dest=/etc/fedoracommunity/production.ini
+    owner=apache group=fedmsg mode=0440
+  notify:
+  - reload httpd
+  - restart fedmsg-hub
+  tags:
+  - packages
+  - packages/web
+
+- name: Copy over the httpd config
+  copy: >
+    src=packages-httpd.conf
+    dest=/etc/httpd/conf.d/fedora-packages.conf
+    owner=root group=root mode=644
+  notify:
+  - reload httpd
+  tags:
+  - packages
+  - packages/web
+
+- name: Copy over the fedmsg consumer config
+  template: >
+    src=fedoracommunity.py
+    dest=/etc/fedmsg.d/fedoracommunity.py
+    owner=root group=root mode=644
+  notify:
+  - restart fedmsg-hub
+  tags:
+  - packages
+  - packages/web
+
+- name: Copy over certs/public-keys, probably for talking with koji.
+  copy: >
+    src="{{private}}/files/packages/fedora-ca.cert"
+    dest="/etc/pki/fedoracommunity/{{item}}"
+    owner=apache
+    group=apache
+    mode=0644
+  with_items:
+  - fedora-server-ca.cert
+  - fedora-upload-ca.cert
+  tags:
+  - packages
+  - packages/web
+
+- name: permanently hotfix the distmappings file
+  copy: >
+    src=distmappings.py
+    dest="{{pythonsitelib}}/fedoracommunity/search/distmappings.py"
+    owner=root group=root mode=0644
+  notify:
+  - reload httpd
+  - restart fedmsg-hub
+  tags:
+  - packages
+  - packages/web
+  when: ansible_distribution_major_version|int < 7 and ansible_distribution == 'RedHat'
+
+# Here's the indexer stuff
+- name: Create cache structure
+  file: >
+    dest="/var/cache/fedoracommunity/{{item}}"
+    state=directory
+    owner=apache
+    group=fedmsg
+    mode=0775
+  with_items:
+  - packages
+  - rpm_cache
+  - git.fedoraproject.org
+  - packages/icons
+  - packages/xapian
+  - packages/xapian/search
+  - packages/tmp
+  - packages/tmp/icons
+  - packages/tmp/search
+  - packages/tmp/var
+  when: install_packages_indexer
+  tags:
+  - packages
+  - packages/web
+
+- name: Copy over the default icon
+  copy: >
+    src=package_128x128.png
+    dest=/var/cache/fedoracommunity/packages/icons/package_128x128.png
+    owner=root mode=644 setype=fusefs_t
+  when: install_packages_indexer
+  tags:
+  - packages
+  - packages/web
+  - icon
+
+- name: hotfix the fedmsg-hub executable to pick up forward compat packages
+  copy: src=fedmsg-hub-forward-compat dest=/usr/bin/fedmsg-hub
+  tags:
+  - packages
+  - packages/web
+  - hotfix
+  when: ansible_distribution_major_version|int < 7 and ansible_distribution == 'RedHat'
+
+# Lastly, here's some selinux stuff.
+- name: set some selinux booleans
+  seboolean: name={{item}} persistent=yes state=yes
+  with_items:
+  - httpd_tmp_exec
+  - httpd_can_network_memcache
+  - httpd_can_network_connect
+  - httpd_use_fusefs
+  - httpd_use_nfs
+  - httpd_execmem
+  tags:
+  - packages
+  - packages/web
+  - selinux
+
+- name: /var/cache/fedoracommunity/git.fedoraproject.org file contexts
+  sefcontext:
+    target: '/var/cache/fedoracommunity/git.fedoraproject.org(/.*)?'
+    setype: httpd_sys_rw_content_t
+    state: present
+
+- name: Build the database the first time. This takes a while
+  command: /usr/bin/fcomm-index-packages --index-db-dest=/var/cache/fedoracommunity/packages/xapian --icons-dest /var/cache/fedoracommunity/packages/icons --mdapi-url=https://apps{{env_suffix}}.fedoraproject.org/mdapi --icons-url=https://dl.fedoraproject.org/pub/alt/screenshots creates=/var/cache/fedoracommunity/packages/xapian/search/termlist.glass
+  tags:
+  - packages
+  - packages/web
+  - selinux
+  when: ansible_distribution_major_version|int > 6 and (ansible_distribution == 'RedHat' or ansible_distribution == 'Fedora')
