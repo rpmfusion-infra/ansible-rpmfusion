@@ -1,0 +1,91 @@
+#!/bin/bash
+
+## ports for mirrors
+mirrorlist1="http://localhost:18081/metalink?repo=free-fedora-rawhide&arch=x86_64"
+mirrorlist2="http://localhost:18082/metalink?repo=free-fedora-rawhide&arch=x86_64"
+
+TIME_DRAIN=30
+TIME_RESTART=5
+TIME_DISABLE=5
+
+# Initial expected state is mirrorlist1 running, mirrorlist2 running and new protbuf cache
+
+if [ ! -f /srv/mirrorlist/data/mirrorlist2/global_netblocks.txt ];
+then
+	cp /srv/mirrorlist/data/mirrorlist1/* /srv/mirrorlist/data/mirrorlist2/
+fi
+
+## Check that protbuf cache is newer than old protobuf cache
+if [ /srv/mirrorlist/data/mirrorlist1/mirrorlist_cache.proto -nt /srv/mirrorlist/data/mirrorlist2/mirrorlist_cache.proto ]; then
+	# new proto
+        :
+else
+	# No new proto
+        exit 0
+fi
+## check mirrorlist1 running
+if [ `systemctl show mirrorlist1 -p ActiveState` != 'ActiveState=active' ]; then
+	# mirrorlist1 not running, there is a problem
+	echo "Error: mirrorlist1 is not running as expected"
+	exit 1
+fi
+
+# check mirrorlist2 (old protbuf cache and see that it's processing ok)
+curl -q -H mirrors.rpmfusion.org ${mirrorlist2} -s -f --retry 50 --retry-delay 10 --retry-connrefused --retry-max-time 180 | grep "sha512" >/dev/null
+if [ $? != 0 ]; then
+	echo "ERROR: mirrorlist2 not processing correctly"
+	exit 1
+fi
+
+# Disable mirrorlist1
+echo /usr/local/bin/balance-manager.sh disable mycluster http://localhost:18081 >& /dev/null
+sleep ${TIME_DISABLE}
+
+# restart mirrorlist1 (new protbuf cache and make sure it's processing ok)
+systemctl stop mirrorlist1
+sleep 1
+systemctl start mirrorlist1
+if [[ ${?} -ne 0 ]]; then
+    systemctl start mirrorlist1
+    if [[ ${?} -ne 0 ]]; then
+        echo "Unable to start mirrorlist1"
+        exit 1
+    fi
+fi
+
+
+sleep ${TIME_RESTART}
+curl -q -H mirrors.rpmfusion.org ${mirrorlist1} -s -f --retry 50 --retry-delay 10 --retry-connrefused --retry-max-time 180 | grep "sha512" >/dev/null
+if [ $? != 0 ]; then
+	echo "ERROR: mirrorlist1 did not restart correctly"
+	exit 1
+fi
+
+# New mirrorlist seems to be working, put it back into service
+echo /usr/local/bin/balance-manager.sh enable mycluster http://localhost:18081 >& /dev/null
+sleep ${TIME_RESTART}
+
+# copy new protbuf cache to mirrorlist2
+cp -a /srv/mirrorlist/data/mirrorlist1/* /srv/mirrorlist/data/mirrorlist2/
+
+# Disable mirrorlist2
+echo /usr/local/bin/balance-manager.sh disable mycluster http://localhost:18082 >& /dev/null
+sleep ${TIME_DISABLE}
+
+# restart mirrorlist2
+systemctl stop mirrorlist2
+sleep 1
+systemctl start mirrorlist2
+if [[ ${?} -ne 0 ]]; then
+    echo "Unable to start mirrorlist2"
+    exit 1
+fi
+
+sleep ${TIME_RESTART}
+curl -q -H mirrors.rpmfusion.org ${mirrorlist2} -o/dev/null -s -f --retry 50 --retry-delay 10 --retry-connrefused --retry-max-time 180
+if [ $? != 0 ]; then
+	echo "ERROR: mirrorlist2 did not restart correctly"
+	exit 1
+fi
+
+echo /usr/local/bin/balance-manager.sh enable mycluster http://localhost:18082 >& /dev/null

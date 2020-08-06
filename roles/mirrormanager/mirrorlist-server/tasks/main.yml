@@ -1,0 +1,202 @@
+---
+# tasklist for setting up the mirrorlist-server components
+# create mirrormanager user
+# create mirrormanager user
+- name: add mirrormanager user - uid {{ mirrormanager_uid }}
+  user: name=mirrormanager uid={{ mirrormanager_uid }} state=present home=/home/mirrormanager createhome=yes
+  tags:
+  - mirrorlist_server
+
+- name: install packages for mirrorlist-server
+  package:
+    state: present
+    name:
+    - mirrorlist-server
+    - geolite2-country
+    - certbot
+  tags:
+  - packages
+  - mirrorlist_server
+
+- name: setup directories
+  file: dest="{{item}}" mode=0755 state=directory
+  with_items:
+  - /srv/mirrorlist
+  - /srv/mirrorlist/data
+  - /srv/mirrorlist/data/mirrorlist1
+  - /srv/mirrorlist/data/mirrorlist2
+  - /var/log/mirrormanager
+  - /etc/letsencrypt/live
+  tags:
+  - mirrorlist_server
+
+- name: make sure mirrormanager user can write new protobuf based cache file
+  file: dest="{{item}}" owner=mirrormanager group=mirrormanager setype=_default
+  with_items:
+  - /srv/mirrorlist/data
+  - /srv/mirrorlist/data/mirrorlist1
+  - /srv/mirrorlist/data/mirrorlist2
+  - /var/log/mirrormanager
+  tags:
+  - mirrorlist_server
+
+- name: Ensure log file for content exists
+  file: dest="{{item}}" owner=mirrormanager group=mirrormanager mode=0755 state=touch setype=_default
+  with_items:
+  - /var/log/mirrormanager/mirrorlist1.service.log
+  - /var/log/mirrormanager/mirrorlist2.service.log
+  tags:
+  - mirrorlist_server
+
+- name: for the rust based mirrorlist server chown log files
+  file: dest="{{item}}" owner=mirrormanager group=mirrormanager
+  with_items:
+  - /var/log/mirrormanager/mirrorlist1.service.log
+  - /var/log/mirrormanager/mirrorlist2.service.log
+  tags:
+  - mirrorlist_server
+
+# We deploy two service files. Both listen on a different port, so that we can switch
+# them out as part of the protobuf cache deployment without having any local downtime.
+- name: Deploy service files
+  template: src=mirrorlist.service.j2 dest=/etc/systemd/system/mirrorlist{{ item }}.service
+  with_items:
+  - 1
+  - 2
+  tags:
+  - mirrorlist_server
+  notify:
+  - reload systemd
+
+- name: Enable mirrorlist services
+  service: name=mirrorlist{{ item }} enabled=yes state=started
+  with_items:
+  - 1
+  - 2
+  tags:
+  - mirrorlist_server
+
+- name: make a /var/www/mirrors.rpmfusion.org directory
+  file: dest=/var/www/mirrors.rpmfusion.org state=directory owner=mirrormanager group=mirrormanager mode=0755
+  tags:
+  - mirrorlist_server
+
+- name: copy download_caches
+  copy: src=download_caches dest=/home/mirrormanager owner=mirrormanager group=mirrormanager mode=0755
+  tags:
+  - mirrorlist_server
+
+- name: download caches cron
+  cron: name="download_caches" minute="*/5" user="mirrormanager"
+        job="/home/mirrormanager/download_caches"
+        cron_file=download_caches
+  tags:
+  - mirrorlist_server
+
+- name: check for mirrorlist files
+  stat: path=/srv/mirrorlist/data/mirrorlist1/mirrorlist_cache.proto
+  register: mirrorlist_cache_status
+  tags:
+  - mirrorlist_server
+
+- name: Deploy mirrorlist data files (if this is a initial install)
+  command: /home/mirrormanager/download_caches
+  become: yes
+  become_user: mirrormanager
+  when: not mirrorlist_cache_status.stat.exists
+  tags:
+  - mirrorlist_server
+
+- name: mirrorlist-server apache conf common
+  copy: src=mirrorlist-server.common dest=/etc/httpd/conf.d/mirrorlist-server.common
+  notify:
+  - restart apache
+  tags:
+  - config
+  - mirrorlist_server
+
+
+- name: mirrorlist-server apache conf
+  copy: src=mirrorlist-server.conf dest=/etc/httpd/conf.d/mirrorlist-server.conf
+  notify:
+  - restart apache
+  tags:
+  - config
+  - mirrorlist_server
+
+- name: mirrorlist-server-ssl apache conf
+  copy: src=mirrorlist-server-ssl.conf dest=/etc/httpd/conf.d/mirrorlist-server-ssl.conf
+  notify:
+  - restart apache
+  tags:
+  - config
+  - mirrorlist_server
+
+# Copy the mirrorlist log file every hour to be ready to be processed
+- name: mirrorlist copy cron
+  cron: name="copy-mirrorlist" minute="55" hour="*" user="mirrormanager"
+        job="cat /var/log/mirrormanager/mirrorlist?.service.log > /var/log/mirrormanager/mirrorlist.log.`date +\%Y-\%m-\%d`"
+        cron_file=copy-mirrorlist
+  tags:
+  - mirrorlist_server
+
+- name: mirrorlist move cron
+  cron: name="move-mirrorlist" minute="1" hour="0" user="mirrormanager"
+        job="cat /var/log/mirrormanager/mirrorlist?.service.log > /var/log/mirrormanager/mirrorlist.log.`date +\%Y-\%m-\%d --date='yesterday'`; rm -f /var/log/mirrormanager/mirrorlist?.service.log; touch /srv/mirrorlist/data/mirrorlist1/mirrorlist_cache.proto"
+        cron_file=move-mirrorlist
+  tags:
+  - mirrorlist_server
+
+# Cleanup old mirrorlist logfile
+- name: mirrorlist clean cron
+  cron: name="clean-mirrorlist" minute="13" hour="13" user="mirrormanager"
+        job="/usr/sbin/tmpwatch --mtime 7d /var/log/mirrormanager"
+        cron_file=clean-mirrorlist
+  tags:
+  - mirrorlist_server
+
+- name: install script to restart mirrorlist containers on protobuf cache changes
+  copy: src=restart-mirrorlist-containers dest=/usr/local/bin/restart-mirrorlist-containers mode=0755
+  tags:
+  - mirrorlist_server
+
+- name: install script to control apache load balancer
+  copy: src=balance-manager.sh dest=/usr/local/bin/balance-manager.sh mode=0755
+  tags:
+  - mirrorlist_server
+
+- name: Setup hourly cron at for mirrorlist restarts
+  cron: name="restart-mirrorlist-containers" minute="*/6" user="root"
+        job="/usr/local/bin/restart-mirrorlist-containers"
+        cron_file=restart-mirrorlist-containers
+  tags:
+  - mirrorlist_server
+
+- name: Set cron MAILTO for restart-mirrorlist-containers
+  cronvar:
+    name: MAILTO
+    value: "adrian@lisas.de"
+    cron_file: restart-mirrorlist-containers
+  tags:
+  - mirrorlist_server
+
+- name: Set httpd_can_network_connect flag on and keep it persistent across reboots
+  seboolean:
+    name: httpd_can_network_connect
+    state: yes
+    persistent: yes
+  tags:
+  - mirrorlist_server
+
+- name: Enable SELinux
+  selinux:
+    policy: targeted
+    state: enforcing
+  tags:
+  - mirrorlist_server
+
+- name: mask systemd-journald-audit.socket
+  systemd:
+    name: systemd-journald-audit.socket
+    enabled: no
+    masked: yes

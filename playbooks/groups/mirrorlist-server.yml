@@ -1,0 +1,47 @@
+- name: mirrorlist-server
+  hosts: mirrorlist_server
+  user: root
+  gather_facts: True
+
+  vars_files:
+   - /srv/web/infra/ansible/vars/global.yml
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  pre_tasks:
+  - name: global default packages to install
+    package:
+      name:
+        - wget
+        - curl
+        - cronie
+      state: present
+    tags:
+    - packages
+  - name: global packages to remove
+    package:
+      name:
+        - sssd-common
+      state: absent
+    tags:
+    - packages
+  - name: set hostname
+    hostname: name="{{inventory_hostname}}"
+  - name: Install common scripts
+    copy: src={{ item }} dest=/usr/local/bin/ owner=root group=root mode=0755
+    with_fileglob:
+     - common-scripts/*
+    tags:
+    - common-scripts
+
+  - debug: msg="{{ansible_nodename}} {{ansible_domain}} {{inventory_hostname}} {{ansible_distribution_major_version|int}}"
+
+  tasks:
+  - import_tasks: "{{ tasks_path }}/motd.yml"
+
+  roles:
+    - apache
+    - httpd/mod_ssl
+    - mirrormanager/mirrorlist-server
+
+  handlers:
+  - import_tasks: "{{ handlers_path }}/restart_services.yml"

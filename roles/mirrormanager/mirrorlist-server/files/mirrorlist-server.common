@@ -1,0 +1,48 @@
+ServerAdmin webmaster@rpmfusion.org
+DocumentRoot /var/www/mirrors.rpmfusion.org
+
+RewriteEngine on
+RewriteOptions inherit
+
+SSLProxyEngine On
+
+RewriteRule ^/(free|nonfree)/(fedora|el)/updates/([^/]+)/([^/]+)/?$ http://mirrors.rpmfusion.org/mirrorlist?repo=$1-$2-updates-released-$3&arch=$4 [R=301,last]
+RewriteRule ^/(free|nonfree)/(fedora|el)/(rawhide|development)/([^/]+)/?$ http://mirrors.rpmfusion.org/mirrorlist?repo=$1-$2-rawhide&arch=$4 [R=301,last]
+RewriteRule ^/(free|nonfree)/(fedora|el)/([^/]+)/([^/]+)/?$ http://mirrors.rpmfusion.org/mirrorlist?repo=$1-$2-$3&arch=$4 [R=301,last]
+
+RewriteCond %{HTTPS} !=on
+RewriteCond %{REQUEST_URI} ^/statistics(.*)
+RewriteRule ^/?(.*) https://mirrors.rpmfusion.org/$1 [R,L]
+
+RewriteRule ^/statistics(.*)  https://lisas.de/mirrorlist-statistics$1 [P,L]
+ProxyPassReverse /statistics/   https://lisas.de/mirrorlist-statistics/
+
+RewriteCond %{REQUEST_URI} !^/.well-known/acme-challenge(.*)
+RewriteCond %{REQUEST_URI} !^/metalink(.*)
+RewriteCond %{REQUEST_URI} !^/logs(.*)
+RewriteCond %{REQUEST_URI} !^/mirrorlist(.*)
+RewriteCond %{REQUEST_URI} !^/mm/publiclist(.*)
+RewriteCond %{REQUEST_URI} !^/balancer-manager(.*)
+RewriteRule ^/(.*)$ http://rpmfusion.org/$1 [R=301]
+
+KeepAlive Off
+Alias /logs/ /var/log/mirrormanager/
+<Directory /var/log/mirrormanager/>
+	Require ip 129.143.116.10
+	Require ip 2001:7c0:700::10
+</Directory>
+
+<Proxy "balancer://mycluster">
+	BalancerMember "http://localhost:18081"
+	BalancerMember "http://localhost:18082"
+</Proxy>
+
+ProxyPass        "/mirrorlist" "balancer://mycluster/mirrorlist"
+ProxyPassReverse "/mirrorlist" "balancer://mycluster/mirrorlist"
+ProxyPass        "/metalink" "balancer://mycluster/metalink"
+ProxyPassReverse "/metalink" "balancer://mycluster/metalink"
+
+<Location "/balancer-manager">
+	SetHandler balancer-manager
+	Require local
+</Location>

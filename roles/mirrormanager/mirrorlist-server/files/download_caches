@@ -1,0 +1,23 @@
+#!/bin/bash
+
+CACHE=/srv/mirrorlist/data/mirrorlist1/
+
+cd $CACHE
+
+FILES="country_continent.csv mirrorlist_cache.proto global_netblocks.txt i2_netblocks.txt"
+
+for i in ${FILES}; do
+        wget -q -N http://lisas.de/mirrorlist-statistics/$i
+done
+
+FILES="pl.tar.gz"
+
+cd /var/www/mirrors.rpmfusion.org
+
+SUM_BEFORE=`cat ${FILES} | md5sum`
+wget -q -N http://lisas.de/.cache/${FILES}
+SUM_AFTER=`cat ${FILES} | md5sum`
+
+if [[ "${SUM_AFTER}" != "${SUM_BEFORE}" ]]; then
+	tar xf ${FILES}
+fi

@@ -1,0 +1,18 @@
+---
+
+motd_custom: |
+    This is one of the (currently as of this writing) three mirrorlist
+    servers of RPM Fusion. Using mirrors.rpmfusion.org is "load balanced"
+    using DNS to one of the existing mirrorlist servers. To check the
+    results following command can be used:
+
+    curl "http://mirrors.rpmfusion.org/mirrorlist?repo=free-fedora-rawhide&arch=x86_64"
+
+    Testing a specific mirrorlist can be done using:
+
+    curl "http://{{ inventory_hostname }}/mirrorlist?repo=free-fedora-rawhide&arch=x86_64"
+
+    The server can be rebooted any time it is necessary without warning.
+    A short downtine of one of the mirrorlist servers can easily be
+    handled by the remaining servers. Longer downtimes require removal
+    of the IP address from the mirrors.rpmfusion.org entry.
