@@ -1,0 +1,28 @@
+---
+vmhost: aarch64-jetson-tx1.home.rpmfusion.net
+eth0_ip: 192.168.1.102
+nm: 255.255.255.0
+gw: 192.168.1.1
+dns: 192.168.1.1
+ks_url: http://dl.kwizart.net/ks/kvm-fedora-32-ext-armv7
+ks_repo: https://dl.fedoraproject.org/pub/fedora/linux/releases/32/Everything/armhfp/os/
+
+virt_install_command: "{{ virt_install_command_armv7_one_nic_unsafe }}"
+
+volgroup: /dev/vg_data
+lvm_size: 80000
+mem_size: 2048
+max_mem_size: "{{ mem_size }}"
+num_cpus: 4
+datacenter: home
+
+nagios_Check_Services:
+  mail: false
+  nrpe: false
+  sshd: false
+  named: false
+  dhcpd: false
+  httpd: false
+  swap: false
+  ping: false
+  raid: false
