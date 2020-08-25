@@ -82,8 +82,11 @@
     - mock
     - kernel-firmware
     - kernel-modules
+    - ntp
+    - ntpdate
     - rsyslog
     - audit
+    - pycdio
     - python3-kickstart
     - libvirt-client
     - oz
@@ -94,8 +97,8 @@
     - imagefactory-plugins-ovfcommon
     - imagefactory-plugins
     - imagefactory-plugins-OVA
-    - imagefactory-plugins-EC2
     - imagefactory-plugins-RHEVM
+    - pykickstart
     - nosync
   tags:
   - koji_builder
@@ -105,15 +108,6 @@
   tags:
   - koji_builder
   when: "ansible_architecture is defined and ansible_architecture == 'aarch64'"
-
-- name: Re byte compile Guest.py (if needed)
-  command: python2 -m compileall /usr/lib/python2.7/site-packages/oz/Guest.py
-  register: compileGuestpy
-  changed_when: "'Compiling ' in compileGuestpy.stdout"
-  tags:
-  - koji_builder
-  notify:
-  - restart kojid
 
 - name: enable virtlogd service
   service: name=virtlogd state=started enabled=yes
@@ -137,6 +131,7 @@
   - restart kojid
   tags:
   - koji_builder
+  - rpmautospec
 
 - name: build /etc/koji/koji.conf from group vars
   template: src=koji.conf dest=/etc/koji.conf
