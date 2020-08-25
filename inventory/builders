@@ -14,6 +14,9 @@ buildvm-02.online.rpmfusion.net
 
 [buildvm_aarch64]
 
+[buildvm_arm]
+arm-jetson-tx1.home.rpmfusion.net
+
 [buildhw]
 buildvm-03.online.rpmfusion.net
 buildvm-05.virt.rpmfusion.net
@@ -67,6 +70,7 @@ buildhw_ppc64le
 buildhw_aarch64
 buildvm
 buildvm_aarch64
+buildvm_arm
 
 [builders:vars]
 ansible_python_interpreter=/usr/bin/python3
