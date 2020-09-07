@@ -10,6 +10,8 @@ RewriteRule ^/(free|nonfree)/(fedora|el)/updates/([^/]+)/([^/]+)/?$ http://mirro
 RewriteRule ^/(free|nonfree)/(fedora|el)/(rawhide|development)/([^/]+)/?$ http://mirrors.rpmfusion.org/mirrorlist?repo=$1-$2-rawhide&arch=$4 [R=301,last]
 RewriteRule ^/(free|nonfree)/(fedora|el)/([^/]+)/([^/]+)/?$ http://mirrors.rpmfusion.org/mirrorlist?repo=$1-$2-$3&arch=$4 [R=301,last]
 
+RewriteRule ^/(free|nonfree)/(fedora|el)/rpmfusion-(free|nonfree)-release-(\d{1,2}).noarch.rpm https://mirrors.rpmfusion.org/mirrorlist?path=$1/$2/rpmfusion-$3-release-$4.noarch.rpm&redirect=1&protocol=https&ip=%{REMOTE_ADDR} [P]
+
 RewriteCond %{HTTPS} !=on
 RewriteCond %{REQUEST_URI} ^/statistics(.*)
 RewriteRule ^/?(.*) https://mirrors.rpmfusion.org/$1 [R,L]

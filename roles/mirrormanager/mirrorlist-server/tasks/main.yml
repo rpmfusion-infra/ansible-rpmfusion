@@ -14,6 +14,8 @@
     - mirrorlist-server
     - geolite2-country
     - certbot
+    - tmpwatch
+    - logrotate
   tags:
   - packages
   - mirrorlist_server
