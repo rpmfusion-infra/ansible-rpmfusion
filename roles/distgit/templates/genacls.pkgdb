@@ -34,7 +34,7 @@ if __name__ == '__main__':
         'f15', 'f16': 'f16', 'f17': 'f17', 'f18': 'f18', 'f19': 'f19',
         'f20': 'f20', 'f21': 'f21', 'f22': 'f22', 'f23': 'f23', 'f24': 'f24',
         'f25': 'f25', 'f26': 'f26', 'f27': 'f27', 'f28': 'f28', 'f29': 'f29',
-        'f30': 'f30', 'f31': 'f31', 'f32': 'f32',
+        'f30': 'f30', 'f31': 'f31', 'f32': 'f32', 'f33': 'f33',
         'devel': 'master', 'master': 'master'}
 
     # Create a "regex"ish list 0f the reserved branches

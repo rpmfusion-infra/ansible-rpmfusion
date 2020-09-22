@@ -21,6 +21,14 @@ grep "repo nonfree/" ./gitolite.conf | \
         sed 's/repo nonfree\///g' | \
         sed "s/.*/'&' => 'nonfree\/&',/g" \
         >> RepoAliases.pm
+grep "repo rpi/" ./gitolite.conf | \
+        sed 's/repo rpi\///g' | \
+        sed "s/.*/'&' => 'rpi\/&',/g" \
+        >> RepoAliases.pm
+grep "repo cuda/" ./gitolite.conf | \
+        sed 's/repo cuda\///g' | \
+        sed "s/.*/'&' => 'cuda\/&',/g" \
+        >> RepoAliases.pm
 echo "};}1;" >> RepoAliases.pm
 
 # With that done, move the files into place and run compile
