@@ -24,9 +24,9 @@ kojihub_url: koji.rpmfusion.org/kojihub
 kojihub_scheme: http
 
 # for kojid config
-koji_server_url: "https://koji.rpmfusion.org.org/kojihub"
-koji_weburl: "https://koji.rpmfusion.org.org/koji"
-koji_topurl: "https://koji.rpmfusion.org.org/kojifiles"
+koji_server_url: "https://koji.rpmfusion.org/kojihub"
+koji_weburl: "https://koji.rpmfusion.org/koji"
+koji_topurl: "https://koji.rpmfusion.org/kojifiles"
 
 # These are consumed by a task in roles/fedmsg/base/main.yml
 fedmsg_certs:

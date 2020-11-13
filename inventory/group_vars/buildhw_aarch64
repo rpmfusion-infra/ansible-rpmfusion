@@ -6,9 +6,9 @@ ansible_ifcfg_blacklist: true
 
 koji_hub_nfs: "rpmfusion_koji"
 
-koji_server_url: "https://koji.rpmfusion.org.org/kojihub"
+koji_server_url: "https://koji.rpmfusion.org/kojihub"
 koji_weburl: "http:/koji.rpmfusion.org/koji"
-koji_topurl: "https://koji.rpmfusion.org.org/kojifiles"
+koji_topurl: "https://koji.rpmfusion.org/kojifiles"
 
 # These variables are pushed into /etc/system_identification by the base role.
 # Groups and individual hosts should ovveride them with specific info.
