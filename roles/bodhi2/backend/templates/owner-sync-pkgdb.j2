@@ -130,7 +130,8 @@ if __name__ == '__main__':
         else:
             session = koji.ClientSession("http://%s.koji.rpmfusion.org/kojihub" % arch)
         try:
-            session.ssl_login(options['cert'], options['ca'], options['serverca'])
+            #session.ssl_login(options['cert'], options['ca'], options['serverca'])
+            session.ssl_login(options['cert'], options['ca'])
         except:
             print "Unable to sync to %s hub" % arch
             continue
