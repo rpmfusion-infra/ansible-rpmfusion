@@ -31,7 +31,7 @@ ProxyDNs = emailAddress=rpmfusion-buildsys@rpmfusion.org,CN=kojiweb,O=RPM Fusion
 ##  Other options  ##
 LoginCreatesUser = On
 {% if inventory_hostname.startswith('koji') %}
-KojiWebURL = http://koji.rpmfusion.org/koji
+KojiWebURL = https://koji.rpmfusion.org.org/koji
 {% elif inventory_hostname.startswith('arm-koji') %}
 KojiWebURL = http://arm.koji.rpmfusion.org/koji
 {% endif %}

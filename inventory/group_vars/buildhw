@@ -5,9 +5,9 @@ sudoers: "{{ private }}/files/sudo/00releng-sudoers"
 freezes: true
 
 koji_hub_nfs: "rpmfusion_koji"
-koji_server_url: "http://koji.rpmfusion.org/kojihub"
-koji_weburl: "http://koji.rpmfusion.org/koji"
-koji_topurl: "http://koji.rpmfusion.org/kojifiles"
+koji_server_url: "https://koji.rpmfusion.org.org/kojihub"
+koji_weburl: "https://koji.rpmfusion.org.org/koji"
+koji_topurl: "https://koji.rpmfusion.org.org/kojifiles"
 
 # These variables are pushed into /etc/system_identification by the base role.
 # Groups and individual hosts should ovveride them with specific info.

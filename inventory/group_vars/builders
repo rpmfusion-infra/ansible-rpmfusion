@@ -6,9 +6,9 @@ fas_client_groups: sysadmin-releng
 sudoers: "{{ private }}/files/sudo/00releng-sudoers"
 
 koji_hub_nfs: "rpmfusion_koji"
-koji_server_url: "http://koji.rpmfusion.org/kojihub"
-koji_weburl: "http://koji.rpmfusion.org/koji"
-koji_topurl: "http://koji.rpmfusion.org/kojifiles"
+koji_server_url: "https://koji.rpmfusion.org.org/kojihub"
+koji_weburl: "https://koji.rpmfusion.org.org/koji"
+koji_topurl: "https://koji.rpmfusion.org.org/kojifiles"
 
 csi_security_category: High
 csi_primary_contact: RPM Fusion Admins - sysadmin@lists.rpmfusion.org

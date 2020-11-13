@@ -39,8 +39,8 @@ def usage():
 def get_options():
     # shamelessly stolen from koji CLI
     opts = {
-        'server': 'http://koji.rpmfusion.org/kojihub',
-        'weburl': 'http://koji.rpmfusion.org/koji',
+        'server': 'https://koji.rpmfusion.org.org/kojihub',
+        'weburl': 'https://koji.rpmfusion.org.org/koji',
         'cert': '/etc/pki/pkgdb/pkgdb.pem',
         'ca': '/etc/pki/pkgdb/rpmfusion-upload-ca.cert',
         'serverca': '/etc/pki/pkgdb/rpmfusion-server-ca.cert'
@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
     for arch in arches:
         if arch == "primary":
-            session = koji.ClientSession("http://koji.rpmfusion.org/kojihub")
+            session = koji.ClientSession("https://koji.rpmfusion.org.org/kojihub")
         else:
             session = koji.ClientSession("http://%s.koji.rpmfusion.org/kojihub" % arch)
         try:
