@@ -165,13 +165,8 @@ ALLOW_SSH_ROOT_USER=without-password
 # configuration file, then a value of '2' may be set here in order to
 # suppress a warning message. This option has a default value of '0'.
 #
-{% if ansible_distribution == 'Fedora' and ansible_distribution_major_version|int < 22 %}
-# Fedora 21 doesn't set protocol in ssh config
-ALLOW_SSH_PROT_V1=2
-{% else %}
 # For RHEL and Fedora 22+ we set proto to v2 only
 ALLOW_SSH_PROT_V1=0
-{% endif %}
 
 #
 # This setting tells rkhunter the directory containing the SSH configuration
@@ -391,6 +386,7 @@ ALLOWDEVFILE=/dev/md/autorebuild.pid
 {% if ansible_hostname == 'notifs-backend01' %}
 ALLOWDEVFILE=/dev/shm/fmn-cache.dbm
 {% endif %}
+{% if ansible_hostname.startswith('kojipkgs') %}
 ALLOWDEVFILE=/dev/shm/squid-squid-page-pool.shm
 ALLOWDEVFILE=/dev/shm/squid-cache_mem.shm
 ALLOWDEVFILE=/dev/shm/squid-ssl_session_cache.shm
@@ -401,7 +397,8 @@ ALLOWDEVFILE=/dev/shm/squid-cache_mem_space.shm
 ALLOWDEVFILE=/dev/shm/squid-cf__readers.shm
 ALLOWDEVFILE=/dev/shm/squid-cf__queues.shm
 ALLOWDEVFILE=/dev/shm/squid-cf__metadata.shm
-{% if inventory_hostname in groups['virtservers'] or inventory_hostname in groups['openqa_workers'] or inventory_hostname in groups['openqa_stg_workers'] or inventory_hostname in groups['taskotron_stg_client_hosts'] or inventory_hostname in groups['taskotron_dev_client_hosts']  %}
+{% endif %}
+{% if inventory_hostname in groups['virtservers'] or inventory_hostname in groups['openqa_workers'] or inventory_hostname in groups['openqa_lab_workers']  %}
 # libvirt spice device makes a /dev/shm/spice file
 ALLOWDEVFILE=/dev/shm/spice.*
 {% endif %}
@@ -411,7 +408,7 @@ ALLOWDEVFILE=/dev/shm/sem.slapd*.stats
 {% if inventory_hostname in groups['proxies'] or inventory_hostname in groups['proxies_stg'] %}
 ALLOWDEVFILE=/dev/shm/libpod_lock
 {% endif %}
-{% if inventory_hostname in groups['pgbdr'] or inventory_hostname in groups['pgbdr_stg'] or inventory_hostname == 'ci-cc-rdu01.fedoraproject.org' or  inventory_hostname == 'hubs01.stg.phx2.fedoraproject.org' or inventory_hostname == 'db-koji01.stg.phx2.fedoraproject.org' or inventory_hostname == 'db-qa03.qa.fedoraproject.org' %}
+{% if inventory_hostname in groups['dbserver'] or inventory_hostname in groups['pkgs'] or inventory_hostname in groups['pagure']  %}
 ALLOWDEVFILE=/dev/shm/PostgreSQL*
 {% endif %}
 
@@ -625,7 +622,7 @@ OS_VERSION_FILE=/etc/{{ ansible_distribution|lower }}-release
 #
 #RTKT_DIR_WHITELIST=""
 #RTKT_FILE_WHITELIST=""
-{% if inventory_hostname in groups['ipa'] %}
+{% if inventory_hostname in groups['ipa'] or inventory_hostname in groups['ipa_stg'] %}
 RTKT_FILE_WHITELIST="/var/log/pki/pki-tomcat/ca/system"
 RTKT_FILE_WHITELIST="/var/log/pki/pki-tomcat/kra/system"
 {% endif %}
@@ -648,5 +645,15 @@ SCRIPTWHITELIST=/usr/bin/whatis
 SCRIPTWHITELIST=/usr/bin/ldd
 SCRIPTWHITELIST=/usr/bin/groups
 SCRIPTWHITELIST=/usr/bin/GET
+{% if ansible_distribution_major_version|int >= 30 %}
+# no network-scripts on newest fedora
+#SCRIPTWHITELIST=/sbin/ifup
+#SCRIPTWHITELIST=/sbin/ifdown
+{% else %}
 SCRIPTWHITELIST=/sbin/ifup
 SCRIPTWHITELIST=/sbin/ifdown
+{% endif %}
+{% if inventory_hostname.startswith(('db','pagure','retrace','anitya','upstream')) %}
+# Set this size very large on postgres running servers.
+IPC_SEG_SIZE=100000000000
+{% endif %}
