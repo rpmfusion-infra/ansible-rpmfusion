@@ -11,7 +11,10 @@ SCRIPT=$2
 SILENT="no"
 if [ $# -ge 3 -a "$3" == "--silent" ]; then
     SILENT="yes"
+    shift
 fi
+
+shift 2
 
 LOCKDIR="/var/tmp/$NAME"
 PIDFILE="$LOCKDIR/pid"
@@ -44,5 +47,5 @@ trap cleanup EXIT SIGQUIT SIGHUP SIGTERM
 echo $$ > "$PIDFILE"
 
 $RESTORE_UMASK
-eval "$SCRIPT"
+eval "$SCRIPT $*"
 

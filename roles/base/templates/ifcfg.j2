@@ -10,7 +10,11 @@ ONBOOT="no"
 {% else %}
 IPADDR="{{ hostvars[inventory_hostname][item + '_ip'] }}"
 NETMASK="{{ hostvars[inventory_hostname][item + '_nm'] }}"
+{% if hostvars[inventory_hostname][item +'_off'] is defined %}
+ONBOOT="no"
+{% else %}
 ONBOOT="yes"
+{% endif %}
 {% endif %}
 TYPE="Ethernet"
 DEVICE="{{item}}"
