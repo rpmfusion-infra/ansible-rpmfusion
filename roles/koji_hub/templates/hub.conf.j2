@@ -22,7 +22,7 @@ CheckClientIP = False
 ## the client username is the common name of the subject of their client certificate
 DNUsernameComponent = CN
 ## separate multiple DNs with |
-ProxyDNs = emailAddress=rpmfusion-buildsys@rpmfusion.org,CN=kojiweb,O=RPM Fusion,ST=Province,C=EU|emailAddress=rpmfusion-buildsys@lists.rpmfusion.org,CN=sign-bridge1,O=RPM Fusion Project,ST=Province,C=EU
+ProxyDNs = emailAddress=rpmfusion-buildsys@rpmfusion.org,CN=kojiweb,O=RPM Fusion,ST=Province,C=EU|emailAddress=rpmfusion-buildsys@lists.rpmfusion.org,CN=sign-bridge1,O=RPM Fusion Project,ST=Province,C=EU|emailAddress=rpmfusion-buildsys@lists.rpmfusion.org,CN=sigul,O=RPM Fusion Project,ST=Province,C=EU
 
 ## end SSL client certificate auth configuration
 
@@ -39,7 +39,7 @@ KojiWebURL = http://arm.koji.rpmfusion.org/koji
 # when creating email notifications
 EmailDomain = rpmfusion.org
 # Disable sending all notifications from koji, people need to use FMN now
-DisableNotifications = False
+DisableNotifications = True
 
 ## If KojiDebug is on, the hub will be /very/ verbose and will report exception
 ## details to clients for anticipated errors (i.e. koji's own exceptions --
@@ -93,13 +93,15 @@ channel =
     method createdistrepo :: use createrepo
     method buildContainer :: use powerbuilder
     buildtag *-rpi :: use powerbuilder
-    method buildSRPMFromSCM && buildtag *rpi :: use powerbuilder
     method buildSRPMFromSCM :: use createrepo
+    method buildSRPMFromSCM && buildtag *rpi :: use powerbuilder
     has req_channel && has_perm customchannel :: req
     is_child_task :: parent
 # Policy to move build to powerfull builders
+    source */chromium-* && bool scratch :: deny
     source */chromium-* :: use powerbuilder
     source */kodi* :: use powerbuilder
+    source */libopenshot* :: use powerbuilder
     source */qt5-qtwebengine-freeworld* :: use powerbuilder
     source */telegram-desktop* :: use powerbuilder
 
