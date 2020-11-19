@@ -39,12 +39,11 @@
   copy: src={{ item }} dest=/etc/sudoers.d/{{ item | basename | replace('.', '_') }}
           owner=root group=root mode=0600
   with_first_found:
-  - files:
-    - "{{ sudoers }}"
-    - "{{ private }}/files/sudo/{{ inventory_hostname }}-sudoers"
-    - "{{ private }}/files/sudo/{{ ansible_hostname }}-sudoers"
-    - "{{ private }}/files/sudo/{{ ansible_domain }}-sudoers"
-    skip: true
+  - "{{ sudoers }}"
+  - "{{ private }}/files/sudo/{{ inventory_hostname }}-sudoers"
+  - "{{ private }}/files/sudo/{{ ansible_hostname }}-sudoers"
+  - "{{ private }}/files/sudo/{{ ansible_domain }}-sudoers"
+  - "{{ private }}/files/sudo/default"
   tags:
   - config
   - sudo
