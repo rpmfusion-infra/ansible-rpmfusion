@@ -3,7 +3,7 @@
 # NOTE: most of these vars_path come from group_vars/buildhw or from hostvars
 
 - name: make koji builder(s) on raw hw
-  hosts: builders
+  hosts: buildhw:bkernel
   remote_user: root
   gather_facts: True
 

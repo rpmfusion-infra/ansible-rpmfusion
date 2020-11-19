@@ -140,22 +140,10 @@
         name:
           - tar
           - rsync
-          - dbus-python
+          - python3-dbus
           - NetworkManager
-          - libselinux-python
-          - python2-pyyaml
-      when: env == "staging"
-    - name: Install necessary packages that openshift-ansible needs
-      package:
-        state: installed
-        name:
-          - tar
-          - rsync
-          - dbus-python
-          - NetworkManager
-          - libselinux-python
+          - python3-libselinux
           - python3-PyYAML
-      when: env == "production"
 
     - name: Deploy controller public ssh keys to osbs cluster hosts
       authorized_key:
@@ -234,6 +222,7 @@
       openshift_master_public_api_url: "https://{{ osbs_url }}:8443"
       openshift_release: "v3.11"
       openshift_version: "v3.11"
+      openshift_pkg_version: "-3.11*"
       openshift_ansible_path: "/root/openshift-ansible"
       openshift_ansible_pre_playbook: "playbooks/prerequisites.yml"
       openshift_ansible_playbook: "playbooks/deploy_cluster.yml"
@@ -274,6 +263,7 @@
       openshift_master_public_api_url: "https://{{ osbs_url }}:8443"
       openshift_release: "v3.11"
       openshift_version: "v3.11"
+      openshift_pkg_version: "-3.11.2"
       openshift_ansible_path: "/root/openshift-ansible"
       openshift_ansible_pre_playbook: "playbooks/prerequisites.yml"
       openshift_ansible_playbook: "playbooks/deploy_cluster.yml"
