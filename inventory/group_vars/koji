@@ -6,7 +6,9 @@ num_cpus: 16
 
 # for systems that do not match the above - specify the same parameter in
 # the host_vars/$hostname file
-tcp_ports: [ 80, 443]
+tcp_ports: [ 80, 443, 44334]
+
+custom_rules: [ '-A INPUT -p tcp -m tcp --dport=44333 -i eth1 -j ACCEPT' ]
 
 udp_ports: []
 
