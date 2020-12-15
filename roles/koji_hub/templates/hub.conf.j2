@@ -89,11 +89,9 @@ tag =
     all :: deny
 
 channel =
-    method createrepo :: use createrepo
-    method createdistrepo :: use createrepo
+    method createrepo newRepo distRepo buildSRPMFromSCM :: use createrepo
     method buildContainer :: use powerbuilder
     buildtag *-rpi :: use powerbuilder
-    method buildSRPMFromSCM :: use createrepo
     method buildSRPMFromSCM && buildtag *rpi :: use powerbuilder
     has req_channel && has_perm customchannel :: req
     is_child_task :: parent
