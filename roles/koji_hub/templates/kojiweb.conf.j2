@@ -17,6 +17,8 @@ Alias /robots.txt /var/www/html/robots.txt
 <Directory "/usr/share/koji-web/scripts/">
     Options ExecCGI
     SetHandler wsgi-script
+    WSGIApplicationGroup %{GLOBAL}
+    WSGIScriptReloading Off
     Require all granted
 </Directory>
 
@@ -63,9 +65,20 @@ Alias /buildgroups "/mnt/koji/buildgroups/"
     Require all granted
 </Directory>
 
-Alias /compose "/mnt/koji/compose/"
+Alias /kojira "/mnt/koji/kojira/"
+<Directory "/mnt/koji/kojira/">
+    Options Indexes FollowSymLinks
+    Require all granted
+</Directory>
 
+Alias /compose "/mnt/koji/compose/"
 <Directory "/mnt/koji/compose/">
+    Options Indexes FollowSymLinks
+    Require all granted
+</Directory>
+
+Alias /ostree "/mnt/koji/ostree/"
+<Directory "/mnt/koji/ostree/">
     Options Indexes FollowSymLinks
     Require all granted
 </Directory>
@@ -77,10 +90,9 @@ Alias /packages "/mnt/koji/packages/"
     Require all granted
 </Directory>
 
-# from kojipkgs
-Alias /kojifiles "/mnt/koji/"
+Alias /repos-dist "/mnt/koji/repos-dist/"
 
-<Directory "/mnt/koji/">
+<Directory "/mnt/koji/repos-dist/">
     Options Indexes FollowSymLinks
     Require all granted
 </Directory>
