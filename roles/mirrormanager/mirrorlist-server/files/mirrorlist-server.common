@@ -6,6 +6,8 @@ RewriteOptions inherit
 
 SSLProxyEngine On
 
+RewriteRule ^/free/fedora/rpi/rpmfusion-rpi.repo https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/rpi/rpmfusion-rpi.repo&protocol=https&redirect=1&ip=%{REMOTE_ADDR} [P]
+
 RewriteRule ^/(free|nonfree)/(fedora|el)/updates/([^/]+)/([^/]+)/?$ http://mirrors.rpmfusion.org/mirrorlist?repo=$1-$2-updates-released-$3&arch=$4 [R=301,last]
 RewriteRule ^/(free|nonfree)/(fedora|el)/(rawhide|development)/([^/]+)/?$ http://mirrors.rpmfusion.org/mirrorlist?repo=$1-$2-rawhide&arch=$4 [R=301,last]
 RewriteRule ^/(free|nonfree)/(fedora|el)/([^/]+)/([^/]+)/?$ http://mirrors.rpmfusion.org/mirrorlist?repo=$1-$2-$3&arch=$4 [R=301,last]
