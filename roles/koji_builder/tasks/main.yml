@@ -80,8 +80,6 @@
     - koji-containerbuild-builder
     - strace
     - mock
-    - kernel-firmware
-    - kernel-modules
     - ntp
     - ntpdate
     - rsyslog
@@ -89,15 +87,6 @@
     - pycdio
     - python3-kickstart
     - libvirt-client
-    - oz
-    - imagefactory
-    - imagefactory-plugins-TinMan
-    - imagefactory-plugins-Docker
-    - imagefactory-plugins-vSphere
-    - imagefactory-plugins-ovfcommon
-    - imagefactory-plugins
-    - imagefactory-plugins-OVA
-    - imagefactory-plugins-RHEVM
     - pykickstart
     - nosync
   tags:
