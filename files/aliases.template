@@ -103,6 +103,7 @@ control-center-maint:   /dev/null
 gecko-bugs-nobody:      /dev/null
 
 # Services Accounts
+armbuilders:            sysadmin-arm-members
 twitter:                twitter-members
 paypal:                 paypal-members
 security:               security-members
