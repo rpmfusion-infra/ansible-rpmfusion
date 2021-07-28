@@ -716,6 +716,7 @@ smtpd_helo_restrictions =
     permit_mynetworks,
     reject_non_fqdn_helo_hostname,
     reject_invalid_helo_hostname,
+    reject_unknown_helo_hostname,
     permit
 
 smtpd_sender_restrictions =
