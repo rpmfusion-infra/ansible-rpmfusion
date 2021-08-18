@@ -1,27 +1,13 @@
 # New tasks to spin up instance in https://fedorainfracloud.org
 
+- include_vars: dir=/srv/web/infra/ansible/vars/all/ ignore_files=README
+
 - name: check it out
   local_action: shell nc -w 5 {{ inventory_hostname }} 22 < /dev/null
   register: host_is_up
   ignore_errors: true
   changed_when: false
   check_mode: no
-
-- name: clean out old known_hosts (name based entries)
-  local_action: known_hosts path={{item}} host={{inventory_hostname}} state=absent
-  ignore_errors: True
-  with_items:
-  - /root/.ssh/known_hosts
-  - /etc/ssh/ssh_known_hosts
-  when: host_is_up|failed
-
-- name: clean out old known_hosts (IP based entries)
-  local_action: known_hosts path={{item}} host={{ lookup('dig', inventory_hostname, wantlist=False) }} state=absent
-  ignore_errors: True
-  with_items:
-  - /root/.ssh/known_hosts
-  - /etc/ssh/ssh_known_hosts
-  when: host_is_up|failed
 
 - name: spin UP VM using nova_compute
   become: False
@@ -33,7 +19,7 @@
       login_tenant_name: "{{inventory_tenant}}"
       name: "{{inventory_instance_name}}"
       image_id: "{{ image|image_name_to_id('admin', ADMIN_PASS, inventory_tenant, os_auth_url) }}"
-      wait_for: 300
+      wait_for: 600
       flavor_id: "{{ instance_type|flavor_name_to_id('admin', ADMIN_PASS, inventory_tenant, os_auth_url) }}"
       security_groups: "{{security_group}}"
       key_name: "{{ keypair }}"
@@ -42,7 +28,7 @@
       floating_ips:
         - "{{public_ip}}"
   register: nova_result
-  when: host_is_up|failed
+  when: host_is_up is failed
 
 # instance can be both id and name, volume must be id
 # volume must be id
@@ -62,35 +48,34 @@
 # If it is attach it.
 #
 - local_action: shell nova --os-auth-url="{{os_auth_url}}" --os-username="admin" --os-password="{{ADMIN_PASS}}" --os-tenant-name={{inventory_tenant}} volume-attach "{{inventory_instance_name}}" "{{item.volume_id}}" "{{item.device}}"
-  with_items: "{{ volumes|default([]) }}"
+  with_items: "{{ volume_available.results|default([]) }}"
   ignore_errors: True
   failed_when: False
-  when: volumes is defined and volume_available is defined and volume_available
+  when: volumes is defined and volume_available is defined and item.changed
 
 - name: wait for he host to be hot
   local_action: wait_for host={{ public_ip }} port=22 delay=1 timeout=600
-  when: host_is_up|failed
-
-- name: gather ssh host key from new instance
-  local_action: command ssh-keyscan -t rsa {{ inventory_hostname }}
-  ignore_errors: True
-  register: hostkey
-  when: host_is_up|failed
-
-- name: add new ssh host key (you still need to add it to official ssh_host_keys later)
-  local_action: known_hosts path={{ item }} key={{ hostkey.stdout }} host={{ inventory_hostname }} state=present
-  ignore_errors: True
-  with_items:
-  - /root/.ssh/known_hosts
-  - /etc/ssh/ssh_known_hosts
-  when: host_is_up|failed
+  when: host_is_up is failed
 
 # SSH is up and running, however cloud-init still did not deployed ssh keypair
 # we have to wait some time. 10 sec is usually enough, but not always.
 
 - name: waiting for cloud-init
   pause: seconds=30
-  when: host_is_up|failed
+  when: host_is_up is failed
+
+- name: gather ssh host key from new instance
+  local_action: command ssh-keyscan -t rsa {{ inventory_hostname }}
+  ignore_errors: True
+  register: hostkey
+  when: host_is_up is failed
+
+- name: add new ssh host key (until we can sign it)
+  local_action: known_hosts path={{item}} key="{{ hostkey.stdout }}" host={{ inventory_hostname }} state=present
+  ignore_errors: True
+  with_items:
+  - /root/.ssh/known_hosts
+  when: host_is_up is failed
 
 #
 # Next we try and gather facts. If the host doesn't have python2 this will fail.
@@ -108,7 +93,7 @@
 
 - name: install python2 and dnf stuff
   raw: dnf -y install python-dnf libselinux-python
-  when: facts|failed
+  when: facts is failed
 
 # TODO - somehow guess when keypair is finally deployed and return little bit earlier
 ## We need to specify user, here we trying with fedora or root
@@ -120,3 +105,5 @@
 #  # poll: 5
 #  ignore_errors: True
 #
+- name: Include SSH config
+  import_role: name=basessh

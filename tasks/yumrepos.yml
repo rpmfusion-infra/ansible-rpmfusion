@@ -1,4 +1,153 @@
 ---
+- name: Include vars/all/
+  include_vars:
+    dir: /srv/web/infra/ansible/vars/all/
+    ignore_files: [README]
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: enable repos for archived Fedora releases
+  set_fact:
+    archive_if_archived: >-
+      {{
+        '/archive'
+        if ansible_distribution_major_version|int < (
+          FedoraPreviousPreviousCycleNumber|int
+          if FedoraPreviousPrevious == True
+          else FedoraPreviousCycleNumber|int
+        )
+        else ''
+      }}
+  when: ansible_distribution == 'Fedora'
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: put rhel repos on rhel systems
+  copy: src="{{ files }}/common/rhel{{ ansible_distribution_major_version|int }}.repo" dest="/etc/yum.repos.d/rhel{{ ansible_distribution_major_version|int }}.repo"
+  when: ansible_distribution == 'RedHat' and not inventory_hostname.startswith('ppc9') and datacenter != "aws"
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: put rhel repos on rhel systems (power9)
+  copy: src="{{ files }}/common/rhel{{ ansible_distribution_major_version|int }}-power9.repo" dest="/etc/yum.repos.d/rhel{{ ansible_distribution_major_version|int }}.repo"
+  when: ansible_distribution == 'RedHat' and inventory_hostname.startswith('ppc9') and datacenter != "aws"
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: put rhel rhev for power repos on rhel power systems
+  copy: src="{{ files }}/common/rhel7-power-rhev.repo" dest="/etc/yum.repos.d/rhel7-power-rhev.repo"
+  when: ansible_distribution == 'RedHat' and ansible_distribution_major_version|int == 7 and ansible_architecture =='ppc64le' and not inventory_hostname.startswith('ppc9')
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: put openshift 3.4 repo on os- systems
+  template: src="{{ files }}/openshift/openshift.repo" dest="/etc/yum.repos.d/openshift.repo"
+  when: ansible_distribution == 'RedHat' and ansible_distribution_major_version|int == 7 and inventory_hostname.startswith('os-') and datacenter != "aws"
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: put epel repos on el systems
+  copy: src="{{ files }}/common/epel{{ ansible_distribution_major_version|int }}.repo" dest="/etc/yum.repos.d/epel{{ ansible_distribution_major_version|int }}.repo"
+  when: ((ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and use_default_epel) and datacenter != "aws"
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: put epel repos on el systems (aws)
+  copy: src="{{ files }}/common/original-epel{{ ansible_distribution_major_version|int }}.repo" dest="/etc/yum.repos.d/epel{{ ansible_distribution_major_version|int }}.repo"
+  when: ((ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and use_default_epel) and datacenter == "aws"
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: put epel gpg key on el systems (aws)
+  copy: src="{{ files }}/common/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version|int }}" dest="/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version|int }}"
+  when: ((ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and use_default_epel) and datacenter == "aws"
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: epel release on el systems (aws)
+  package:
+    name: 'epel-release'
+    state: present
+  when: ((ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and use_default_epel) and datacenter == "aws"
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: put fedora repos on primary architecture systems
+  template: src="{{ files }}/common/{{ item }}" dest="/etc/yum.repos.d/{{ item }}"
+  with_items:
+  - fedora.repo
+  - fedora-updates.repo
+  - fedora-updates-testing.repo
+  when: ansible_distribution == 'Fedora' and not inventory_hostname.startswith(('buildvm-s390x', 'buildvm-ppc64le')) and not inventory_hostname.startswith('rawhide-test') and datacenter != "aws"
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: put fedora modular repos on primary architecture systems
+  template: src="{{ files }}/common/{{ item }}" dest="/etc/yum.repos.d/{{ item }}"
+  with_items:
+  - fedora-modular.repo
+  - fedora-updates-modular.repo
+  - fedora-updates-testing-modular.repo
+  when: ansible_distribution == 'Fedora' and not inventory_hostname.startswith('rawhide-test') and not inventory_hostname.startswith(('buildvm-s390x', 'buildvm-ppc64le')) and datacenter != "aws"
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: put fedora repos on secondary architecture systems
+  template: src="{{ files }}/common/{{ item }}-secondary" dest="/etc/yum.repos.d/{{ item }}"
+  with_items:
+  - fedora.repo
+  - fedora-updates.repo
+  - fedora-updates-testing.repo
+  when: ansible_distribution == 'Fedora' and (ansible_architecture == 'ppc64' or ansible_architecture == 'ppc64le' or ansible_architecture == 's390x') and datacenter != "aws"
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: put fedora repos on secondary architecture systems
+  template: src="{{ files }}/common/{{ item }}-secondary" dest="/etc/yum.repos.d/{{ item }}"
+  with_items:
+  - fedora-modular.repo
+  - fedora-updates-modular.repo
+  - fedora-updates-testing-modular.repo
+  when: ansible_distribution == 'Fedora' and ansible_distribution_major_version|int >= 29 and (ansible_architecture == 'ppc64le' or ansible_architecture == 's390x') and datacenter != "aws"
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: add aarch64 server rpms repo
+  copy: src="{{ files }}/common/rhel-{{ ansible_distribution_major_version|int }}-aarch64-server-rpms.repo" dest="/etc/yum.repos.d/rhel-{{ ansible_distribution_major_version|int }}-aarch64-server-rpms.repo"
+  when: (ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and inventory_hostname.startswith('aarch64-c') and ansible_distribution_major_version|int >= 7 and datacenter != "aws"
+  tags:
+  - config
+  - packages
+  - yumrepos
+
 - name: add infrastructure tags repo - RHEL
   copy: src="{{ files }}/common/rhel-infra-tags.repo" dest="/etc/yum.repos.d/infra-tags.repo"
   when: (ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS')
@@ -9,7 +158,7 @@
 
 - name: add infrastructure STAGING tags repo - RHEL
   copy: src="{{ files }}/common/rhel-infra-tags-stg.repo" dest="/etc/yum.repos.d/infra-tags-stg.repo"
-  when: (ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and env == 'staging'
+  when: (ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and env in ['staging', 'pagure-staging']
   tags:
   - config
   - packages
@@ -25,7 +174,7 @@
 
 - name: add infrastructure STAGING tags repo - Fedora
   copy: src="{{ files }}/common/fedora-infra-tags-stg.repo" dest="/etc/yum.repos.d/infra-tags-stg.repo"
-  when: ansible_distribution == 'Fedora' and env == 'staging'
+  when: ansible_distribution == 'Fedora' and env in ['staging', 'pagure-staging']
   tags:
   - config
   - packages

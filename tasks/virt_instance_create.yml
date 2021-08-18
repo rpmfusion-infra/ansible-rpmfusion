@@ -4,10 +4,17 @@
 - include_vars: dir=/srv/web/infra/ansible/vars/all/ ignore_files=README
 
 - name: get vm list
+  vars:
+    ansible_python_interpreter: "{{ hostvars[vmhost]['ansible_python']['executable'] }}"
   delegate_to: "{{ vmhost }}"
   virt: command=list_vms
   register: result
   check_mode: no
+
+- name: ensure no old facts exist
+  delegate_to: localhost
+  file: path=/root/.ansible_facts_cache/{{ inventory_hostname }} state=absent
+  when: inventory_hostname not in result.list_vms
 
 - name: ensure the lv for the guest is made
   lvol: lv={{ inventory_hostname }} vg={{ volgroup }} size={{ lvm_size }} state=present
@@ -90,8 +97,8 @@
   with_items:
   - /root/.ssh/known_hosts
   - /etc/ssh/ssh_known_hosts
-  when: inventory_hostname not in result.list_vms and inventory_hostname in groups['osbs-masters-stg']+groups['osbs-nodes-stg']
-  delegate_to: osbs-control01.stg.phx2.fedoraproject.org
+  when: inventory_hostname not in result.list_vms and inventory_hostname in groups['osbs_masters_stg']+groups['osbs_nodes_stg']
+  delegate_to: osbs-control01.stg.{{ datacenter }}.fedoraproject.org
 
 - name: (osbs-control01) make sure there is no old ssh host key for the host still around
   known_hosts: path={{item}} host={{ inventory_hostname }} state=absent
@@ -99,8 +106,8 @@
   with_items:
   - /root/.ssh/known_hosts
   - /etc/ssh/ssh_known_hosts
-  when: inventory_hostname not in result.list_vms and inventory_hostname in groups['osbs-masters']+groups['osbs-nodes']
-  delegate_to: osbs-control01.phx2.fedoraproject.org
+  when: inventory_hostname not in result.list_vms and inventory_hostname in groups['osbs_masters']+groups['osbs_nodes']
+  delegate_to: osbs-control01.{{ datacenter }}.fedoraproject.org
 
 - name: wait for ssh on the vm to start back
   local_action: wait_for delay=10 host={{ inventory_hostname }} port=22 state=started timeout=1200
@@ -125,8 +132,8 @@
   with_items:
   - /root/.ssh/known_hosts
   - /etc/ssh/ssh_known_hosts
-  when: inventory_hostname not in result.list_vms and inventory_hostname in groups['osbs-masters-stg']+groups['osbs-nodes-stg']
-  delegate_to: osbs-control01.stg.phx2.fedoraproject.org
+  when: inventory_hostname not in result.list_vms and inventory_hostname in groups['osbs_masters_stg']+groups['osbs_nodes_stg']
+  delegate_to: osbs-control01.stg.{{ datacenter }}.fedoraproject.org
 
 - name: (osbs-control01) add new ssh host key
   known_hosts: path={{item}} key="{{ hostkey.stdout }}" host={{ inventory_hostname }} state=present
@@ -134,6 +141,12 @@
   with_items:
   - /root/.ssh/known_hosts
   - /etc/ssh/ssh_known_hosts
-  when: inventory_hostname not in result.list_vms and inventory_hostname in groups['osbs-masters']+groups['osbs-nodes']
-  delegate_to: osbs-control01.phx2.fedoraproject.org
+  when: inventory_hostname not in result.list_vms and inventory_hostname in groups['osbs_masters']+groups['osbs_nodes']
+  delegate_to: osbs-control01.{{ datacenter }}.fedoraproject.org
 
+- name: gather facts
+  setup:
+  check_mode: no
+  ignore_errors: True
+  register: facts
+  when: inventory_hostname not in result.list_vms

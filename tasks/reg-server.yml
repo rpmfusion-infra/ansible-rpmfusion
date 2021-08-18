@@ -1,7 +1,6 @@
 - name: install reg-server
   package:
-    name: reg-server
-    state: latest
+    name: reg
   tags:
   - regserver
 
@@ -32,5 +31,19 @@
     src: "{{files}}/reg-server/cron-stg"
     dest: "/etc/cron.d/reg-server"
   when: env == "staging"
+  tags:
+  - regserver
+
+- name: Copy fedora icon
+  copy:
+    src: "{{files}}/reg-server/fedora.png"
+    dest: "/var/lib/reg-server/static/fedora.png"
+  tags:
+  - regserver
+
+- name: Copy custom styles.css
+  copy:
+    src: "{{files}}/reg-server/styles.css"
+    dest: "/var/lib/reg-server/static/css/styles.css"
   tags:
   - regserver
