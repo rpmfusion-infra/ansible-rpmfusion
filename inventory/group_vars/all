@@ -18,6 +18,7 @@ openshift_ansible: /srv/web/infra/openshift-ansible/
 freezes: true
 # most of our systems are in online
 datacenter: online
+preferred_dc: online
 postfix_group: "none"
 # for httpd/website
 server_admin: root@rpmfusion.org
@@ -71,8 +72,11 @@ eth0_nm: 255.255.255.0
 eth1_nm: 255.255.255.0
 br0_nm: 255.255.255.0
 br1_nm: 255.255.255.0
-# Default to managing the network, we want to not do this on select hosts (like cloud nodes)
-ansible_ifcfg_blacklist: false
+nm: 255.255.255.0
+
+# Default to managing the network, we want to not do this on select
+# hosts (like cloud nodes)
+ansible_ifcfg_blocklist: false
 # List of interfaces to explicitly disable
 ansible_ifcfg_disabled: []
 #
@@ -85,13 +89,28 @@ nfs_bridge: br1
 mac_address: RANDOM
 mac_address1: RANDOM
 
+
+virt_install_command_pxe_rhcos: virt-install -n {{ inventory_hostname }}
+  --vcpus {{ num_cpus }},maxvcpus={{ num_cpus }}
+  --cpu host
+  --memory  {{ mem_size }}
+  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
+  --nographics
+  --network bridge={{ main_bridge }},model=virtio,mac={{ mac_address }}
+  --hvm --accelerate
+  --autostart --wait=-1
+  --extra-args "ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:ens2:none hostname={{ inventory_hostname }} nameserver={{ dns }} console=ttyS0 nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.live.rootfs_url={{ rhcos_install_rootfs_url }} coreos.inst.ignition_url={{ rhcos_ignition_file_url }}"
+  --os-variant rhel7
+  --location  {{ rhcos_install_url }}
+
+
 virt_install_command_one_nic: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
                  --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
-                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyS0
+                 'net.ifnames=0 inst.ksdevice=eth0 inst.ks={{ ks_url }} console=tty0 console=ttyS0
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
-                  ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
+                  ip={{ eth0_ipv4 }}::{{ eth0_ipv4_gw }}:{{ eth0_ipv4_nm }}:{{ inventory_hostname }}:eth0:none'
                  --network bridge={{ main_bridge }},model=virtio,mac={{ mac_address }}
                  --autostart --noautoconsole --watchdog default --rng /dev/random --cpu host
 
@@ -99,7 +118,7 @@ virt_install_command_two_nic: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
                  --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
-                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyS0
+                 'net.ifnames=0 inst.ksdevice=eth0 inst.ks={{ ks_url }} console=tty0 console=ttyS0
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none
                   ip={{ eth1_ip }}:::{{ nm }}:{{ inventory_hostname_short }}-nfs:eth1:none'
@@ -111,9 +130,9 @@ virt_install_command_one_nic_unsafe: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }},cache=unsafe,io=threads
                  --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
-                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyS0
-                  hostname={{ inventory_hostname }} nameserver={{ dns }}
-                  ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
+                 'net.ifnames=0 inst.ksdevice=eth0 inst.ks={{ ks_url }} console=tty0 console=ttyS0
+                  hostname={{ inventory_hostname }} nameserver={{ dns1 }}
+                  ip={{ eth0_ipv4 }}::{{ eth0_ipv4_gw }}:{{ eth0_ipv4_nm }}:{{ inventory_hostname }}:eth0:none'
                  --network bridge={{ main_bridge }},model=virtio,mac={{ mac_address }}
                  --autostart --noautoconsole --watchdog default --rng /dev/random --cpu host
 
@@ -121,7 +140,7 @@ virt_install_command_two_nic_unsafe: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }},cache=unsafe,io=threads
                  --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
-                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyS0
+                 'net.ifnames=0 inst.ksdevice=eth0 inst.ks={{ ks_url }} console=tty0 console=ttyS0
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth1_ip }}:::{{ nm }}:{{ inventory_hostname_short }}-nfs:eth1:none
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
@@ -129,11 +148,21 @@ virt_install_command_two_nic_unsafe: virt-install -n {{ inventory_hostname }}
                  --network bridge={{ nfs_bridge }},model=virtio,mac={{ mac_address1 }}
                  --autostart --noautoconsole --watchdog default --rng /dev/random
 
+virt_install_command_ppc64le_one_nic_unsafe: virt-install -n {{ inventory_hostname }}
+                 --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
+                 --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }},cache=unsafe,io=threads
+                 --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
+                 'net.ifnames=0 inst.ksdevice=eth0 inst.ks={{ ks_url }} console=tty0 console=ttyS0
+                  hostname={{ inventory_hostname }} nameserver={{ dns }}
+                  ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
+                 --network bridge={{ main_bridge }},model=virtio,mac={{ mac_address }}
+                 --autostart --noautoconsole --watchdog default --rng /dev/random
+
 virt_install_command_ppc64le_two_nic_unsafe: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }},cache=unsafe,io=threads
                  --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
-                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyS0
+                 'net.ifnames=0 inst.ksdevice=eth0 inst.ks={{ ks_url }} console=tty0 console=ttyS0
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none
                   ip={{ eth1_ip }}:::{{ nm }}:{{ inventory_hostname_short }}-nfs:eth1:none'
@@ -145,7 +174,7 @@ virt_install_command_aarch64_one_nic: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
                  --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
-                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }}
+                 'net.ifnames=0 inst.ksdevice=eth0 inst.ks={{ ks_url }}
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
                  --network bridge={{ main_bridge }},model=virtio,mac={{ mac_address }}
@@ -155,7 +184,7 @@ virt_install_command_aarch64_one_nic_unsafe: virt-install -n {{ inventory_hostna
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }},cache=unsafe,io=threads
                  --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
-                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }}
+                 'net.ifnames=0 inst.ksdevice=eth0 inst.ks={{ ks_url }}
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
                  --network bridge={{ main_bridge }},model=virtio,mac={{ mac_address }}
@@ -165,7 +194,7 @@ virt_install_command_aarch64_2nd_nic: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
                  --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
-                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }}
+                 'net.ifnames=0 inst.ksdevice=eth0 inst.ks={{ ks_url }}
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
                  --network bridge={{ nfs_bridge }},model=virtio,mac={{ mac_address }}
@@ -175,7 +204,7 @@ virt_install_command_aarch64_two_nic: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
                  --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
-                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }}
+                 'net.ifnames=0 inst.ksdevice=eth0 inst.ks={{ ks_url }}
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none
                   ip={{ eth1_ip }}:::{{ nm }}:{{ inventory_hostname_short }}-nfs:eth1:none'
@@ -187,7 +216,7 @@ virt_install_command_armv7_one_nic: virt-install -n {{ inventory_hostname }} --a
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
                  --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
-                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyAMA0
+                 'net.ifnames=0 inst.ksdevice=eth0 inst.ks={{ ks_url }} console=tty0 console=ttyAMA0
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
                  --network bridge={{ main_bridge }}
@@ -197,17 +226,17 @@ virt_install_command_armv7_one_nic_unsafe: virt-install -n {{ inventory_hostname
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }},cache=unsafe,io=threads
                  --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
-                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }} console=tty0 console=ttyAMA0
+                 'net.ifnames=0 inst.ksdevice=eth0 inst.ks={{ ks_url }} console=tty0 console=ttyAMA0
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
                  --network bridge={{ main_bridge }}
-                 --autostart --noautoconsole --rng /dev/random
+                 --autostart --noautoconsole --rng /dev/random --qemu-commandline="-machine highmem=off"
 
 virt_install_command_s390x_one_nic: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
                  --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
-                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }}
+                 'net.ifnames=0 inst.ksdevice=eth0 inst.ks={{ ks_url }}
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
                  --network bridge={{ main_bridge }},model=virtio,mac={{ mac_address }}
@@ -217,7 +246,7 @@ virt_install_command_s390x_one_nic_unsafe: virt-install -n {{ inventory_hostname
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }} --memballoon virtio
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }},cache=unsafe,io=threads
                  --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
-                 'net.ifnames=0 ksdevice=eth0 ks={{ ks_url }}
+                 'net.ifnames=0 inst.ksdevice=eth0 inst.ks={{ ks_url }}
                   hostname={{ inventory_hostname }} nameserver={{ dns }}
                   ip={{ eth0_ip }}::{{ gw }}:{{ nm }}:{{ inventory_hostname }}:eth0:none'
                  --network bridge={{ main_bridge }},model=virtio,mac={{ mac_address }}
@@ -227,10 +256,10 @@ virt_install_command_rhel6: virt-install -n {{ inventory_hostname }}
                  --memory={{ mem_size }},maxmemory={{ max_mem_size }}
                  --disk bus=virtio,path={{ volgroup }}/{{ inventory_hostname }}
                  --vcpus={{ num_cpus }},maxvcpus={{ max_cpu }} -l {{ ks_repo }} -x
-                 "ksdevice=eth0 ks={{ ks_url }} ip={{ eth0_ip }} netmask={{ nm }}
+                 "inst.ksdevice=eth0 inst.ks={{ ks_url }} ip={{ eth0_ip }} netmask={{ nm }}
                   gateway={{ gw }} dns={{ dns }} console=tty0 console=ttyS0
                   hostname={{ inventory_hostname }}"
-                 --network=bridge=br1 --autostart --noautoconsole --watchdog default
+                 --network=bridge=br0 --autostart --noautoconsole --watchdog default
 
 max_mem_size: "{{ mem_size * 1 }}"
 max_cpu: "{{ num_cpus * 1 }}"
@@ -303,7 +332,7 @@ env_suffix: ""
 env_short: prod
 
 # nfs mount options, override at the group/host level
-nfs_mount_opts: "ro,hard,bg,noatime,nodev,nosuid,nfsvers=3"
+nfs_mount_opts: "ro,hard,bg,intr,noatime,nodev,nosuid,nfsvers=3"
 
 # by default set become to false here We can override it as needed.
 # Note that if become is true, you need to unset requiretty for
@@ -384,18 +413,18 @@ dns2: "62.210.16.6"
 # This is a list of services that need to wait for VPN to be up before getting started.
 postvpnservices: []
 
-# true or false if we are or are not a copr build virthost. 
+# true or false if we are or are not a copr build virthost.
 # Default to false
 copr_build_virthost: false
 
 #
-# Set a redirectmatch variable we can use to disable some redirectmatches 
+# Set a redirectmatch variable we can use to disable some redirectmatches
 # like the prerelease to final ones.
 #
 redirectmatch_enabled: True
 
 #
-# sshd can run a internal sftp server, we need this on some hosts, but 
+# sshd can run a internal sftp server, we need this on some hosts, but
 # not on most of them, so default to false
 sshd_sftp: false
 

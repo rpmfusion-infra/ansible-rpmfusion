@@ -53,7 +53,7 @@ centos66_x86_64: CentOS-6-x86_64-GenericCloud-20141129_01
 rhel70_x86_64: rhel-guest-image-7.0-20140930.0.x86_64
 rhel66_x86_64: rhel-guest-image-6.6-20141222.0.x86_64
 
-# Note: we do "all and blacklist" rather than whitelist to make sure we can use this
+# Note: we do "+all -some" rather than "+some" to make sure we can use this
 # same list on both EL7 and Fedora and get new ciphers: on Fedora, at time of writing,
 # this includes TLSv1.3, which EL7 does not have.
 ssl_protocols: "+all -SSLv3 -TLSv1 -TLSv1.1"

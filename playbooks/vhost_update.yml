@@ -1,4 +1,4 @@
-# This playboook updates a virthost and all it's guests. 
+# This playboook updates a virthost and all it's guests.
 #
 # requires --extra-vars="target=somevhostname yumcommand=update"
 # Might add nodns=true or nonagios=true at extra-vars
@@ -16,7 +16,7 @@
 
   - name: add them to myvms_new group
     local_action: add_host hostname={{ item }} groupname=myvms_new
-    with_items: vmlist.list_vms
+    with_items: '{{vmlist.list_vms}}'
 
 # Call out to another playbook.  Disable any proxies that may live here
 #- import_playbook: update-proxy-dns.yml status=disable proxies=myvms_new:&proxies
@@ -51,7 +51,7 @@
     command: dnf -y {{ yumcommand }}
     async: 7200
     poll: 30
-    when: ansible_distribution_major_version|int > 21 and ansible_cmdline.ostree is not defined
+    when: package_excludes is defined
 
 - name: run rkhunter if installed
   hosts:  "{{ target }}:myvms_new"
@@ -65,4 +65,4 @@
 
   - name: run rkhunter --propupd
     command: /usr/bin/rkhunter --propupd
-    when: rkhunter|success
+    when: rkhunter is success
