@@ -1,4 +1,4 @@
-#!/usr/bin/python -tt
+#!/usr/bin/python3
 #
 # Copyright 2012 Red Hat, Inc.
 # License: GPLv2+
@@ -111,11 +111,11 @@ def read_config_files(cfg_files):
     if results != True:
         for (section_list, key, unused_) in flatten_errors(options, results):
             if key is not None:
-                print 'The "%s" key in the section "%s" failed validation' % (
-                        key, ', '.join(section_list))
+                print('The "%s" key in the section "%s" failed validation' % (
+                        key, ', '.join(section_list)))
             else:
-                print 'The following section was missing:%s ' % ', '.join(
-                        section_list)
+                print('The following section was missing:%s ' % ', '.join(
+                        section_list))
         sys.exit(1)
 
     return options
@@ -159,8 +159,8 @@ def retry_fas(function, *args, **kwargs):
             return function(*args, **kwargs)
         except AuthError:
             retries += 1
-            password = getpass('FAS Password for %s:' % function.im_self.username)
-            function.im_self.password = password
+            password = getpass('FAS Password for %s:' % function.__self__.username)
+            function.__self__.password = password
             if retries >= MAX_RETRIES:
                 raise
 
@@ -203,4 +203,4 @@ if __name__ == '__main__':
 
     for user in sorted(ssh_keys.keys()):
         for key in ssh_keys[user]:
-            print '%s%s' % (from_string, key)
+            print('%s%s' % (from_string, key))

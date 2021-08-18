@@ -15,13 +15,36 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
+# Make coding more python3-ish
+from __future__ import (absolute_import, division, print_function)
+__metaclass__ = type
+
+DOCUMENTATION = r'''
+callback: logdetail
+callback_type: notification
+short_description: Logs playbook results, per date, playbook and host.
+description: Logs playbook results, per date, playbook and host, in I(log_path).
+options:
+  log_path:
+    description: The path where log files will be created.
+    default: /var/log/ansible
+    ini:
+    - section: callback_logdetail
+      key: log_path
+    env:
+    - name: ANSIBLE_LOGDETAIL_PATH
+'''
 
 import os
 import time
 import json
 import pwd
-from ansible import utils
+import gzip
+
+try:
+    from ansible.utils.hashing import secure_hash
+except ImportError:
+    from ansible.utils import md5 as secure_hash
 
 try:
     from ansible.plugins.callback import CallbackBase
@@ -29,31 +52,31 @@ except ImportError:
     # Ansible v1 compat
     CallbackBase = object
 
-TIME_FORMAT="%b %d %Y %H:%M:%S"
+TIME_FORMAT = "%b %d %Y %H:%M:%S"
 
-MSG_FORMAT="%(now)s\t%(count)s\t%(category)s\t%(name)s\t%(data)s\n"
+MSG_FORMAT = "%(now)s\t%(count)s\t%(category)s\t%(name)s\t%(data)s\n"
 
-LOG_PATH = '/var/log/ansible'
 
 def getlogin():
     try:
         user = os.getlogin()
-    except OSError, e:
+    except OSError as e:
         user = pwd.getpwuid(os.geteuid())[0]
     return user
 
+
 class LogMech(object):
-    def __init__(self):
+    def __init__(self, logpath):
         self.started = time.time()
         self.pid = str(os.getpid())
         self._pb_fn = None
         self._last_task_start = None
         self.play_info = {}
-        self.logpath = LOG_PATH
+        self.logpath = logpath
         if not os.path.exists(self.logpath):
             try:
                 os.makedirs(self.logpath, mode=0750)
-            except OSError, e:
+            except OSError as e:
                 if e.errno != 17:
                     raise
 
@@ -74,13 +97,13 @@ class LogMech(object):
     def logpath_play(self):
         # this is all to get our path to look nice ish
         tstamp = time.strftime('%Y/%m/%d/%H.%M.%S', time.localtime(self.started))
-        path = os.path.normpath(self.logpath + '/' + self.playbook_id +  '/' + tstamp + '/')
+        path = os.path.normpath(self.logpath + '/' + self.playbook_id + '/' + tstamp + '/')
 
         if not os.path.exists(path):
             try:
                 os.makedirs(path)
-            except OSError, e:
-                if e.errno != 17: # if it is not dir exists then raise it up
+            except OSError as e:
+                if e.errno != 17:  # if it is not dir exists then raise it up
                     raise
 
         return path
@@ -96,8 +119,8 @@ class LogMech(object):
     def task_to_json(self, task):
         res = {}
         res['task_name'] = task.name
-        res['task_module'] = task.module_name
-        res['task_args'] = task.module_args
+        res['task_module'] = task.action
+        res['task_args'] = task.args
         if self.playbook_id == 'ansible-cmd':
             res['task_userid'] = getlogin()
         for k in ("delegate_to", "environment", "with_first_found",
@@ -115,10 +138,9 @@ class LogMech(object):
             host = 'HOSTMISSING'
 
         if type(data) == dict:
-            name = data.get('module_name',None)
+            name = data.get('module_name', None)
         else:
             name = "unknown"
-
 
         # we're in setup - move the invocation  info up one level
         if 'invocation' in data:
@@ -126,11 +148,11 @@ class LogMech(object):
             if not name and 'module_name' in invoc:
                 name = invoc['module_name']
 
-            #don't add this since it can often contain complete passwords :(
+            # don't add this since it can often contain complete passwords :(
             del(data['invocation'])
 
         if task:
-            name = task.name
+            name = task._name
             data['task_start'] = self._last_task_start
             data['task_end'] = time.time()
             data.update(self.task_to_json(task))
@@ -143,7 +165,7 @@ class LogMech(object):
 
         if self.play_info.get('check', False) and self.play_info.get('diff', False):
             category = 'CHECK_DIFF:' + category
-        elif self.play_info.get('check', False):    
+        elif self.play_info.get('check', False):
             category = 'CHECK:' + category
 
         # Sometimes this is None.. othertimes it's fine.  Othertimes it has
@@ -152,13 +174,11 @@ class LogMech(object):
             name = name.strip()
 
         sanitize_host = host.replace(' ', '_').replace('>', '-')
-        fd = open(self.logpath_play + '/' + sanitize_host + '.log', 'a')
+        fd = gzip.open(self.logpath_play + '/' + sanitize_host + '.log.gz', 'at')
         now = time.strftime(TIME_FORMAT, time.localtime())
         fd.write(MSG_FORMAT % dict(now=now, name=name, count=count, category=category, data=json.dumps(data)))
         fd.close()
 
-
-logmech = LogMech()
 
 class CallbackModule(CallbackBase):
     """
@@ -172,101 +192,72 @@ class CallbackModule(CallbackBase):
     def __init__(self):
         self._task_count = 0
         self._play_count = 0
+        self.task = None
+        self.playbook = None
 
-    def on_any(self, *args, **kwargs):
-        pass
+        super(CallbackModule, self).__init__()
+        self.set_options()
+        self.logmech = LogMech(self.get_option('log_path'))
 
+    def set_play_context(self, play_context):
+        self.play_context = play_context
 
-    def runner_on_failed(self, host, res, ignore_errors=False):
+    def v2_runner_on_failed(self, result, ignore_errors=False):
         category = 'FAILED'
-        task = getattr(self,'task', None)
-        logmech.log(host, category, res, task, self._task_count)
+        self.logmech.log(result._host.get_name(), category, result._result, self.task, self._task_count)
 
-
-    def runner_on_ok(self, host, res):
+    def v2_runner_on_ok(self, result):
         category = 'OK'
-        task = getattr(self,'task', None)
-        logmech.log(host, category, res, task, self._task_count)
+        self.logmech.log(result._host.get_name(), category, result._result, self.task, self._task_count)
 
-
-    def runner_on_error(self, host, res):
-        category = 'ERROR'
-        task = getattr(self,'task', None)
-        logmech.log(host, category, res, task, self._task_count)
-
-    def runner_on_skipped(self, host, item=None):
+    def v2_runner_on_skipped(self, result):
         category = 'SKIPPED'
-        task = getattr(self,'task', None)
         res = {}
-        res['item'] = item
-        logmech.log(host, category, res, task, self._task_count)
+        res['item'] = self._get_item_label(getattr(result._result, 'results', {}))
+        self.logmech.log(result._host.get_name(), category, res, self.task, self._task_count)
 
-    def runner_on_unreachable(self, host, output):
+    def v2_runner_on_unreachable(self, result):
         category = 'UNREACHABLE'
-        task = getattr(self,'task', None)
         res = {}
-        res['output'] = output
-        logmech.log(host, category, res, task, self._task_count)
+        res['output'] = result._result
+        self.logmech.log(result._host.get_name(), category, res, self.task, self._task_count)
 
-    def runner_on_no_hosts(self):
-        pass
-
-    def runner_on_async_poll(self, host, res, jid, clock):
-        pass
-
-    def runner_on_async_ok(self, host, res, jid):
-        pass
-
-    def runner_on_async_failed(self, host, res, jid):
+    def v2_runner_on_async_failed(self, result):
         category = 'ASYNC_FAILED'
-        task = getattr(self,'task', None)
-        logmech.log(host, category, res, task, self._task_count)
+        self.logmech.log(result._host.get_name(), category, result._result, self.task, self._task_count)
 
-    def playbook_on_start(self):
-        pass
+    def v2_playbook_on_start(self, playbook):
+        self.playbook = playbook
 
-    def playbook_on_notify(self, host, handler):
-        pass
-
-    def playbook_on_no_hosts_matched(self):
-        pass
-
-    def playbook_on_no_hosts_remaining(self):
-        pass
-
-    def playbook_on_task_start(self, name, is_conditional):
-        logmech._last_task_start = time.time()
+    def v2_playbook_on_task_start(self, task, is_conditional):
+        self.task = task
+        if self.task:
+            self.task._name = task.get_name().strip()
+        self.logmech._last_task_start = time.time()
         self._task_count += 1
 
-    def playbook_on_vars_prompt(self, varname, private=True, prompt=None, encrypt=None, confirm=False, salt_size=None, salt=None, default=None):
-        pass
-
-    def playbook_on_setup(self):
+    def v2_playbook_on_setup(self):
         self._task_count += 1
-        pass
 
-    def playbook_on_import_for_host(self, host, imported_file):
-        task = getattr(self,'task', None)
+    def v2_playbook_on_import_for_host(self, result, imported_file):
         res = {}
         res['imported_file'] = imported_file
-        logmech.log(host, 'IMPORTED', res, task)
+        self.logmech.log(result._host.get_name(), 'IMPORTED', res, self.task)
 
-    def playbook_on_not_import_for_host(self, host, missing_file):
-        task = getattr(self,'task', None)
+    def v2_playbook_on_not_import_for_host(self, result, missing_file):
         res = {}
         res['missing_file'] = missing_file
-        logmech.log(host, 'NOTIMPORTED', res, task)
+        self.logmech.log(result._host.get_name(), 'NOTIMPORTED', res, self.task)
 
-    def playbook_on_play_start(self, pattern):
+    def v2_playbook_on_play_start(self, play):
         self._task_count = 0
 
-        play = getattr(self, 'play', None)
         if play:
             # figure out where the playbook FILE is
-            path = os.path.abspath(play.playbook.filename)
+            path = os.path.abspath(self.playbook._file_name)
 
             # tel the logger what the playbook is
-            logmech.playbook_id = path
+            self.logmech.playbook_id = path
 
             # if play count == 0
             # write out playbook info now
@@ -275,33 +266,35 @@ class CallbackModule(CallbackBase):
                 pb_info['playbook_start'] = time.time()
                 pb_info['playbook'] = path
                 pb_info['userid'] = getlogin()
-                pb_info['extra_vars'] = play.playbook.extra_vars
-                pb_info['inventory'] = play.playbook.inventory.host_list
-                pb_info['playbook_checksum'] = utils.md5(path)
-                pb_info['check'] = play.playbook.check
-                pb_info['diff'] = play.playbook.diff
-                logmech.play_log(json.dumps(pb_info, indent=4))
+                pb_info['extra_vars'] = play._variable_manager.extra_vars
+                pb_info['inventory'] = play._variable_manager._inventory._sources
+                pb_info['playbook_checksum'] = secure_hash(path)
+                if hasattr(self, "play_context"):
+                    pb_info['check'] = self.play_context.check_mode
+                    pb_info['diff'] = self.play_context.diff
+                self.logmech.play_log(json.dumps(pb_info, indent=4))
 
             self._play_count += 1
             # then write per-play info that doesn't duplcate the playbook info
             info = {}
             info['play'] = play.name
             info['hosts'] = play.hosts
-            info['transport'] = play.transport
             info['number'] = self._play_count
-            info['check'] = play.playbook.check
-            info['diff'] = play.playbook.diff
-            logmech.play_info = info
-            logmech.play_log(json.dumps(info, indent=4))
+            if hasattr(self, "play_context"):
+                info['transport'] = str(self.play_context.connection)
+                info['check'] = self.play_context.check_mode
+                info['diff'] = self.play_context.diff
+            self.logmech.play_info = info
+            try:
+                self.logmech.play_log(json.dumps(info, indent=4))
+            except TypeError:
+                print(("Failed to conver to JSON:", info))
 
-
-    def playbook_on_stats(self, stats):
+    def v2_playbook_on_stats(self, stats):
         results = {}
-        for host in stats.processed.keys():
+        for host in list(stats.processed.keys()):
             results[host] = stats.summarize(host)
-            logmech.log(host, 'STATS', results[host])
-        logmech.play_log(json.dumps({'stats': results}, indent=4))
-        logmech.play_log(json.dumps({'playbook_end': time.time()}, indent=4))
-        print 'logs written to: %s' % logmech.logpath_play
-
-
+            self.logmech.log(host, 'STATS', results[host])
+        self.logmech.play_log(json.dumps({'stats': results}, indent=4))
+        self.logmech.play_log(json.dumps({'playbook_end': time.time()}, indent=4))
+        print(('logs written to: %s' % self.logmech.logpath_play))

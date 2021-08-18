@@ -432,6 +432,7 @@ sshd_sftp: false
 # Autodetect python version
 #
 ansible_python_interpreter: auto
+
 #
 # datacenter with active certbot in it
 #

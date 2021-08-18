@@ -3,7 +3,7 @@
 # doteast porting to ansible 2.0
 # list hosts with ansible var[=value], Or
 # list all hosts with their corresponding vars
-# Note that the script will attempt to "match" the supplied value of the var against the values if it the var is multivalued  
+# Note that the script will attempt to "match" the supplied value of the var against the values if it the var is multivalued
 
 from ansible import constants as C
 from ansible.parsing.dataloader import DataLoader
@@ -23,46 +23,43 @@ parser.add_option('-a', action="store_true", dest='all_vars', default=None,
 opts, args = parser.parse_args(sys.argv[1:])
 
 if ((opts.variable == None and opts.all_vars == None) or (opts.variable != None and opts.all_vars != None)):
-	print "Usage: hosts_with_var_set -o varname[=value] | -a"
-	sys.exit(-1)
+    print("Usage: hosts_with_var_set -o varname[=value] | -a")
+    sys.exit(-1)
 
 loader = DataLoader()
 inv = InventoryManager(loader=loader, sources=opts.inventory)
 variable_manager = VariableManager(loader=loader, inventory=inv)
-matching=True
+matching = True
 
 if opts.variable != None:
-   if opts.variable.find("=") == -1:
- 	matching=False
-	var_name=opts.variable
-   else:
-	var_name,value = opts.variable.split('=') 
-	if value == "":
-   		value="None"
+    if opts.variable.find("=") == -1:
+        matching = False
+        var_name = opts.variable
+    else:
+        var_name, value = opts.variable.split('=')
+        if value == "":
+            value = "None"
 
 var_set = []
-
-for host in sorted(inv.get_hosts()):
+for host in inv.get_hosts():
     vars = variable_manager.get_vars(host=host)
     if opts.variable == None:
-	 # remove expanded 'all' groups
-  	 vars.pop('groups')
-	 vars['groups']=host.get_groups()
-	 print "%s\n%s\n" % (host.get_name(),vars)
+        # remove expanded 'all' groups
+        vars.pop('groups')
+        vars['groups'] = host.get_groups()
+        print("%s\n%s\n" % (host.get_name(), vars))
     else:
-	 if vars.has_key(var_name):
-	   if not matching:
-		var_set.append(host.get_name())
-	   else:
-      		if str(vars.get(var_name)).find(value) != -1:
-        		var_set.append(host.get_name())
-		
+        if var_name in vars:
+            if not matching:
+                var_set.append(host.get_name())
+            else:
+                if str(vars.get(var_name)).find(value) != -1:
+                    var_set.append(host.get_name())
+
 if opts.variable != None:
-	if not matching:
-		print 'hosts with variable %s:' % var_name
-	else:
-		print 'hosts with variable %s matching %s value' % (var_name,value)
-	for host in sorted(var_set):
-    		print host
-
-
+    if not matching:
+        print('hosts with variable %s:' % var_name)
+    else:
+        print('hosts with variable %s matching %s value' % (var_name, value))
+    for host in sorted(var_set):
+        print(host)

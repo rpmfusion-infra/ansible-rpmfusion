@@ -9,7 +9,7 @@ def invert_fedmsg_policy(groups, vars, env):
     """
 
     if env == 'staging':
-        hosts = groups['staging'] + groups['fedmsg-qa-network-stg']
+        hosts = groups['staging'] + groups['staging_friendly']
     else:
         hosts = [h for h in groups['all'] if h not in groups['staging']]
 
@@ -25,7 +25,7 @@ def invert_fedmsg_policy(groups, vars, env):
                 inverted[key] = inverted.get(key, [])
                 inverted[key].append(cert['service'] + '-' + fqdn)
 
-    result = inverted.items()
+    result = list(inverted.items())
     # Sort things so they come out in a reliable order (idempotence)
     [inverted[key].sort() for key in inverted]
     result.sort(key=operator.itemgetter(0))
