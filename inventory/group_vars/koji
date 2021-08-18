@@ -1,8 +1,8 @@
 ---
 # Define resources for this group of hosts here.
-lvm_size: 30000
-mem_size: 16384
-num_cpus: 16
+lvm_size: 20000
+mem_size: 2048
+num_cpus: 1
 
 # for systems that do not match the above - specify the same parameter in
 # the host_vars/$hostname file
