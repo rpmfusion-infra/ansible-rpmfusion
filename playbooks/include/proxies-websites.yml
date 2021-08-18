@@ -1,5 +1,5 @@
 - name: Set up those proxy websites.  My, my..
-  hosts: proxies-stg:proxies
+  hosts: proxies_stg:proxies
   user: root
   gather_facts: True
 
@@ -11,15 +11,9 @@
   handlers:
   - import_tasks: "{{ handlers_path }}/restart_services.yml"
 
-
-  pre_tasks:
-  - name: Install policycoreutils-python
-    package: name=policycoreutils-python state=present
-
+  tasks:
   - name: Create /srv/web/ for all the goodies.
-    file: >
-        dest=/srv/web state=directory
-        owner=root group=root mode=0755
+    file: dest=/srv/web state=directory owner=root group=root mode=0755
     tags:
     - httpd
     - httpd/website
