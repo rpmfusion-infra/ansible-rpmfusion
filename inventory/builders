@@ -64,11 +64,15 @@ arm-jetson-tx1.home.rpmfusion.net
 
 [builders:children]
 buildhw
+buildvm
+
+[buildhw:children]
 buildhw_armv7
 buildhw_ppc64
 buildhw_ppc64le
 buildhw_aarch64
-buildvm
+
+[buildvm:children]
 buildvm_aarch64
 buildvm_arm
 
