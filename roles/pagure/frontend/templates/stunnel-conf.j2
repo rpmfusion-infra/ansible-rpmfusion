@@ -1,0 +1,16 @@
+{% if env == 'pagure-staging' %}
+cert = /etc/pki/tls/certs/stg.pagure.io.bundle.cert
+key = /etc/pki/tls/private/stg.pagure.io.key
+{% else %}
+cert = /etc/pki/tls/certs/pagure.io.bundle.cert
+key = /etc/pki/tls/certs/pagure.io.key
+{% endif %}
+pid = /var/run/stunnel.pid
+
+[{{ stunnel_service }}]
+sslVersion = all
+options = NO_SSLv2
+options = NO_SSLv3
+options = NO_TLSv1
+accept = {{ stunnel_source_port }}
+connect = {{ stunnel_destination_port }}

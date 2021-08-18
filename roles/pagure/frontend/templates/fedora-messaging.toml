@@ -1,0 +1,25 @@
+# A sample configuration for fedora-messaging. This file is in the TOML format.
+# For complete details on all configuration options, see the documentation.
+
+{% if env == "pagure-staging" %}
+amqp_url = "amqps://pagure.stg:@rabbitmq.stg.fedoraproject.org/%2Fpubsub"
+{% else %}
+amqp_url = "amqps://pagure:@rabbitmq.fedoraproject.org/%2Fpubsub"
+{% endif %}
+
+# The topic_prefix configuration value will add a prefix to the topics of every sent message.
+# This is used for migrating from fedmsg, and should not be used afterwards.
+{% if env == "pagure-staging" %}
+topic_prefix = "io.pagure.stg"
+{% else %}
+topic_prefix = "io.pagure.prod"
+{% endif %}
+
+[tls]
+ca_cert = "/etc/pki/rabbitmq/pagurecert/pagure.ca"
+keyfile = "/etc/pki/rabbitmq/pagurecert/pagure.key"
+certfile = "/etc/pki/rabbitmq/pagurecert/pagure.crt"
+
+[client_properties]
+app = "pagure.io"
+

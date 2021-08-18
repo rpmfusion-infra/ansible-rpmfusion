@@ -1,0 +1,10 @@
+User-agent: *
+{% if env == 'pagure-staging' %}
+Disallow: /
+{% else %}
+Disallow: /api
+Disallow: /login
+Disallow: /*/raw
+Disallow: /*/blob
+Crawl-Delay: 2
+{% endif %}

@@ -1,0 +1,598 @@
+---
+# Configuration for the pagure webapp
+
+- name: install needed packages
+  package: name={{ item }} state=present
+  with_items:
+  - pagure
+  - pagure-ci
+  - pagure-ev
+  - pagure-loadjson
+  - pagure-logcom
+  - pagure-milters
+  - pagure-webhook
+  - python-psycopg2
+  - python2-pygments2
+  - redis
+  - libsemanage-python
+  - mod_ssl
+  - stunnel
+  # Use haveged to ensure the server keeps some entropy
+  - haveged
+  when: env != 'pagure-staging'
+  tags:
+  - pagure
+  - packages
+
+- name: install needed packages
+  package: name={{ item }} state=present
+  with_items:
+  - pagure
+  - pagure-ci
+  - pagure-ev
+  - pagure-loadjson
+  - pagure-logcom
+  - pagure-milters
+  - pagure-webhook
+  - python3-psycopg2
+  - python3-pygments
+  - redis
+  - python3-libsemanage
+  - mod_ssl
+  - stunnel
+  # Use haveged to ensure the server keeps some entropy
+  - haveged
+  when: env == 'pagure-staging'
+  tags:
+  - pagure
+  - packages
+
+- name: install needed packages
+  package: name={{ item }} state=present
+  when: env == 'pagure-staging'
+  with_items:
+  - pagure-theme-pagureio
+  tags:
+  - pagure
+  - packages
+
+- name: Initialize postgres if necessary
+  command: /usr/bin/postgresql-setup initdb
+           creates=/var/lib/pgsql/data
+  notify:
+  - restart postgresql
+  tags:
+  - pagure
+
+- name: Put in robots.txt
+  template: src=robots.txt.j2 dest=/var/www/html/robots.txt
+  tags:
+  - pagure
+
+
+- name: Create the "git" user
+  command: useradd --move-home --login git --home /srv/git/
+           creates=/srv/git/
+  when: env != 'pagure-staging'
+  tags:
+  - pagure
+
+- name: Create the "git" user
+  command: useradd --create-home --home-dir=/srv/git/  git
+           creates=/srv/git/
+  when: env == 'pagure-staging'
+  tags:
+  - pagure
+
+- name: create the /attachments folder
+  file: state=directory
+         path=/srv/attachments
+         owner=git group=git mode=0775
+  tags:
+  - pagure
+
+# This now fails when there are broken symlinks. Lets figure out a better way to do this - kevin
+#- name: Adjust owner of /srv/git
+#  file: name=/srv/git state=directory recurse=yes owner=git group=git
+#  tags:
+#  - gitolite
+
+- name: create all the directories where we store the git repos
+  file: state=directory
+               path={{ item }}
+               owner=git group=git mode=0775
+  with_items:
+  - /srv/git/repositories/
+  - /srv/git/repositories/forks
+  - /srv/git/repositories/docs
+  - /srv/git/repositories/tickets
+  - /srv/git/repositories/requests
+  - /srv/git/remotes
+  tags:
+  - pagure
+
+- name: create the /srv/tmp folder where to clone repos
+  file: state=directory
+               path=/srv/tmp
+               owner=git group=git mode=0775
+  tags:
+  - pagure
+
+# Set things up for the mirroring feature
+
+- name: create the `paguremirroring` group
+  group:
+      name: paguremirroring
+      state: present
+  tags:
+  - pagure
+  - mirror
+
+- name: create the `paguremirroring` user
+  user:
+      name: paguremirroring
+      group: paguremirroring
+      groups: paguremirroring,git
+      shell: /bin/nologin
+      home: /srv/mirror
+  tags:
+  - pagure
+  - mirror
+
+# We need the SSL certs early on
+
+- name: Install the SSL cert so that we can use https
+  copy: >
+      src={{ private}}/files/httpd/{{ item }} dest=/etc/pki/tls/certs/{{ item }}
+      owner=root group=root mode=0600
+  notify: restart stunnel
+  with_items:
+  - pagure.io.cert
+  - pagure.io.key
+  - pagure.io.intermediate.cert
+  tags:
+  - config
+  - pagure
+  - httpd/certificate
+
+# Set-up postfix and the milter for postfix
+
+- name: Add the /etc/aliases file
+  copy: src=aliases dest=/etc/aliases owner=root mode=644
+  tags:
+  - config
+  - pagure
+  - postfix
+  notify:
+  - restart postfix
+  - restart pagure_milter
+
+# Override pagure_ev systemd service file
+
+- name: install pagure_ev service definition
+  copy: src=pagure_ev.service
+        dest=/usr/lib/systemd/system/pagure_ev.service
+        owner=root group=root mode=0644
+  notify:
+  - reload systemd
+  - restart pagure_ev
+  tags:
+  - pagure
+  - pagure_ev
+
+# Set-up stunnel for the event source server
+
+- name: install stunnel service definition
+  copy: src=stunnel.service
+        dest=/usr/lib/systemd/system/stunnel.service
+        owner=root group=root mode=0644
+  notify:
+  - reload systemd
+  - restart stunnel
+  tags:
+  - pagure
+  - stunnel
+
+- name: ensure old stunnel init file is gone
+  file: dest=/etc/init.d/stunnel/stunnel.init state=absent
+  tags:
+  - pagure
+  - stunnel
+  - config
+
+- name: make a bundle file of the cert and intermediate for stunnel
+  shell: cat /etc/pki/tls/certs/pagure.io.cert /etc/pki/tls/certs/pagure.io.intermediate.cert > /etc/pki/tls/certs/pagure.io.bundle.cert creates=/etc/pki/tls/certs/pagure.io.bundle.cert
+  tags:
+  - pagure
+  - stunnel
+  - config
+  when: env != 'pagure-staging'
+
+- name: make a bundle file of the cert and intermediate for stunnel (stg)
+  shell: cat /etc/pki/tls/certs/stg.pagure.io.cert /etc/pki/tls/certs/stg.pagure.io.intermediate.cert > /etc/pki/tls/certs/stg.pagure.io.bundle.cert creates=/etc/pki/tls/certs/stg.pagure.io.bundle.cert
+  tags:
+  - pagure
+  - stunnel
+  - config
+  when: env == 'pagure-staging'
+
+- name: install stunnel.conf
+  template: src={{ item.file }}
+            dest={{ item.dest }}
+            owner=root group=root mode=0600
+  with_items:
+  - { file: stunnel-conf.j2, dest: /etc/stunnel/stunnel.conf }
+  notify: restart stunnel
+  tags:
+  - pagure
+  - stunnel
+  - config
+
+- name: Add the different service files for the different services
+  copy: src={{ item }}.service
+        dest=/etc/systemd/system/{{ item }}.service
+        owner=root group=root mode=0755
+  with_items:
+  - pagure_fast_worker
+  - pagure_medium_worker
+  - pagure_slow_worker
+  - pagure_mirror
+  notify:
+  - reload systemd
+  tags:
+  - pagure
+
+# setup fedora-messaging
+
+- name: install fedora-messaging as a dependency
+  package: name={{ item }} state=present
+  with_items:
+  - python2-fedora-messaging
+  when: env != 'pagure-staging'
+  tags:
+  - pagure
+  - fedora-messaging
+
+- name: install fedora-messaging as a dependency
+  package: name={{ item }} state=present
+  with_items:
+  - python3-fedora-messaging
+  when: env == 'pagure-staging'
+  tags:
+  - pagure
+  - fedora-messaging
+
+- name: create the config folder for fedora-messaging
+  file: path=/etc/fedora-messaging/ owner=root group=root mode=0755 state=directory
+  tags:
+  - pagure
+  - fedora-messaging
+
+- name: install the configuration file for fedora-messaging
+  template:
+      src=fedora-messaging.toml
+      dest=/etc/fedora-messaging/config.toml
+  tags:
+  - pagure
+  - fedora-messaging
+
+- name: create folder where we'll place the certs
+  file: path=/etc/pki/rabbitmq/pagurecert/ owner=root group=root mode=0755 state=directory
+  tags:
+  - pagure
+  - fedora-messaging
+
+- name: deploy pagure/rabbitmq certificate
+  copy: src={{ item.src }}
+        dest=/etc/pki/rabbitmq/pagurecert/{{ item.dest }}
+        owner={{ item.owner }} group={{ item.group}} mode={{ item.mode }}
+  when: env == 'pagure-staging'
+  with_items:
+    - src: "{{private}}/files/rabbitmq/staging/pki/issued/pagure.stg.crt"
+      dest: pagure.crt
+      owner: git
+      group: root
+      mode: "444"
+    - src: "{{private}}/files/rabbitmq/staging/pki/private/pagure.stg.key"
+      dest: pagure.key
+      owner: git
+      group: root
+      mode: "440"
+    - src: "{{private}}/files/rabbitmq/staging/pki/ca.crt"
+      dest: pagure.ca
+      owner: git
+      group: root
+      mode: "444"
+  tags:
+  - pagure
+  - fedora-messaging
+
+- name: deploy pagure/rabbitmq certificate
+  copy: src={{ item.src }}
+        dest=/etc/pki/rabbitmq/pagurecert/{{ item.dest }}
+        owner={{ item.owner }} group={{ item.group}} mode={{ item.mode }}
+  when: env != 'pagure-staging'
+  with_items:
+    - src: "{{private}}/files/rabbitmq/production/pki/issued/pagure.crt"
+      dest: pagure.crt
+      owner: git
+      group: root
+      mode: "444"
+    - src: "{{private}}/files/rabbitmq/production/pki/private/pagure.key"
+      dest: pagure.key
+      owner: git
+      group: root
+      mode: "440"
+    - src: "{{private}}/files/rabbitmq/production/pki/ca.crt"
+      dest: pagure.ca
+      owner: git
+      group: root
+      mode: "444"
+  tags:
+  - pagure
+  - fedora-messaging
+
+
+# Set-up Pagure
+
+- name: create the folders used for releases and archives
+  file: state=directory
+               path={{ item }}
+               owner=git group=git mode=0775
+  with_items:
+  - /var/www/releases
+  - /var/www/archives
+  tags:
+  - pagure
+  - web
+
+- name: copy sundry pagure configuration
+  template: src={{ item.file }}
+            dest={{ item.location }}/{{ item.file }}
+            owner=git group=postfix mode=0640
+  with_items:
+  - { file: pagure.cfg, location: /etc/pagure }
+  - { file: alembic.ini, location: /etc/pagure }
+  tags:
+  - config
+  - web
+  - pagure
+  notify:
+  - restart apache
+
+
+- name: create the database scheme
+  command: /usr/bin/python2 /usr/share/pagure/pagure_createdb.py
+  changed_when: "1 != 1"
+  environment:
+      PAGURE_CONFIG: /etc/pagure/pagure.cfg
+  when: env != 'pagure-staging'
+  tags:
+  - web
+  - pagure
+
+- name: create the database scheme
+  command: /usr/bin/python3 /usr/share/pagure/pagure_createdb.py
+  changed_when: "1 != 1"
+  environment:
+      PAGURE_CONFIG: /etc/pagure/pagure.cfg
+  when: env == 'pagure-staging'
+  tags:
+  - web
+  - pagure
+
+- name: Install the configuration file to activate https
+  template: src={{ item }} dest=/etc/httpd/conf.d/{{ item }}
+            owner=root group=root mode=0644
+  with_items:
+  - 0_pagure.conf
+  - securityheaders.conf
+  tags:
+  - files
+  - config
+  - pagure
+  - sslciphers
+  notify:
+  - restart apache
+
+- name: Install the wsgi file
+  template: src={{ item }}
+            dest=/var/www/{{ item }}
+            owner=git group=git mode=0644
+  with_items:
+  - pagure.wsgi
+  - docs_pagure.wsgi
+  tags:
+  - config
+  - web
+  - pagure
+  notify:
+  - restart apache
+
+- name: let paguremirroring read the pagure config
+  command: /usr/bin/setfacl -m user:paguremirroring:rx /etc/pagure/pagure.cfg
+  tags:
+  - pagure
+  - mirror
+
+- name: Add default facl so apache can read git repos
+  acl: default=yes etype=user entity=apache permissions="rx" name=/srv/git state=present
+  register: acl_updates
+  tags:
+  - pagure
+
+- name: Manually fix current default ACLs since Ansible doesnt know recursive acls
+  when: acl_updates.changed
+  command: /usr/bin/setfacl -Rdm user:apache:rx /srv/git
+  tags:
+  - pagure
+
+- name: Manually fix current ACLs since Ansible doesnt know recursive acls
+  when: acl_updates.changed
+  command: /usr/bin/setfacl -Rm user:apache:rx /srv/git
+  tags:
+  - pagure
+
+- name: check the selinux context of the git repo directory
+  command: matchpathcon /srv/git
+  register: distgitcontext
+  check_mode: no
+  changed_when: false
+  tags:
+  - config
+  - pagure
+  - selinux
+
+- name: set the SELinux policy for the distgit root directory
+  command: semanage fcontext -a -t gitosis_var_lib_t "/srv/git(/.*)?"
+  when: distgitcontext.stdout.find('gitosis_var_lib_t') == -1
+  tags:
+  - config
+  - pagure
+  - selinux
+
+- name: check the selinux context of the releases directory
+  command: matchpathcon /var/www/releases
+  register: distgitcontext
+  check_mode: no
+  changed_when: false
+  tags:
+  - config
+  - pagure
+  - selinux
+
+# Note: On Fedora its httpd_sys_content_rw_t - Don't we love confusions?
+- name: set the SELinux policy for the releases directory
+  command: semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/releases(/.*)?"
+  when: distgitcontext.stdout.find('httpd_sys_rw_content_t') == -1
+  tags:
+  - config
+  - pagure
+  - selinux
+
+- name: copy over our custom selinux module
+  copy: src=selinux/pagure.pp dest=/usr/local/share/pagure.pp
+  register: selinux_module
+  tags:
+  - pagure
+
+- name: install our custom selinux module
+  command: semodule -i /usr/local/share/pagure.pp
+  when: selinux_module is changed
+  tags:
+  - pagure
+
+- name: set sebooleans so pagure can talk to the network (db + redis)
+  seboolean: name=httpd_can_network_connect
+                    state=true
+                    persistent=true
+  tags:
+  - selinux
+  - web
+  - pagure
+
+- name: set sebooleans so apache can send emails
+  seboolean: name=httpd_can_sendmail
+                    state=true
+                    persistent=true
+  tags:
+  - selinux
+  - web
+  - pagure
+
+
+# Ensure all the services are up and running
+
+- name: Start and enable httpd, postfix, pagure_milter
+  service: name={{ item }} enabled=yes state=started
+  with_items:
+  - httpd
+  - postfix
+  - stunnel
+  - redis
+  - pagure_ev
+  - pagure_ci
+  - pagure_loadjson
+  - pagure_logcom
+  - pagure_milter
+  - pagure_webhook
+  - pagure_worker
+  - pagure_gitolite_worker
+  - pagure_fast_worker
+  - pagure_medium_worker
+  - pagure_slow_worker
+#  - pagure_api_key_expire_mail
+#  - pagure_api_key_expire_mail.timer
+  - pagure_mirror_project_in
+  - pagure_mirror_project_in.timer
+#  - fedmsg-relay
+  - haveged
+  ignore_errors: true
+  tags:
+  - pagure
+  - service
+  - postfix
+
+- name: setup logrotate to our needs
+  copy: src="{{ files }}/httpd/httpd.logrotate" dest=/etc/logrotate.d/httpd
+  tags:
+  - config
+  - apache
+
+- name: Add SAR script for pagure
+  copy: src=pagure_sar.py dest=/usr/local/bin/pagure_sar.py owner=git mode=0700
+  tags:
+  - SAR
+  - GDPR
+  - pagure
+
+- name: override the default syslog logrotate file
+  copy: src=syslog-logrotate dest=/etc/logrotate.d/syslog
+  tags:
+  - pagure
+  - logrotate
+
+- name: Letsencrypt for releases.stg.pagure.org
+  include_role: name=letsencrypt
+  vars:
+    site_name: releases.stg.pagure.org
+  when: env == 'pagure-staging'
+  tags:
+  - pagure
+  - letsencrypt
+
+- name: Letsencrypt for docs.stg.pagure.org
+  include_role: name=letsencrypt
+  vars:
+    site_name: docs.stg.pagure.org
+  when: env == 'pagure-staging'
+  tags:
+  - pagure
+  - letsencrypt
+
+- name: Letsencrypt for stg.pagure.org
+  include_role: name=letsencrypt
+  vars:
+    site_name: stg.pagure.org
+  when: env == 'pagure-staging'
+  tags:
+  - pagure
+  - letsencrypt
+
+- name: Letsencrypt for stg.pagure.io
+  include_role: name=letsencrypt
+  vars:
+    site_name: stg.pagure.io
+  when: env == 'pagure-staging'
+  tags:
+  - pagure
+  - letsencrypt
+
+- name: Letsencrypt for pagure.org
+  include_role: name=letsencrypt
+  vars:
+    site_name: pagure.org
+  when: env != 'pagure-staging'
+  tags:
+  - pagure
+  - letsencrypt
