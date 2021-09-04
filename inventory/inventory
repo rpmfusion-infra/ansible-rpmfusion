@@ -43,6 +43,10 @@ db02.online.rpmfusion.net
 [moin]
 moin01.online.rpmfusion.net
 
+[osuosl]
+buildppcle-01.osuosl.rpmfusion.net
+buildppcle-02.osuosl.rpmfusion.net
+
 [pkgdb]
 pkgdb02.online.rpmfusion.net
 
@@ -78,9 +82,9 @@ ansible_python_interpreter=/usr/bin/python3
 hv01.online.rpmfusion.net
 
 [scaleway]
-mirrorlist03.scaleway.rpmfusion.net
 proxy01.scaleway.rpmfusion.net
 #test01.scaleway.rpmfusion.net
+
 
 [virtservers:children]
 virthost
