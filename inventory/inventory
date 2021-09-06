@@ -45,6 +45,8 @@ moin01.online.rpmfusion.net
 
 [openqa_workers]
 
+[openqa_lab_workers]
+
 [osuosl]
 buildppcle-01.osuosl.rpmfusion.net
 buildppcle-02.osuosl.rpmfusion.net
