@@ -5,7 +5,7 @@
 
 - name: get vm list
   vars:
-    ansible_python_interpreter: "{{ hostvars[vmhost]['ansible_python']['executable'] }}"
+    ansible_python_interpreter: "/usr/bin/python3"
   delegate_to: "{{ vmhost }}"
   virt: command=list_vms
   register: result

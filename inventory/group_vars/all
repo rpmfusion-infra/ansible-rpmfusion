@@ -366,6 +366,10 @@ wsgi_wants_apache: true
 additional_host_keytabs: []
 ipa_server: ipa01.online.rpmfusion.org
 ipa_realm: RPMFUSION.ORG
+ipa_server_nodes:
+  - ipa01.online.rpmfusion.org
+  - ipa02.online.rpmfusion.org
+  #ipa03.online.rpmfusion.org
 ipa_admin_password: "{{ ipa_prod_admin_password }}"
 
 # Normal default sshd port is 22
@@ -433,7 +437,8 @@ sshd_sftp: false
 #
 ansible_python_interpreter: auto
 
-#
-# datacenter with active certbot in it
-#
-certgetter_datacenter: online
+# set no x-forward header by default
+x_forward: false
+
+# ocp4 is only set true in some proxy roles
+ocp4: false
