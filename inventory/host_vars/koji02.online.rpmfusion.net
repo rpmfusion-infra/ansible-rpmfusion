@@ -1,12 +1,11 @@
 ---
 nm: 255.255.255.0
-gw: 195.154.185.1
+gw: 192.168.181.254
 dns: 192.168.181.254
 ks_url: http://192.168.181.254/install/ks/koji02.ks
 
 volgroup: /dev/vg_hv03_virt
-eth0_ip: 212.83.132.100
-eth1_ip: 192.168.181.136
+eth0_ip: 192.168.181.140
 vmhost: hv01.online.rpmfusion.net
 datacenter: online
 
