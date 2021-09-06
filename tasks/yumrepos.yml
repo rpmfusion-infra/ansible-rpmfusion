@@ -33,6 +33,7 @@
   - config
   - packages
   - yumrepos
+  when: False
 
 - name: put rhel repos on rhel systems (power9)
   copy: src="{{ files }}/common/rhel{{ ansible_distribution_major_version|int }}-power9.repo" dest="/etc/yum.repos.d/rhel{{ ansible_distribution_major_version|int }}.repo"
@@ -65,6 +66,7 @@
   - config
   - packages
   - yumrepos
+  when: False
 
 - name: put epel repos on el systems (aws)
   copy: src="{{ files }}/common/original-epel{{ ansible_distribution_major_version|int }}.repo" dest="/etc/yum.repos.d/epel{{ ansible_distribution_major_version|int }}.repo"
