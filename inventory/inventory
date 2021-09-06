@@ -110,3 +110,5 @@ mirrorlist04.mv.rpmfusion.net
 [mirrorlist_server]
 mirrorlist06.hetzner.rpmfusion.net
 mirrorlist05.ovh.rpmfusion.net
+
+[zombie_infested]
