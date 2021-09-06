@@ -43,17 +43,18 @@ LoadPlugin vmem
 </Plugin>
 
 <Plugin "interface">
-  Interface "/^veth/"
+  Interface "/^veth.*"
+  Interface "/^vnet.*"
   IgnoreSelected true
 </Plugin>
 
 <Plugin "df">
   MountPoint "^/.*/.snapshot/"
-  MountPoint "^/var/lib/containers/storage/overlay/.*/merged/"
-  MountPoint "^/var/lib/containers/docker/devicemapper/.*/.*/"
-  MountPoint "^/var/lib/origin/openshift.local.volumes.*"
   MountPoint "^/run/containers/storage/overlay-containers/.*"
-  MountPoint "^/tmp/iso/mount/"
+  MountPoint "^/tmp/iso/mount/.*"
+  MountPoint "^/var/lib/containers/.*"
+  MountPoint "^/var/lib/docker/.*"
+  MountPoint "^/var/lib/origin.*"
   FSType "shm"
   FSType "tmpfs"
   FSType "overlay"

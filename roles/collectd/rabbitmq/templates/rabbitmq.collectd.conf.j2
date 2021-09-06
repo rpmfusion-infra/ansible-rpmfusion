@@ -13,6 +13,8 @@ LoadPlugin python
     VHostPrefix "stg"
 {% endif %}
     <Ignore "queue">
+      Regex "celery%40"
+      Regex "celeryev.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
       Regex "^federation%3A%20"
       Regex "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
     </Ignore>

@@ -2,11 +2,10 @@
 # collectd server setup
 
 # install pkg
-- name: install collectd server packages
+- name: install collectd server packages (rhel 7)
   package: name={{ item }} state=present
   with_items:
   - collectd-rrdtool
-  - collectd-ping
   - collectd-web
   - collectd-rabbitmq-data
   notify:
@@ -14,15 +13,21 @@
   tags:
   - config
   - collectd/server
+  when: ansible_distribution_major_version|int == 7
 
-# install collectd ping config
-- name: install collectd ping config
-  copy: src=ping.conf dest=/etc/collectd.d/ping.conf
+- name: install collectd server packages (rhel 8)
+  package: name={{ item }} state=present
+  with_items:
+  - collectd-rrdtool
+  - collectd-web
+  - collectd-rabbitmq-data
+  - collectd-ipa-data
   notify:
   - restart collectd
   tags:
   - config
   - collectd/server
+  when: ansible_distribution_major_version|int == 8
 
 # install collectd rrd config
 - name: install collectd rrd config
@@ -50,13 +55,6 @@
 # create /var/log/collectd as it's on a larger volume
 - name: create /var/log/collectd
   file: path=/var/log/collectd owner=root group=root mode=0755 state=directory
-  tags:
-  - config
-  - collectd/server
-
-# create a link from /var/lib/collectd to /var/log/collectd
-- name: create link from /var/lib/collectd to /var/log/collectd
-  file: state=link src=/var/log/collectd dest=/var/lib/collectd
   tags:
   - config
   - collectd/server
