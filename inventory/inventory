@@ -23,6 +23,8 @@ fas01.online.rpmfusion.net
 
 [ipa]
 
+[ipa_stg]
+
 [ipsilon]
 ipsilon01.online.rpmfusion.net
 
@@ -51,6 +53,8 @@ moin01.online.rpmfusion.net
 buildppcle-01.osuosl.rpmfusion.net
 buildppcle-02.osuosl.rpmfusion.net
 
+[pagure]
+
 [pkgdb]
 pkgdb02.online.rpmfusion.net
 
@@ -58,6 +62,8 @@ pkgdb02.online.rpmfusion.net
 pkgs01.online.rpmfusion.net
 
 [proxies]
+
+[proxies_stg]
 
 [releng_compose]
 bodhi-backend01.online.rpmfusion.net
