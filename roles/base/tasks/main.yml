@@ -5,24 +5,31 @@
 # Things in here are things we want to do to every machine no matter what.
 #
 
+#
+# on rhel6 and rhel7 installing policycoreutils-python is all we need for ansible
+#
 - name: ensure packages required for semanage are installed (rhel 6 and 7)
   package: name={{ item }} state=present
   with_items:
   - policycoreutils-python
   tags:
   - selinux
-  when: ansible_distribution_major_version|int < 8
+  when: ansible_distribution_major_version|int < 8 and ansible_distribution == 'RedHat'
 
+# 
+# On fedora and rhel larger than 7, all we need is policycoreutils-python-utils, 
+# which in turn pulls in python3-policycoreutils
+#
 - name: ensure packages required for semanage are installed (fedora/rhel8)
   package: name=policycoreutils-python-utils state=present
-  when: ansible_distribution_major_version|int > 27 and ansible_cmdline.ostree is not defined
+  when: ansible_distribution_major_version|int > 7
   tags:
   - selinux
 
 # XXX fixme # a datacenter 'fact' from setup
 - name: /etc/resolv.conf
   copy: src={{ item }} dest=/etc/resolv.conf
-  when: not nm_controlled_resolv
+  when: not nm_controlled_resolv or not network_connections is defined
   with_first_found:
   - "{{ resolvconf }}"
   - resolv.conf/{{ inventory_hostname }}
@@ -52,7 +59,7 @@
   ini_file: dest=/etc/NetworkManager/NetworkManager.conf section=main option=dns value=none
   notify:
   - restart NetworkManager
-  when: ansible_distribution_major_version|int >=7 and ansible_distribution != 'Fedora' and nmclitest is success and ( not ansible_ifcfg_blacklist) and not nm_controlled_resolv
+  when: ansible_distribution_major_version|int >=7 and ansible_distribution == 'RedHat' and nmclitest is success and ( not ansible_ifcfg_blocklist) and ( not nm_controlled_resolv ) and ( not network_connections is defined )
   tags:
    - config
    - resolvconf
@@ -63,7 +70,7 @@
   ini_file: dest=/etc/NetworkManager/NetworkManager.conf section=main option=dns value=none
   notify:
   - restart NetworkManager
-  when: ansible_distribution_major_version|int >=29 and ansible_distribution == 'Fedora' and nmclitest is success and ( not ansible_ifcfg_blacklist) and not nm_controlled_resolv
+  when: ansible_distribution_major_version|int >=29 and ansible_distribution == 'Fedora' and nmclitest is success and ( not ansible_ifcfg_blocklist) and ( not nm_controlled_resolv ) and ( not network_connections is defined )
   tags:
    - config
    - resolvconf
@@ -71,12 +78,12 @@
    - ifcfg
 
 - name: get interface uuid
-  shell: nmcli -f "DEVICE,UUID" c show --active | grep -E '^eth|^br|^em|^en'
+  shell: nmcli -f "DEVICE,UUID" c show --active | grep -E '^eth|^br|^em|^eno|^enP|^enc900'
   register: if_uuid
   changed_when: false
   failed_when: 'if_uuid.stdout == ""'
   check_mode: no
-  when: ansible_distribution_major_version|int >=7 and nmclitest is success and ( not ansible_ifcfg_blacklist )
+  when: ansible_distribution_major_version|int >=7 and nmclitest is success and ( not ansible_ifcfg_blocklist )
   tags:
    - config
    - ifcfg
@@ -92,13 +99,14 @@
   - apply interface-changes
   when: 
   - virthost is not defined
-  - item.startswith(('eth','br','enc','em'))
+  - item.startswith(('eth','br','enc','em','eno'))
   - hostvars[inventory_hostname]['ansible_' + item.replace('-','_')]['type'] == 'ether'
   - hostvars[inventory_hostname]['ansible_' + item.replace('-','_')]['active']
   - ansible_distribution_major_version|int >=7
   - nmclitest is success
-  - not ansible_ifcfg_blacklist
-  - ansible_ifcfg_whitelist is not defined or item in ansible_ifcfg_whitelist
+  - not ansible_ifcfg_blocklist
+  - ansible_ifcfg_allowlist is not defined or item in ansible_ifcfg_allowlist
+  - not network_connections is defined
   tags:
    - config
    - ifcfg
@@ -120,9 +128,16 @@
   tags:
   - packages
   - base
-  when: ansible_distribution_major_version|int > 21 and ansible_cmdline.ostree is not defined
+  when: ansible_distribution_major_version|int >= 8 and ansible_distribution == 'RedHat' and ansible_cmdline.ostree is not defined
 
-- name: make sure hostname is set right on rhel7 hosts
+- name: global default packages to install (dnf)
+  dnf: state=present name="{{ global_pkgs_inst }}"
+  tags:
+  - packages
+  - base
+  when: ansible_distribution_major_version|int > 29 and ansible_distribution == 'Fedora' and ansible_cmdline.ostree is not defined
+
+- name: make sure hostname is set right on all hosts
   hostname: name="{{inventory_hostname}}"
 
 #
@@ -258,7 +273,18 @@
 - name: enable journald persistence
   file: path=/var/log/journal state=directory
         owner=root group=systemd-journal mode=2755
-  when: ansible_distribution_major_version|int >= 7
+  when: ansible_distribution_major_version|int >= 7 and ansible_distribution == 'RedHat'
+  tags:
+  - journald
+  - config
+  - base
+  notify:
+  - flush journald tmpfiles to persistent store
+
+- name: enable journald persistence
+  file: path=/var/log/journal state=directory
+        owner=root group=systemd-journal mode=2755
+  when: ansible_distribution_major_version|int >= 29 and ansible_distribution == 'Fedora'
   tags:
   - journald
   - config
@@ -360,7 +386,7 @@
 
 - name: install our custom selinux module
   command: semodule -i /usr/local/share/rsyslog/rsyslog-audit.pp
-  when: selinux_module is changed and ansible_distribution_major_version|int < 31
+  when: selinux_module is changed and ansible_distribution_major_version|int > 6
   tags:
   - rsyslogd
   - config
@@ -370,7 +396,16 @@
 - name: copy over our custom selinux module
   copy: src=selinux/mapchkpwd.pp dest=/usr/local/share/mapchkpwd.pp
   register: selinux_module
-  when: ansible_distribution_major_version|int >= 27
+  when: ansible_distribution_major_version|int >= 29 and ansible_distribution == 'Fedora'
+  tags:
+  - config
+  - selinux
+
+# Custom selinux policy to allow unix_chkpwd to map PAM database
+- name: copy over our custom selinux module
+  copy: src=selinux/mapchkpwd.pp dest=/usr/local/share/mapchkpwd.pp
+  register: selinux_module
+  when: ansible_distribution_major_version|int >= 8 and ansible_distribution == 'RedHat'
   tags:
   - config
   - selinux
@@ -399,13 +434,6 @@
   - base
   - common-scripts
 
-- name: install a sync httpd logs cron script only on log01
-  copy: src=syncHttpLogs.sh dest=/etc/cron.daily/syncHttpLogs.sh mode=0755
-  when: inventory_hostname.startswith('log01')
-  tags:
-  - config
-  - base
-
 - name: Drop in a little system_identification note
   template: src=system_identification dest=/etc/system_identification
   tags:
@@ -413,15 +441,22 @@
   - base
 
 #
-# Blacklist the cdc_ether module as we don't want it loading mgmt usb0 and spewing to logs.
+# Disable the cdc_ether module as we don't want it loading mgmt usb0 and spewing to logs.
 #
-- name: Blacklist cdc_ether module
-  copy: src=blacklist-cdc_ether.conf dest=/etc/modprobe.d/blacklist-cdc_ether.conf
+- name: Disable cdc_ether module
+  copy: src=disable-cdc_ether.conf dest=/etc/modprobe.d/disable-cdc_ether.conf
   when: ansible_virtualization_role is defined and ansible_virtualization_role == 'host'
   tags:
   - config
   - base
   - cdc_ether
+
+# Remove old filename for above: remove this when we're pretty sure the file's
+# gone from all hosts
+- name: Remove old cdc_ether config file
+  file:
+    path: /etc/modprobe.d/blacklist-cdc_ether.conf
+    state: absent
 
 #
 # Watchdog stuff
@@ -479,7 +514,7 @@
 
 - name: Setup host keytab
   import_tasks: keytab.yml
-  when: env == 'DISABLED'
+  when: False
 
 # SSSD-KCM has been showing way too many bugs with it saying "I have a ticket" while the ticket
 # is actually expired, and kinit's still not refreshing them and such alike.
@@ -494,6 +529,17 @@
 # rhel8 hosts do not have /usr/bin/python, but there are a few things we call 
 # with that because they also run the same on python2 hosts. 
 # So, we set python3 to /usr/bin/python on those hosts:
+- name : ensure that platform-python is installed on EL8 boxes
+  package: name={{ item }} state=present
+  with_items:
+  - platform-python
+  when: ansible_distribution == 'RedHat' and ansible_distribution_major_version|int == 8
+  tags:
+  - base
+  - config
+  - python3alternative
+
+
 - name: set /usr/bin/python to python3 on rhel8 hosts
   alternatives:
     name: python

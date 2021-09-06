@@ -2,8 +2,11 @@ NAME="{{item}}"
 BOOTPROTO="none"
 NM_CONTROLLED=yes
 {% if item in ansible_ifcfg_infra_net_devices %}
-GATEWAY="{{gw}}"
+DEFROUTE=yes
+GATEWAY="{{ gw }}"
 {% endif %}
+DNS1="{{ dns1 }}"
+DNS2="{{ dns2 }}"
 HWADDR="{{ hostvars[inventory_hostname]['ansible_' + item]['macaddress']|upper }}"
 {% if item in ansible_ifcfg_disabled %}
 ONBOOT="no"
