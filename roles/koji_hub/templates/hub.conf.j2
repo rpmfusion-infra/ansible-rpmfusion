@@ -30,11 +30,7 @@ ProxyDNs = emailAddress=rpmfusion-buildsys@rpmfusion.org,CN=kojiweb,O=RPM Fusion
 
 ##  Other options  ##
 LoginCreatesUser = On
-{% if inventory_hostname.startswith('koji') %}
 KojiWebURL = https://koji.rpmfusion.org/koji
-{% elif inventory_hostname.startswith('arm-koji') %}
-KojiWebURL = http://arm.koji.rpmfusion.org/koji
-{% endif %}
 # The domain name that will be appended to Koji usernames
 # when creating email notifications
 EmailDomain = rpmfusion.org
@@ -45,6 +41,12 @@ DisableNotifications = True
 ## details to clients for anticipated errors (i.e. koji's own exceptions --
 ## subclasses of koji.GenericError).
 # KojiDebug = On
+
+## If MissingPolicyOk is on, and given policy is not set up,
+## policy test will pass as ok. If 'deny' result is desired, set it
+## to off
+# MissingPolicyOk = True
+MissingPolicyOk = False
 
 ## Determines how much detail about exceptions is reported to the client (via faults)
 ## Meaningful values:
@@ -68,9 +70,8 @@ DisableNotifications = True
 #Plugins = darkserver-plugin
 Plugins = runroot_hub hub_containerbuild
 
-{% if inventory_hostname.startswith('koji') %}
-[policy]
 
+[policy]
 
 tag =
     has_perm secure-boot && package kernel shim grub2 fedora-release fedora-repos pesign :: allow
@@ -107,12 +108,21 @@ channel =
 
     all :: use default
 
+
 build_from_srpm =
     has_perm admin :: allow
+    tag *-infra-candidate && has_perm infra :: allow
     all :: deny
 
 build_from_repo_id=
     has_perm admin :: allow
     all :: deny
 
-{% endif %}
+sidetag =
+    tag f36-*-build :: allow
+    tag f35-*-build :: allow
+    tag f34-*-build :: allow
+    tag f33-*-build :: allow
+    tag el8-*-build :: allow
+    tag el7-*-build :: allow
+    all :: deny

@@ -13,6 +13,7 @@
   - koji-containerbuild-hub
   - mod_ssl
   - mod_wsgi
+  - mod_auth_gssapi
   - git
   - gnupg2
   tags:
@@ -53,6 +54,14 @@
   # https://lists.fedoraproject.org/pipermail/buildsys/2015-April/004636.html
   when: env == 'staging'
 
+- name: set the apache mpm to use event MPM
+  copy: src=00-mpm.conf dest=/etc/httpd/conf.modules.d/00-mpm.conf
+  notify:
+  - reload proxyhttpd
+  tags:
+  - config
+  - koji_hub
+
 - name: hub config
   template: src=hub.conf.j2 dest=/etc/koji-hub/hub.conf owner=apache group=apache mode=600
   tags:
@@ -81,8 +90,134 @@
   - selinux
   - koji_hub
 
-- name: koji fedmsg plugin
-  template: src=fedmsg-koji-plugin.py dest=/usr/lib/koji-hub-plugins/fedmsg-koji-plugin.py
+- name: install fedora-messaging as a dependency for the plugin (rhel7)
+  package: name={{ item }} state=present
+  with_items:
+  - python2-fedora-messaging
+  - python2-koji-sidetag-plugin-hub
+  tags:
+  - packages
+  - koji_hub
+  - fedora-messaging
+  when: ansible_distribution == "RedHat" and ansible_distribution_major_version|int == 7
+
+- name: install fedora-messaging as a dependency for the plugin (fedora)
+  package: name={{ item }} state=present
+  with_items:
+  - python3-fedora-messaging
+  tags:
+  - packages
+  - koji_hub
+  - fedora-messaging
+  when: ansible_distribution == "Fedora"
+
+- name: create the config folder for fedora-messaging
+  file: path=/etc/fedora-messaging/ owner=root group=root mode=0755 state=directory
+  tags:
+  - koji_hub
+  - fedora-messaging
+
+- name: install the configuration file for fedora-messaging
+  template:
+      src=fedora-messaging.toml
+      dest=/etc/fedora-messaging/config.toml
+  tags:
+  - config
+  - koji_hub
+  - fedora-messaging
+
+- name: create folder where we'll place the certs
+  file: path=/etc/pki/rabbitmq/kojicert/ owner=root group=root mode=0755 state=directory
+  tags:
+  - config
+  - koji_hub
+  - fedora-messaging
+
+- name: deploy koji/rabbitmq certificate
+  copy: src={{ item.src }}
+        dest=/etc/pki/rabbitmq/kojicert/{{ item.dest }}
+        owner={{ item.owner }} group=root mode={{ item.mode }}
+  with_items:
+    - src: "{{private}}/files/rabbitmq/{{env}}/pki/issued/koji{{ env_suffix }}.crt"
+      dest: koji.crt
+      owner: apache
+      mode: 0644
+    - src: "{{private}}/files/rabbitmq/{{env}}/pki/private/koji{{ env_suffix }}.key"
+      dest: koji.key
+      owner: apache
+      mode: "600"
+    - src: "{{private}}/files/rabbitmq/{{env}}/pki/ca.crt"
+      dest: koji.ca
+      owner: apache
+      mode: 0644
+  tags:
+  - config
+  - koji_hub
+  - fedora-messaging
+
+# Since we're in freeze we'll have different plugins in prod and stg
+- name: koji fedora-messaging plugin - installed as fedmsg-koji-plugin
+  template:
+        src: fedmsg-koji-plugin.py
+        dest: /usr/lib/koji-hub-plugins/fedmsg-koji-plugin.py
+        mode: 644
+  notify:
+  - reload httpd
+  tags:
+  - config
+  - koji_hub
+  - fedora-messaging
+
+
+- name: install the configuration file for the sidetag plugin
+  copy:
+    src: sidetag.conf
+    dest: /etc/koji-hub/plugins/sidetag.conf
+  tags:
+  - koji_hub
+
+#
+# rpmautospec plugin
+#
+
+- name: uninstall koji hub rpmautospec plugin
+  package: name={{ item }} state=absent
+  with_items:
+  - koji-hub-plugin-rpmautospec
+  tags:
+  - packages
+  - koji_hub
+  - rpmautospec
+
+- name: remove obsolete configuration for rpmautospec
+  file:
+    path: "/etc/koji-hub/plugins/{{ item }}"
+    state: absent
+  loop:
+    - rpmautospec.conf
+    - rpmautospec.conf.rpmnew
+    - rpmautospec.conf.rpmsave
+    - rpmautospec.conf.rpmorig
+  tags:
+  - koji_hub
+  - rpmautospec
+
+#
+# install keytabs
+#
+
+- name: install koji-hub keytab
+  copy: src={{ private }}/files/keytabs/{{ env }}/koji-hub-{{ fedmsg_koji_instance }} dest=/etc/koji-hub/koji-hub.keytab
+        owner=apache group=apache mode=0600
+  notify:
+  - reload httpd
+  tags:
+  - config
+  - koji_hub
+
+- name: install GSSAPI keytab
+  copy: src={{ private }}/files/keytabs/{{ env }}/koji-gssapi dest=/etc/koji-hub/gssapi.keytab
+        owner=apache group=apache mode=0600
   notify:
   - reload httpd
   tags:
@@ -91,65 +226,6 @@
 
 #
 # install production certs and keys
-#
-- name: install kojiweb_cert_key.pem
-  copy: src={{ private }}/files/koji/kojiweb_cert_key.pem dest=/etc/pki/tls/private/kojiweb_cert_key.pem owner=apache mode=600
-  notify:
-  - reload httpd
-  tags:
-  - config
-  - koji_hub
-  when: env != 'staging' and ansible_hostname.startswith('koji')
-
-- name: install production koji_cert.pem
-  copy: src={{ private }}/files/koji/koji_cert.pem dest=/etc/pki/tls/certs/koji_cert.pem owner=apache mode=600
-  notify:
-  - reload httpd
-  tags:
-  - config
-  - koji_hub
-  when: env != 'staging' and ansible_hostname.startswith('koji')
-
-- name: install production koji_key.pem
-  copy: src={{ private }}/files/koji/koji_key.pem dest=/etc/pki/tls/private/koji_key.pem owner=apache mode=600
-  notify:
-  - reload httpd
-  tags:
-  - config
-  - koji_hub
-  when: env != 'staging' and ansible_hostname.startswith('koji')
-
-#
-# install production s390 certs and keys
-#
-- name: install s390 kojiweb_cert_key.pem
-  copy: src={{ private }}/files/koji/s390.koji.fedoraproject.org_key_and_cert.pem dest=/etc/pki/tls/private/kojiweb_cert_key.pem owner=apache mode=600
-  notify:
-  - reload httpd
-  tags:
-  - config
-  - koji_hub
-  when: ansible_hostname.startswith('s390')
-
-- name: install s390 production koji_cert.pem
-  copy: src={{ private }}/files/koji/s390_koji_cert.pem dest=/etc/pki/tls/certs/koji_cert.pem owner=apache mode=600
-  notify:
-  - reload httpd
-  tags:
-  - config
-  - koji_hub
-  when: ansible_hostname.startswith('s390')
-
-- name: install s390 production koji_key.pem
-  copy: src={{ private }}/files/koji/s390_koji_key.pem dest=/etc/pki/tls/private/koji_key.pem owner=apache mode=600
-  notify:
-  - reload httpd
-  tags:
-  - config
-  - koji_hub
-  when: ansible_hostname.startswith('s390')
-#
-# install production arm certs and keys
 #
 - name: install arm kojiweb_cert_key.pem
   copy: src={{ private }}/files/koji/arm.koji.fedoraproject.org_key_and_cert.pem dest=/etc/pki/tls/private/kojiweb_cert_key.pem owner=apache mode=600
@@ -215,21 +291,6 @@
   tags:
   - config
   - koji_hub
-  when: ansible_hostname.startswith('koji') or ansible_hostname.startswith('s390') or ansible_hostname.startswith('arm')
-
-- name: updatecrl script
-  copy: src=updatecrl.sh dest=/usr/local/bin/updatecrl.sh owner=root mode=755
-  tags:
-  - config
-  - koji_hub
-  - cron
-
-- name: updatecrl cronjob
-  copy: src=updatecrl.cron dest=/etc/cron.d/updatecrl owner=root mode=644
-  tags:
-  - config
-  - cron
-  - koji_hub
 
 - name: koji web common config files
   copy: src={{ item }} dest=/etc/httpd/conf.d/{{ item }} owner=root group=root
@@ -265,6 +326,7 @@
   tags:
   - config
   - koji_hub
+  - sslciphers
   notify: reload httpd
   when: env == "staging"
 
@@ -273,6 +335,7 @@
   tags:
   - config
   - koji_hub
+  - sslciphers
   notify: reload httpd
   when: env != "staging"
 
@@ -295,6 +358,8 @@
   tags:
   - config
   - koji_hub
+  notify:
+  - restart kojira
 
 - name: make an empty /mnt/rpmfusion_koji for stg.
   file: state=directory path=/mnt/rpmfusion_koji/koji owner=root group=root
@@ -327,12 +392,18 @@
   - selinux
   - koji_hub
 
+- name: set sebooleans so koji can run the fedora-messaging plugin
+  seboolean: name=httpd_execmem state=true persistent=true
+  tags:
+  - selinux
+  - koji_hub
+
 - name: set sebooleans so koji can anon write
   seboolean: name=httpd_anon_write state=true persistent=true
   tags:
   - selinux
   - koji_hub
-  when: ansible_distribution == "CentOS" and ansible_distribution_major_version|int == 7
+  when: ansible_distribution == "RedHat" and ansible_distribution_major_version|int == 7
 
 - name: Set httpd to run on boot
   service: name=httpd enabled=yes
@@ -343,12 +414,12 @@
   - service
   - koji_hub
 
-- name: Make sure kojira is set to not run on boot (controlled by keepalived)
-  service: name=kojira enabled=no
+- name: Make sure kojira is set to run on boot 
+  service: name=kojira enabled=yes
   tags:
   - service
   - koji_hub
-  when: env != 'staging' and ansible_hostname.startswith('koji')
+  when: ansible_hostname.startswith('koji02')
 
 - name: install cert for oscar (garbage collector) user
   copy: src={{ private }}/files/koji/gc/oscar_key_and_cert.pem dest=/etc/koji-gc/client.crt
