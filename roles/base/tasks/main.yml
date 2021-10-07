@@ -107,6 +107,7 @@
   - not ansible_ifcfg_blocklist
   - ansible_ifcfg_allowlist is not defined or item in ansible_ifcfg_allowlist
   - not network_connections is defined
+  - gw is defined
   tags:
    - config
    - ifcfg
