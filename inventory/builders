@@ -54,7 +54,7 @@ home_arm
 #arm-builder04.scaleway.rpmfusion.net
 
 [home_arm]
-arm-builder09.home.rpmfusion.net
+#arm-builder09.home.rpmfusion.net
 arm-builder10.home.rpmfusion.net
 arm-builder11.home.rpmfusion.net
 #arm-builder12.home.rpmfusion.net
