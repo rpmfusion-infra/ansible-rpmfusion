@@ -108,4 +108,12 @@ twitter:                twitter-members
 paypal:                 paypal-members
 security:               security-members
 
+# Fedora/EL GPG-KEYS
+rpmfusion-gpg-key-el8-free: root
+rpmfusion-gpg-key-el8-nonfree: root
+rpmfusion-gpg-key-el9-free: root
+rpmfusion-gpg-key-el9-nonfree: root
+rpmfusion-gpg-key-fedora-free-2020: root
+rpmfusion-gpg-key-fedora-nonfree-2020: root
+
 # Account System
