@@ -11,6 +11,7 @@
 - import_playbook: /srv/web/infra/ansible/playbooks/groups/koji-hub.yml
 - import_playbook: /srv/web/infra/ansible/playbooks/groups/kojipkgs.yml
 - import_playbook: /srv/web/infra/ansible/playbooks/groups/logserver.yml
+- import_playbook: /srv/web/infra/ansible/playbooks/groups/logserver2.yml
 - import_playbook: /srv/web/infra/ansible/playbooks/groups/memcached.yml
 - import_playbook: /srv/web/infra/ansible/playbooks/groups/packages.yml
 - import_playbook: /srv/web/infra/ansible/playbooks/groups/pkgdb.yml
