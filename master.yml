@@ -1,7 +1,6 @@
 ---
 
 
-- import_playbook: /srv/web/infra/ansible/playbooks/groups/autosign.yml
 - import_playbook: /srv/web/infra/ansible/playbooks/groups/bastion.yml
 - import_playbook: /srv/web/infra/ansible/playbooks/groups/bodhi2.yml
 - import_playbook: /srv/web/infra/ansible/playbooks/groups/buildvm.yml
@@ -20,3 +19,4 @@
 - import_playbook: /srv/web/infra/ansible/playbooks/groups/proxies.yml
 - import_playbook: /srv/web/infra/ansible/playbooks/groups/sign-bridge.yml
 - import_playbook: /srv/web/infra/ansible/playbooks/groups/virthost.yml
+- import_playbook: /srv/web/infra/ansible/playbooks/groups/virthost2.yml
