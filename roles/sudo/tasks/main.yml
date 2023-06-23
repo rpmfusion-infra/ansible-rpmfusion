@@ -8,7 +8,7 @@
 #
 - name: setup /etc/sudoers.d/01-sysadmin-main
   copy: src="{{ private }}/files/sudo/sysadmin-main" dest=/etc/sudoers.d/01-sysadmin-main owner=root group=root mode=0600
-  when: sudoers_main is not defined
+  when: "sudoers_main is not defined and (primary_auth_source | default('fas')) == 'fas'"
   tags:
   - config
   - sudo
@@ -44,6 +44,7 @@
   - "{{ private }}/files/sudo/{{ ansible_hostname }}-sudoers"
   - "{{ private }}/files/sudo/{{ ansible_domain }}-sudoers"
   - "{{ private }}/files/sudo/default"
+  when: inventory_hostname.startswith('batcave')
   tags:
   - config
   - sudo
