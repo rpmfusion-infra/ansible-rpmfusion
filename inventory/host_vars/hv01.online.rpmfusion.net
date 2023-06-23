@@ -1,6 +1,6 @@
 ---
 
-ansible_ifcfg_blacklist: true
+ansible_ifcfg_blocklist: true
 freezes: true
 dns: 62.210.16.6
 gw: 195.154.185.1

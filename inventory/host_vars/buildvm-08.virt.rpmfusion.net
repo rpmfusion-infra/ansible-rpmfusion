@@ -1,6 +1,6 @@
 ---
 datacenter: virt
-ansible_ifcfg_blacklist: True
+ansible_ifcfg_blocklist: true
 
 #
 # We need to mount koji storage rw here so run_root can work.
