@@ -4,7 +4,7 @@
 aarch64-03.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_python_interpreter=/usr/bin/python3
 aarch64-04.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_python_interpreter=/usr/bin/python3
 aarch64-jetson-tx1.home.rpmfusion.net
-aarch64-10.home.rpmfusion.net
+#aarch64-10.home.rpmfusion.net
 
 [buildvm]
 buildvm-01.online.rpmfusion.net
@@ -13,9 +13,6 @@ buildvm-02.online.rpmfusion.net
 [buildvm_stg]
 
 [buildvm_aarch64]
-
-[buildvm_arm]
-arm-jetson-tx1.home.rpmfusion.net
 
 [buildhw]
 buildvm-03.online.rpmfusion.net
@@ -30,10 +27,6 @@ buildvm-08.virt.rpmfusion.net
 buildppcle-01.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
 buildppcle-02.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
 
-[buildhw_armv7:children]
-home_arm
-scaleway_c1
-
 [bkernel]
 
 
@@ -44,38 +37,17 @@ buildhw_aarch64
 buildhw_ppc64
 buildhw_ppc64le
 
-[home:children]
-home_arm
-
-[scaleway_c1]
-#arm-builder01.scaleway.rpmfusion.net
-#arm-builder02.scaleway.rpmfusion.net
-#arm-builder03.scaleway.rpmfusion.net
-#arm-builder04.scaleway.rpmfusion.net
-
-[home_arm]
-#arm-builder09.home.rpmfusion.net
-arm-builder10.home.rpmfusion.net
-arm-builder11.home.rpmfusion.net
-#arm-builder12.home.rpmfusion.net
-arm-jetson-tk1.home.rpmfusion.net
-arm-jetson-tx1.home.rpmfusion.net
-arm-pi4.home.rpmfusion.net
-
-
 [builders:children]
 buildhw
 buildvm
 
 [buildhw:children]
-buildhw_armv7
 buildhw_ppc64
 buildhw_ppc64le
 buildhw_aarch64
 
 [buildvm:children]
 buildvm_aarch64
-buildvm_arm
 
 [builders:vars]
 ansible_python_interpreter=/usr/bin/python3
