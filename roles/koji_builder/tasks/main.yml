@@ -78,6 +78,7 @@
     - koji-builder-plugins
     - python3-koji
     - koji-containerbuild-builder
+    - libvirt-daemon
     - strace
     - mock
     - rsyslog
@@ -87,6 +88,7 @@
     - libvirt-client
     - pykickstart
     - nosync
+    - oz
   tags:
   - koji_builder
 
@@ -100,7 +102,6 @@
   service: name=virtlogd state=started enabled=yes
   tags:
   - koji_builder
-  when: ansible_architecture == 'disabled'
 
 - name: create kojid service override directory
   file: path=/etc/systemd/system/kojid.service.d state=directory
