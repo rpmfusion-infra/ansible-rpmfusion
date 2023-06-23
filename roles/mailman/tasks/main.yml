@@ -8,7 +8,7 @@
 # TODO: switch to the sefcontext module when we update Ansible to 2.2+
 #
 - name: install semanage
-  yum: pkg=policycoreutils-python state=present
+  package: name=policycoreutils-python state=present
   tags:
   - mailman
   - selinux
@@ -86,7 +86,7 @@
   tags: mailman
 
 - name: install GPG to validate the key
-  yum: state=present name=gnupg
+  package: state=present name=gnupg
   tags: mailman
 
 - name: add the GPG key
@@ -94,27 +94,28 @@
   tags: mailman
 
 - name: install needed packages
-  yum: pkg={{ item }} state=present
-  with_items:
-  - python-psycopg2
-  - python34-psycopg2
-  - hyperkitty
-  - hyperkitty-selinux
-  - postorius
-  - memcached
-  - python-pylibmc
-  - python-django-haystack-xapian
-  - yum-plugin-post-transaction-actions
-  # to run the test suite:
-  - python-beautifulsoup4
-  - python-mock
-  - python-whoosh
-  - python-tox
-  - python-vcrpy
-  # scripts
-  - python34-PyYAML
-  # mailman soft dep to convert html to plaintext
-  - lynx
+  package: 
+    name: 
+     - python-psycopg2
+     - python34-psycopg2
+     - hyperkitty
+     - hyperkitty-selinux
+     - postorius
+     - memcached
+     - python-pylibmc
+     - python-django-haystack-xapian
+     - yum-plugin-post-transaction-actions
+     # to run the test suite:
+     - python-beautifulsoup4
+     - python-mock
+     - python-whoosh
+     - python-tox
+     - python-vcrpy
+     # scripts
+     - python34-PyYAML
+     # mailman soft dep to convert html to plaintext
+     - lynx
+    state: present
   tags:
   - packages
   - mailman
@@ -131,7 +132,7 @@
   tags: mailman
 
 - name: install the mailman3 fedmsg plugin rpm
-  yum: pkg=mailman3-fedmsg-plugin
+  package: name=mailman3-fedmsg-plugin
   notify: restart mailman3
   when: ansible_distribution == 'RedHat'
   tags: mailman
@@ -144,11 +145,12 @@
   notify: restart mailman3
 
 - name: install packages
-  yum: pkg={{ item }} state=present
-  with_items:
-  - mailman3
-  - mailman3-selinux
-  - mailman3-hyperkitty
+  package: 
+    name:
+      - mailman3
+      - mailman3-selinux
+      - mailman3-hyperkitty
+    state: present
   tags:
   - packages
   - mailman
