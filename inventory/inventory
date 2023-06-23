@@ -77,7 +77,6 @@ sign-vault01.online.rpmfusion.net ansible_ssh_user=root
 [squid]
 hv01.online.rpmfusion.net
 bastion02.linaro.rpmfusion.net ansible_become=yes ansible_ssh_user=cloud-user
-bastion03.virt.rpmfusion.net
 buildppcle-01.osuosl.rpmfusion.net
 buildppcle-02.osuosl.rpmfusion.net
 
