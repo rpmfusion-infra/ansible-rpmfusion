@@ -80,8 +80,6 @@
     - koji-containerbuild-builder
     - strace
     - mock
-    - ntp
-    - ntpdate
     - rsyslog
     - audit
     - pycdio
