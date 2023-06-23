@@ -15,13 +15,13 @@
   - "/srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml"
 
   roles:
-  - base
-  - rkhunter
-  - nagios_client
+#  - base
+#  - rkhunter
+#  - nagios_client
   - hosts
   - fas_client
-  - collectd/base
-  - sudo
+#  - collectd/base
+#  - sudo
   - spamassassin
   - mod_wsgi
 
@@ -55,6 +55,7 @@
 - name: setup the database
   hosts: mailman_db-stg:mailman_db
   gather_facts: no
+  user: root
   become: yes
   become_user: postgres
   become_method: su
@@ -97,7 +98,7 @@
     mailman_hyperkitty_admin_db_pass: "{{ mailman_hk_admin_db_pass }}"
     mailman_hyperkitty_db_pass: "{{ mailman_hk_db_pass }}"
     mailman_hyperkitty_cookie_key: "{{ mailman_hk_cookie_key }}"
-  - fedmsg/base
+#  - fedmsg/base
 
   tasks:
   - name: install more needed packages
