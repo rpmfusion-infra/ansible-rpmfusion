@@ -100,7 +100,7 @@
   service: name=virtlogd state=started enabled=yes
   tags:
   - koji_builder
-  when: ansible_architecture != 'armv7l'
+  when: ansible_architecture == 'disabled'
 
 - name: create kojid service override directory
   file: path=/etc/systemd/system/kojid.service.d state=directory
