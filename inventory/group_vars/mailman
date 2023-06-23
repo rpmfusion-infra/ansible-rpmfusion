@@ -41,18 +41,6 @@ mailman_login:
   github:
     display_name: GitHub
     provider: github
-  twitter:
-    display_name: Twitter
-    provider: twitter
-  google:
-    display_name: Google
-    provider: google
-  facebook:
-    display_name: Facebook
-    provider: facebook
-  stackexchange:
-    display_name: StackExchange
-    provider: stackexchange
 
 # by default, the number of emails in queue before we whine
 nrpe_check_postfix_queue_warn: 100
