@@ -430,7 +430,8 @@ redirectmatch_enabled: True
 #
 # sshd can run a internal sftp server, we need this on some hosts, but
 # not on most of them, so default to false
-sshd_sftp: false
+# rpmfusion sane default:
+sshd_sftp: true
 
 #
 # Autodetect python version
