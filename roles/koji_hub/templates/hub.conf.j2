@@ -101,11 +101,13 @@ channel =
     source */chromium-* && bool scratch :: deny
     source */chromium-* :: use powerbuilder
     source */kodi* :: use powerbuilder
+    source */megasync* :: use powerbuilder
     source */libopenshot* :: use powerbuilder
     source */qt5-qtwebengine-freeworld* :: use powerbuilder
     source */telegram-desktop* :: use powerbuilder
 
-    method build && bool scratch :: use default
+    method build && bool scratch && has_perm admin :: allow
+    method build && bool scratch :: deny
 
     all :: use default
 
