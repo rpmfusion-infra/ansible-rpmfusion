@@ -78,9 +78,11 @@
     - koji-builder-plugins
     - python3-koji
     - koji-containerbuild-builder
-    - libvirt-daemon
     - strace
     - mock
+    - mock-rpmautospec
+    - kernel-firmware
+    - kernel-modules
     - rsyslog
     - audit
     - pycdio
@@ -88,10 +90,36 @@
     - libvirt-client
     - pykickstart
     - nosync
-    - oz
   tags:
   - koji_builder
+#
+# rpmautospec plugin
+#
 
+- name: remove koji builder rpmautospec plugin
+  package:
+    name:
+      - koji-builder-plugin-rpmautospec
+      - python3-rpmautospec
+      - rpmautospec
+    state: absent
+  tags:
+  - packages
+  - koji_builder
+  - rpmautospec
+
+- name: remove obsolete configuration of rpmautospec
+  file:
+    path: "/etc/kojid/plugins/{{ item }}"
+    state: absent
+  loop:
+    - rpmautospec.conf
+    - rpmautospec.conf.rpmnew
+    - rpmautospec.conf.rpmsave
+    - rpmautospec.conf.rpmorig
+  tags:
+  - koji_builder
+  - rpmautospec
 - name: Install arm UEFI firmware package (aarch64 only)
   package: name=edk2-arm state=present
   tags:
@@ -301,3 +329,9 @@
   - koji_builder
   - koji_builder/rngd
   when: ansible_architecture != 's390x'
+
+- name: disable systemd-oomd we do not need or want it
+  systemd: name=systemd-oomd state=stopped enabled=no masked=true
+  tags:
+  - koji_builder
+  - koji_builder/oomd
