@@ -1,8 +1,7 @@
 ---
 dist_tag: f{{ ansible_distribution_version }}
-base_pkgs_inst: ['iptables-services' ]
-base_pkgs_erase: ['firewalld', 'sendmail', 'at']
-service_disabled: [ ]
-service_enabled: ['auditd','logrotate.timer']
+base_pkgs_inst: ['iptables-services', 'cronie']
+base_pkgs_erase: ['firewalld', 'sendmail', 'at', 'pam_sss']
+service_disabled: []
+service_enabled: ['auditd', 'logrotate.timer']
 is_fedora: True
-pythonsitelib: /usr/lib/python2.7/site-packages
