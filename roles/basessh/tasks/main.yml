@@ -146,7 +146,7 @@
   - base
 
 - set_fact:
-    pubkeydir: "/tmp/sshkeysign/{{inventory_hostname}}"
+    pubkeydir: "/var/tmp/sshkeysign/{{inventory_hostname}}"
   tags:
   - basessh
   - sshd_cert
@@ -157,9 +157,7 @@
 
 - name: Create directory for storing pubkeys
   file: path="{{pubkeydir}}"
-        owner=root
-        group=root
-        mode=0600
+        mode=0700
         state=directory
   delegate_to: localhost
   run_once: true
