@@ -1,0 +1,3 @@
+---
+datacenter: home
+ansible_ifcfg_blocklist: true
