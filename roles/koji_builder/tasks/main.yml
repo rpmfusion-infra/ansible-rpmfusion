@@ -70,6 +70,16 @@
   tags:
   - koji_builder
 
+- name: Install some builders repositories
+  copy:
+    src: infra-builders.repo
+    dest: /etc/yum.repos.d/infra-builders.repo
+  with_items:
+    - infra-builders.repo
+    - _copr\:copr.fedorainfracloud.org\:kwizart\:infrastructure.repo
+  tags:
+    - koji_builder
+
 - name: add pkgs
   package:
     state: present

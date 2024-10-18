@@ -1,0 +1,5 @@
+[infra-builders]
+name=RPM Fusion - Free - Infra builders
+baseurl=https://koji.rpmfusion.org/buildsys-override/infra-builders/$basearch/
+enabled=1
+gpgcheck=0

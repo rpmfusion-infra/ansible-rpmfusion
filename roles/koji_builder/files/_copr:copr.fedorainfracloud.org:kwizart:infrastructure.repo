@@ -1,0 +1,10 @@
+[copr:copr.fedorainfracloud.org:kwizart:infrastructure]
+name=Copr repo for infrastructure owned by kwizart
+baseurl=https://download.copr.fedorainfracloud.org/results/kwizart/infrastructure/fedora-$releasever-$basearch/
+type=rpm-md
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=https://download.copr.fedorainfracloud.org/results/kwizart/infrastructure/pubkey.gpg
+repo_gpgcheck=0
+enabled=1
+enabled_metadata=1
