@@ -4,7 +4,7 @@
 aarch64-03.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_python_interpreter=/usr/bin/python3
 aarch64-04.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_python_interpreter=/usr/bin/python3
 aarch64-jetson-tx1.home.rpmfusion.net
-#aarch64-10.home.rpmfusion.net
+aarch64-jetson-orin.home.rpmfusion.net
 
 [buildvm]
 buildvm-01.online.rpmfusion.net
