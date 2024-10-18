@@ -23,7 +23,6 @@
   - koji_builder
 #  - { role: bkernel, when: inventory_hostname.startswith('bkernel') }
   - hosts
-  - { role: fas_client, when: not inventory_hostname.startswith('bkernel') }
   - { role: sudo, when: not inventory_hostname.startswith('bkernel') }
 
   tasks:

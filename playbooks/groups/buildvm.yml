@@ -23,7 +23,6 @@
   - hosts
   - { role: openvpn/client, when: datacenter != "online" }
   - { role: nfs/client, mnt_dir: '/mnt/rpmfusion_koji',  nfs_src_dir: "{{ koji_hub_nfs }}" }
-  - { role: fas_client, when: not inventory_hostname.startswith('bkernel') }
   - { role: sudo, when: not inventory_hostname.startswith('bkernel') }
   - koji_builder
 
