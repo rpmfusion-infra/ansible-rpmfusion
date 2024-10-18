@@ -1,3 +1,4 @@
 ---
 datacenter: home
 ansible_ifcfg_blocklist: true
+nm_controlled_resolv: true
