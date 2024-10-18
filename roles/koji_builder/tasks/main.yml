@@ -88,6 +88,8 @@
     - pycdio
     - python3-kickstart
     - libvirt-client
+    - oz
+    - imagefactory
     - pykickstart
     - nosync
   tags:
@@ -198,6 +200,7 @@
   template: src=oz.cfg.j2 dest=/etc/oz/oz.cfg
   tags:
   - koji_builder
+  - koji_builder/oz.cfg
 
 # install libvirtd.conf
 #
@@ -286,7 +289,6 @@
   tags:
   - koji_builder
   - selinux
-  when: ansible_architecture != 'armv7l' and ansible_architecture != 'aarch64'
 
 - name: Create directory for shared secrets
   file:
@@ -328,7 +330,7 @@
   tags:
   - koji_builder
   - koji_builder/rngd
-  when: ansible_architecture != 's390x'
+  when: ansible_architecture != 's390x' and ansible_architecture != 'ppc64le'
 
 - name: disable systemd-oomd we do not need or want it
   systemd: name=systemd-oomd state=stopped enabled=no masked=true
