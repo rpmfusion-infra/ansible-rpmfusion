@@ -5,7 +5,14 @@
 #   Background/reference about external repos pulled in:
 #       https://pagure.io/fedora-infrastructure/issue/5476
 #
+# IPA settings
+additional_host_keytabs: []
 ansible_base: /srv/web/infra
+# Default to managing the network, we want to not do this on select
+# hosts (like cloud nodes)
+# List of interfaces to explicitly disable
+ansible_ifcfg_disabled: []
+
 
 # Path to the openshift-ansible checkout as external git repo brought into
 # Fedora Infra
@@ -63,7 +70,18 @@ lvm_size: 20000
 # on openqa-ppc64le-01.qa it's eth2 for some reason, and on qa01.qa and
 # qa02.qa it's em3. currently this only affects whether GATEWAY, DOMAIN
 # and DNS1/DNS2 lines are put into ifcfg-(device).
-ansible_ifcfg_infra_net_devices: [ 'eth0', 'enc900' ]
+ansible_ifcfg_infra_net_devices: ['eth0', 'enc900']
+#
+# Autodetect python version
+#
+ansible_python_interpreter: auto
+# Set variable if we want to use our global iptables defaults
+# Some things need to set their own.
+baseiptables: True
+# by default set become to false here We can override it as needed.
+# Note that if become is true, you need to unset requiretty for
+# ssh controlpersist to work.
+become: false
 
 # Default netmask. Almost all our phx2 nets are /24's with the
 # exception of 10.5.124.128/25. Almost all of our non phx2 sites are
@@ -74,11 +92,6 @@ br0_nm: 255.255.255.0
 br1_nm: 255.255.255.0
 nm: 255.255.255.0
 
-# Default to managing the network, we want to not do this on select
-# hosts (like cloud nodes)
-ansible_ifcfg_blocklist: false
-# List of interfaces to explicitly disable
-ansible_ifcfg_disabled: []
 #
 # The default virt-install works for rhel7 or fedora with 1 nic
 #
@@ -334,11 +347,6 @@ env_short: prod
 # nfs mount options, override at the group/host level
 nfs_mount_opts: "ro,hard,bg,intr,noatime,nodev,nosuid,nfsvers=3"
 
-# by default set become to false here We can override it as needed.
-# Note that if become is true, you need to unset requiretty for
-# ssh controlpersist to work.
-become: false
-
 # default the root_auth_users to nothing.
 # This should be set for cloud instances in their host or group vars.
 root_auth_users: ''
@@ -363,7 +371,6 @@ csi_relationship: |
 wsgi_wants_apache: true
 
 # IPA settings
-additional_host_keytabs: []
 ipa_server: ipa01.online.rpmfusion.org
 ipa_realm: RPMFUSION.ORG
 ipa_server_nodes:
@@ -404,10 +411,6 @@ nagios_Check_Services:
 
 nagios_Can_Connect: true
 
-# Set variable if we want to use our global iptables defaults
-# Some things need to set their own.
-baseiptables: True
-
 # Most of our machines have manual resolv.conf files
 # These settings are for machines where NM is supposed to control resolv.conf.
 nm_controlled_resolv: False
@@ -432,11 +435,6 @@ redirectmatch_enabled: True
 # not on most of them, so default to false
 # rpmfusion sane default:
 sshd_sftp: true
-
-#
-# Autodetect python version
-#
-ansible_python_interpreter: auto
 
 # set no x-forward header by default
 x_forward: false
