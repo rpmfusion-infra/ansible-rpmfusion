@@ -441,17 +441,6 @@
   - config
   - base
 
-#
-# Disable the cdc_ether module as we don't want it loading mgmt usb0 and spewing to logs.
-#
-- name: Disable cdc_ether module
-  copy: src=disable-cdc_ether.conf dest=/etc/modprobe.d/disable-cdc_ether.conf
-  when: ansible_virtualization_role is defined and ansible_virtualization_role == 'host'
-  tags:
-  - config
-  - base
-  - cdc_ether
-
 # Remove old filename for above: remove this when we're pretty sure the file's
 # gone from all hosts
 - name: Remove old cdc_ether config file
