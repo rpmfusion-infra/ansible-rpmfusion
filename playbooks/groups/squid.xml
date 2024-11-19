@@ -1,13 +1,17 @@
 # create a new squid server
 
 - name: make the box be real
-  hosts: squid-stg:squid
+  hosts: squid
   user: root
   gather_facts: True
 
   vars_files:
    - /srv/web/infra/ansible/vars/global.yml
    - "/srv/private/ansible/vars.yml"
+   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  pre_tasks:
+  - import_tasks: "{{ tasks_path }}/yumrepos.yml"
 
   roles:
   - base
@@ -19,14 +23,11 @@
   - rsyncd
   - { role: openvpn/client,
   when: datacenter != "online" }
-  - fas_client
   - squid
 
   tasks:
-  - include: "{{ tasks_path }}/yumrepos.yml"
-  - include: "{{ tasks_path }}/motd.yml"
+  - import_tasks: "{{ tasks_path }}/motd.yml"
+    when: not inventory_hostname.startswith('bkernel')
 
   handlers:
-  - include: "{{ handlers_path }}/restart_services.yml"
-
-
+  - import_tasks: "{{ handlers_path }}/restart_services.yml"
