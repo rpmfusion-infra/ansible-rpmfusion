@@ -93,6 +93,8 @@ hv01.online.rpmfusion.net
 proxy01.scaleway.rpmfusion.net
 #test01.scaleway.rpmfusion.net
 
+[linaro]
+bastion02.linaro.rpmfusion.net
 
 [virtservers:children]
 virthost
