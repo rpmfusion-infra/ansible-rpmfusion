@@ -18,19 +18,28 @@
   action: service name=crond state=restarted
 
 - name: restart fedmsg-gateway
-  command: /usr/local/bin/conditional-restart.sh fedmsg-gateway fedmsg-gateway
+  command: /usr/local/bin/conditional-restart.sh fedmsg-gateway
 
 - name: restart fedmsg-hub
-  command: /usr/local/bin/conditional-restart.sh fedmsg-hub fedmsg-hub
+  command: /usr/local/bin/conditional-restart.sh {{ item }}
+  with_items:
+  - fedmsg-hub
+  - fedmsg-hub-3
+
+- name: restart fedmsg-hub-3
+  command: /usr/local/bin/conditional-restart.sh {{ item }}
+  with_items:
+  - fedmsg-hub
+  - fedmsg-hub-3
 
 - name: restart fedmsg-irc
-  command: /usr/local/bin/conditional-restart.sh fedmsg-irc fedmsg-irc
+  command: /usr/local/bin/conditional-restart.sh fedmsg-irc
 
 - name: restart fedmsg-relay
-  command: /usr/local/bin/conditional-restart.sh fedmsg-relay fedmsg-relay
+  command: /usr/local/bin/conditional-restart.sh fedmsg-relay
 
-- name: restart koji-sync-listener
-  action: service name=koji-sync-listener state=restarted
+- name: restart fm-consumer@koji_sync_listener
+  action: service name=fm-consumer@koji_sync_listener state=restarted enabled=yes
 
 - name: reload httpd
   command: /usr/local/bin/conditional-reload.sh httpd httpd
@@ -46,6 +55,10 @@
 
 - name: restart libvirtd
   action: service name=libvirtd state=restarted
+
+- name: restart libvirtd.socket
+  action: service name=libvirtd.socket state=stopped
+  notify: restart libvirtd
 
 - name: restart mailman
   action: service name=mailman state=restarted
@@ -65,14 +78,8 @@
   #notify:
   #- fix openvpn routing
 
-- name: restart openvpn (RHEL6)
-  when: ansible_distribution == "RedHat" and ansible_distribution_major_version|int == 6
-  action: service name=openvpn state=restarted
-  #notify:
-  #- fix openvpn routing
-
-- name: restart openvpn (RHEL7)
-  when: ansible_distribution == "RedHat" and ansible_distribution_major_version|int == 7
+- name: restart openvpn (RHEL7+)
+  when: ansible_distribution == "RedHat" and ansible_distribution_major_version|int >= 7
   action: service name=openvpn-client@openvpn state=restarted
   #notify:
   #- fix openvpn routing
@@ -82,6 +89,7 @@
 
 - name: restart xinetd
   action: service name=xinetd state=restarted
+  when: not inventory_hostname.startswith('proxy')
 
 - name: restart netapproute
   action: command /etc/sysconfig/network-scripts/ifup-routes eth1
@@ -91,6 +99,9 @@
 
 - name: rebuild postfix transport
   command: /usr/sbin/postmap /etc/postfix/transport
+
+- name: rebuild postfix bysender
+  command: /usr/sbin/postmap /etc/postfix/bysender
 
 - name: rebuild postfix tls_policy
   command: /usr/sbin/postmap /etc/postfix/tls_policy
@@ -170,8 +181,8 @@
   command: nmcli con up {{ item.split()[1] }}
   async: 1
   poll: 0
-  with_items:
-  - "{{ if_uuid.stdout_lines }}"
+  loop: "{{ if_uuid.stdout_lines|flatten(levels=1) }}"
+  when: item.split()[1] not in ansible_ifcfg_disabled
 
 - name: flush journald tmpfiles to persistent store
   command: pkill -f -USR1 systemd-journald
@@ -191,5 +202,31 @@
     state: restarted
     daemon_reload: yes
 
-- name: restart repoSpanner
-  action: service name=repoSpanner state=restarted
+- name: restart chronyd
+  service: name=chronyd state=restarted
+
+- name: restart kojira
+  systemd:
+    name: kojira
+    state: restarted
+
+- name: restart haveged
+  service: name=haveged state=restarted
+
+- name: restart obs-signd
+  service: name=signd state=restarted
+
+- name: restart swap.swap
+  service: name="swap.swap" state=restarted
+
+- name: restart varnish
+  service: name=varnish state=restarted
+
+- name: reload varnish
+  service: name=varnish state=reload
+
+- name: restart systemd-oomd
+  service: name=systemd-oomd state=reload
+
+- name: restart debuginfod
+  service: name=debuginfod state=restarted
