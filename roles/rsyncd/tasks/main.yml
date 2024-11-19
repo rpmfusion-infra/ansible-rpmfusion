@@ -1,61 +1,109 @@
 ---
 #
-# This role sets up rsyncd on a server 
+# This role sets up rsyncd on a server
 #
 
-- name: install rnecessary packages
-  yum: state=present name={{item}}
-  with_items:
-  - rsync
-  - xinetd
-  - libsemanage-python
+- name: install necessary packages
+  package:
+    state: present
+    name:
+    - rsync
+    - xinetd
+    - libsemanage-python
   tags:
   - packages
-  when: ansible_distribution_major_version|int < 22
+  - rsyncd
+  when: ansible_distribution == 'RedHat' and ansible_distribution_major_version|int < 8
 
-- name: install rnecessary packages
-  dnf: state=present name={{item}}
-  with_items:
-  - rsync
-  - xinetd
-  - libsemanage-python
+- name: install necessary packages
+  package:
+    state: present
+    name:
+    - rsync
+    - xinetd
+    - python3-libsemanage
   tags:
   - packages
-  when: ansible_distribution_major_version|int > 21
+  - rsyncd
+  when: ansible_distribution == 'RedHat' and ansible_distribution_major_version|int == 8
 
-- name: rsyncd.conf file
-  copy: src={{ item }} dest=/etc/rsyncd.conf mode=644
+- name: install necessary packages for fedora or rhel9
+  package:
+    state: present
+    name:
+      - rsync-daemon
+      - python3-libsemanage
+  tags:
+    - packages
+    - rsyncd
+  when: ansible_distribution == 'Fedora' or (ansible_distribution == 'RedHat' and ansible_distribution_major_version|int > 8)
+
+- name: rsyncd.conf file for non download servers
+  copy: src={{ item }} dest=/etc/rsyncd.conf mode=0644
   with_first_found:
     - "{{ rsyncd_conf }}"
-    - rsyncd.conf.{{ ansible_fqdn }}
+    - rsyncd.conf.{{ inventory_hostname }}
     - rsyncd.conf.{{ host_group }}
     - rsyncd.conf.{{ rsync_group }}
     - rsyncd.conf.default
+  when: "'download' not in group_names"
   notify:
-  - restart xinetd
+  - restart daemon
+  ignore_errors: true
   tags:
   - config
+  - rsyncd
 
-- name: xinetd rsync file
-  copy: src={{ item }} dest=/etc/xinetd.d/rsync mode=644
+- name: rsyncd.conf file for download servers
+  template: src=rsyncd.conf.download.j2 dest=/etc/rsyncd.conf mode=0644
+  notify:
+  - restart daemon
+  when: "'download' in group_names"
+  tags:
+  - config
+  - rsyncd
+
+- name: xinetd rsync file for rhel8
+  copy: src={{ item }} dest=/etc/xinetd.d/rsync mode=0644
   with_first_found:
     - "{{ rsync }}"
-    - rsync.{{ ansible_fqdn }}
+    - rsync.{{ inventory_hostname }}
     - rsync.{{ host_group }}
     - rsync.{{ rsync_group }}
     - rsync.default
   notify:
   - restart xinetd
+  when: ansible_distribution_major_version|int < 9 and ansible_distribution == 'RedHat'
   tags:
   - config
+  - rsyncd
 
-- name: make sure xinetd is started
-  service: name=xinetd state=started
+- name: systemd rsync file for fedora and rhel9
+  copy: src=rsyncd.service dest=/usr/lib/systemd/system/rsyncd.service mode=0644
+  when: ansible_distribution == 'Fedora' or (ansible_distribution == 'RedHat' and ansible_distribution_major_version|int > 8)
+  notify:
+    - restart daemon
+  tags:
+    - config
+    - rsyncd
+
+- name: make sure xinetd is started on rhel8
+  service: name=xinetd state=started enabled=true
+  when: ansible_distribution_major_version|int < 9 and ansible_distribution == 'RedHat'
   tags:
   - services
+  - rsyncd
 
+- name: make sure rsync daemon is started on Fedora and rhel9
+  service: name=rsyncd enabled=true state=started
+  when: ansible_distribution == 'Fedora' or (ansible_distribution == 'RedHat' and ansible_distribution_major_version|int > 8)
+  tags:
+    - services
+    - rsyncd
+    
 - name: set sebooleans so rsync can read dirs
   seboolean: name=rsync_export_all_ro
                     state=true
                     persistent=true
-
+  tags:
+    - rsyncd
