@@ -1,7 +1,6 @@
 [bastion]
 hv01.online.rpmfusion.net
 bastion02.linaro.rpmfusion.net
-bastion03.virt.rpmfusion.net
 
 [bodhi2]
 #bodhi01.online.rpmfusion.net
