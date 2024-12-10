@@ -87,7 +87,6 @@
     - koji-builder
     - koji-builder-plugins
     - python3-koji
-    - koji-containerbuild-builder
     - strace
     - mock
     - mock-rpmautospec
