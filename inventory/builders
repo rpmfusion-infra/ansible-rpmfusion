@@ -1,6 +1,6 @@
 [buildhw_aarch64_linaro]
 #aarch64-01.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_python_interpreter=/usr/bin/python3
-#aarch64-02.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_python_interpreter=/usr/bin/python3
+aarch64-02.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_python_interpreter=/usr/bin/python3
 aarch64-03.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_python_interpreter=/usr/bin/python3
 aarch64-04.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_python_interpreter=/usr/bin/python3
 
