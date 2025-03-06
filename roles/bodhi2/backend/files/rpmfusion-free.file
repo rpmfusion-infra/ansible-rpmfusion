@@ -4,7 +4,12 @@ gstreamer-plugins-*
 gstreamer1-libav
 gstreamer1-plugins-*
 alsa-plugins-freeworld-*
+libavcodec-freeworld
 libtxc_dxtn
 libva-intel-driver
+mesa-va-drivers-freeworld
+mesa-vdpau-drivers-freeworld
+mesa-vulkan-drivers-freeworld
+pipewire-codec-aptx
 xine-lib-*
 zsnes
