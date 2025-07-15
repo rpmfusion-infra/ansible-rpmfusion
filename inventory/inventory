@@ -1,5 +1,6 @@
 [bastion]
 hv01.online.rpmfusion.net
+hv02.ovh.rpmfusion.net
 bastion02.linaro.rpmfusion.net
 
 [bodhi2]
@@ -16,6 +17,7 @@ db02.online.rpmfusion.net
 
 [dns]
 hv01.online.rpmfusion.net
+hv02.ovh.rpmfusion.net
 
 [fas]
 fas01.online.rpmfusion.net
@@ -75,6 +77,7 @@ sign-vault01.online.rpmfusion.net ansible_ssh_user=root
 
 [squid]
 hv01.online.rpmfusion.net
+hv02.ovh.rpmfusion.net
 bastion02.linaro.rpmfusion.net ansible_become=yes ansible_ssh_user=cloud-user
 buildppcle-01.osuosl.rpmfusion.net
 buildppcle-02.osuosl.rpmfusion.net
@@ -88,6 +91,7 @@ ansible_python_interpreter=/usr/bin/python3
 
 [virthost]
 hv01.online.rpmfusion.net
+hv02.ovh.rpmfusion.net
 
 [scaleway]
 proxy01.scaleway.rpmfusion.net

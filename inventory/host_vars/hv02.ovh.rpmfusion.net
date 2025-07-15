@@ -1,0 +1,19 @@
+---
+
+ansible_ifcfg_blocklist: true
+freezes: true
+dns: 213.186.33.99
+gw: 54.38.192.254
+br0_ip: 54.38.192.28
+br0_nm: 255.255.255.0
+br1_ip: 192.168.181.254
+br1_nm: 255.255.255.0
+
+# bridge are reversed in our infra
+main_bridge: br1
+nfs_bridge: br0
+
+
+tcp_ports: ['22', '25', '53', '1194']
+udp_ports: ['53', '1194']
+
