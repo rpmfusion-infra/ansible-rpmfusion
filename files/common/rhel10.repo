@@ -1,0 +1,34 @@
+[rhel10-dvd-BaseOS]
+name = rhel10 baseos dvd
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/RHEL10-$basearch/BaseOS
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta,file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+enabled=1
+gpgcheck=1
+
+[rhel10-dvd-AppStream]
+name = rhel10 AppStream dvd
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/RHEL10-$basearch/AppStream
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta,file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+enabled=1
+gpgcheck=1
+
+[rhel10-BaseOS]
+name = rhel10 BaseOS $basearch
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/rhel10/10.0/repos/$basearch/baseos
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta,file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+enabled=1
+gpgcheck=1
+
+[rhel10-AppStream]
+name = rhel10 AppStream $basearch
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/rhel10/10.0/repos/$basearch/appstream
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta,file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+enabled=1
+gpgcheck=1
+
+[rhel10-CRB]
+name = rhel10 CodeReadyBuilder $basearch
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/rhel10/10.0/repos/$basearch/crb
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta,file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+enabled=1
+gpgcheck=1

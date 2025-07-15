@@ -1,0 +1,24 @@
+[rhel7-dvd]
+name = rhel7 base dvd
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/RHEL7-$basearch/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+[rhel7-base]
+name = rhel7 base $basearch
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/rhel7/$basearch/rhel-7-server-rpms
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+[rhel7-optional]
+name = rhel7 optional $basearch
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/rhel7/$basearch/rhel-7-server-optional-rpms
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+[rhel7-extras]
+name = rhel7 extras $basearch
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/rhel7/$basearch/rhel-7-server-extras-rpms
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+[rhel7-ha]
+name = rhel7 ha $basearch
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/rhel7/$basearch/rhel-ha-for-rhel-7-server-rpms/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release

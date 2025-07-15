@@ -1,0 +1,23 @@
+# See: https://git.centos.org/rpms/centos-release-messaging/blob/c9s-sig-messaging/f/SOURCES
+[centos-rabbitmq38]
+# Yes, the repo is called 38. Yes, it only contains 3.9.x packages as of 2025-06
+name=CentOS-9 - RabbitMQ 38 (3.9.x) - $basearch
+#baseurl=<mirror>/CentOS-Stream/SIGs/9-stream/messaging/x86_64/rabbitmq-38/
+metalink=https://mirrors.centos.org/metalink?release=$releasever&arch=$basearch&repo=centos-messaging-sig-rabbitmq-38-9-stream&protocol=https,http
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-Messaging
+
+[centos-rabbitmq-38-test]
+name=CentOS-8 - RabbitMQ 38 Testing
+baseurl=https://buildlogs.centos.org/centos/$releasever-stream/messaging/$basearch/rabbitmq-38/
+gpgcheck=0
+enabled=0
+
+[centos-rabbitmq-38-source]
+name=CentOS-8 - RabbitMQ 38 - Source
+baseurl=http://mirror.stream.centos.org/SIGs/$releasever-stream/messaging/source/rabbitmq-38/
+gpgcheck=1
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-Messaging
+

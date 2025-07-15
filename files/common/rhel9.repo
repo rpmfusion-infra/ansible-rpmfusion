@@ -1,0 +1,41 @@
+[rhel9-dvd-BaseOS]
+name = rhel9 baseos dvd
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/RHEL9.0-$basearch/BaseOS
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta,file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+enabled=1
+gpgcheck=1
+
+[rhel9-dvd-AppStream]
+name = rhel9 AppStream dvd
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/RHEL9.0-$basearch/AppStream
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta,file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+enabled=1
+gpgcheck=1
+
+[rhel9-BaseOS]
+name = rhel9 BaseOS $basearch
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/rhel9/$basearch/rhel-9-for-$basearch-baseos-rpms
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta,file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+enabled=1
+gpgcheck=1
+
+[rhel9-AppStream]
+name = rhel9 AppStream $basearch
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/rhel9/$basearch/rhel-9-for-$basearch-appstream-rpms
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta,file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+enabled=1
+gpgcheck=1
+
+[rhel9-CRB]
+name = rhel9 CodeReadyBuilder $basearch
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/rhel9/$basearch/codeready-builder-for-rhel-9-$basearch-rpms/
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta,file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+enabled=1
+gpgcheck=1
+
+[rhel9-advanced-virt]
+name = rhel9 AdvancedVirt $basearch
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/rhel9/$basearch/rhel-9-advanced-virt/
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta,file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+enabled=0
+gpgcheck=1

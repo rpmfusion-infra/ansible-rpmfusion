@@ -1,0 +1,4 @@
+[rhel8-rhos16]
+name = rhel8 openstack $basearch
+baseurl=https://infrastructure.fedoraproject.org/repo/rhel/rhel8/other/rhel-8-x86_64-openstack-16-rpms
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
