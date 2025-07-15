@@ -1,52 +1,52 @@
 ---
 #
 # We have some tasks here in case this is a bare metal machine
-# and we are provisioning it for the first time. 
+# and we are provisioning it for the first time.
 # virtual machines are handled in tasks/virt-instance-create
 #
 
-- name: make sure there is no old ssh host key for the host still around
+- name: Make sure there is no old ssh host key for the host still around
   local_action: known_hosts path={{item}} host={{ inventory_hostname }} state=absent
-  ignore_errors: True
+  ignore_errors: true
   with_items:
   - /root/.ssh/known_hosts
   when: birthday is defined
 
-- name: gather ssh host key from new instance
+- name: Gather ssh host key from new instance
   local_action: command ssh-keyscan -t rsa {{ inventory_hostname }}
-  ignore_errors: True
+  ignore_errors: true
   register: hostkey
   when: birthday is defined
 
-- name: add new ssh host key (until we can sign it)
+- name: Add new ssh host key (until we can sign it)
   local_action: known_hosts path={{item}} key="{{ hostkey.stdout }}" host={{ inventory_hostname }} state=present
-  ignore_errors: True
+  ignore_errors: true
   with_items:
   - /root/.ssh/known_hosts
   when: birthday is defined
 
-- name: make sure libselinux-python is installed
-  package: name=libselinux-python state=present
+- name: Make sure libselinux-python is installed
+  ansible.builtin.package: name=libselinux-python state=present
   tags:
   - basessh
   - sshd_config
   - config
   - sshd
   - selinux
-  when: ansible_distribution_major_version|int < 8
+  when: ansible_distribution == 'RedHat' and ansible_distribution_major_version|int < 8
 
-- name: make sure python3-libselinux is installed
-  package: name=python3-libselinux state=present
+- name: Make sure python3-libselinux is installed
+  ansible.builtin.package: name=python3-libselinux state=present
   tags:
   - basessh
   - sshd_config
   - config
   - sshd
   - selinux
-  when: ansible_distribution_major_version|int >= 8
+  when: ( ansible_distribution == 'Fedora' and ansible_distribution_major_version|int >= 30 ) or ( ansible_distribution == 'RedHat' and ansible_distribution_major_version|int >= 8 )
 
-- name: check if sshd port is already known by selinux
-  shell: semanage port -l | grep ssh
+- name: Check if sshd port is already known by selinux
+  ansible.builtin.shell: semanage port -l | grep ssh
   register: sshd_selinux_port
   check_mode: no
   changed_when: false
@@ -59,8 +59,8 @@
   - selinux
   - base
 
-- name: allow alternate sshd port
-  command: semanage port -a -t ssh_port_t -p tcp {{ sshd_port }}
+- name: Allow alternate sshd port
+  ansible.builtin.command: semanage port -a -t ssh_port_t -p tcp {{ sshd_port }}
   when: sshd_port in sshd_selinux_port
   failed_when: false
   tags:
@@ -71,10 +71,10 @@
   - selinux
   - base
 
-- name: sshd_config
-  template: src=sshd_config dest=/etc/ssh/sshd_config mode=0600
+- name: Sshd_config
+  ansible.builtin.template: src=sshd_config dest=/etc/ssh/sshd_config mode=0600
   notify:
-  - restart sshd
+  - Restart sshd
   tags:
   - basessh
   - sshd_config
@@ -146,7 +146,7 @@
   - base
 
 - set_fact:
-    pubkeydir: "/var/tmp/sshkeysign/{{inventory_hostname}}"
+    pubkeydir: "/tmp/sshkeysign/{{inventory_hostname}}"
   tags:
   - basessh
   - sshd_cert
@@ -156,12 +156,14 @@
   - base
 
 - name: Create directory for storing pubkeys
-  file: path="{{pubkeydir}}"
-        mode=0700
+  ansible.builtin.file: path="{{pubkeydir}}"
+        owner=root
+        group=root
+        mode=0600
         state=directory
   delegate_to: localhost
   run_once: true
-  changed_when: False
+  changed_when: false
   tags:
   - basessh
   - sshd_cert
@@ -197,7 +199,7 @@
 
 # Currently, we use the epoch as serial. That's unique enough for now
 - name: Sign the certificates
-  shell: "ssh-keygen -s {{private}}/files/ssh/{{env}}_ca_host_key -t rsa-sha2-256 -I {{inventory_hostname}} -h -n {{ sign_hostnames|join(',') }} -V {{sign_validity}} -z `date +%s` {{pubkeydir}}/{{inventory_hostname}}{{item}}.pub"
+  ansible.builtin.shell: "ssh-keygen -s {{private}}/files/ssh/{{env}}_ca_host_key -t rsa-sha2-256 -I {{inventory_hostname}} -h -n {{ sign_hostnames|join(',') }} -V {{sign_validity}} -z `date +%s` {{pubkeydir}}/{{inventory_hostname}}{{item}}.pub"
   delegate_to: localhost
   with_items: "{{certs_to_sign}}"
   check_mode: no
@@ -210,12 +212,12 @@
   - base
 
 - name: Copy the certificates
-  copy: src="{{pubkeydir}}/{{inventory_hostname}}{{item}}-cert.pub"
+  ansible.builtin.copy: src="{{pubkeydir}}/{{inventory_hostname}}{{item}}-cert.pub"
         dest="{{item}}-cert.pub"
   with_items: "{{certs_to_sign}}"
   register: certcopy
   notify:
-  - restart sshd
+  - Restart sshd
   tags:
   - basessh
   - sshd_cert
@@ -245,8 +247,8 @@
   - sshd
   - base
 
-- name: make sure there is no old ssh host key for the host still around
+- name: Make sure there is no old ssh host key for the host still around
   local_action: known_hosts path={{item}} host={{ inventory_hostname }} state=absent
-  ignore_errors: True
+  ignore_errors: true
   with_items:
   - /root/.ssh/known_hosts

@@ -2,11 +2,7 @@ Protocol 2
 
 Port {{ sshd_port }}
 
-{% if ansible_distribution_major_version|int == 6 %}
-KexAlgorithms diffie-hellman-group-exchange-sha256
-MACs hmac-sha2-512,hmac-sha2-256
-Ciphers aes256-ctr,aes192-ctr,aes128-ctr
-{% elif ansible_distribution_major_version|int == 7 %}
+{% if ansible_distribution_major_version|int == 7 %}
 KexAlgorithms curve25519-sha256@libssh.org,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256
 Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
 MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com
@@ -57,9 +53,7 @@ AllowAgentForwarding no
 X11Forwarding no
 PermitTunnel no
 
-{% if ansible_distribution_major_version|int == 6 %}
-UsePrivilegeSeparation yes
-{% elif ansible_distribution_major_version|int == 7 %}
+{% if ansible_distribution_major_version|int == 7 %}
 UsePrivilegeSeparation sandbox
 {% endif %}
 
@@ -70,10 +64,15 @@ AcceptEnv LC_IDENTIFICATION LC_ALL LANGUAGE
 AcceptEnv XMODIFIERS
 
 {% if sshd_keyhelper %}
-# For repospanner/git
+{% if inventory_hostname.startswith('pkgs') %}
+AuthorizedKeysCommandUser nobody
+AuthorizedKeysCommand /usr/local/bin/ssh_wrapper "%u"
+{% else %}
 AuthorizedKeysCommandUser git
 AuthorizedKeysCommand /usr/libexec/pagure/keyhelper.py "%u" "%h" "%t" "%f"
 {% endif %}
-{% if sshd_sftp %}
-Subsystem sftp internal-sftp
+{% else %}
+AuthorizedKeysCommandUser nobody
+AuthorizedKeysCommand /usr/bin/sss_ssh_authorizedkeys
 {% endif %}
+Subsystem sftp internal-sftp
