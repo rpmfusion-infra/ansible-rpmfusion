@@ -8,7 +8,7 @@
   - packages
   - yumrepos
 
-- name: enable repos for archived Fedora releases
+- name: Enable repos for archived Fedora releases
   set_fact:
     archive_if_archived: >-
       {{
@@ -26,101 +26,106 @@
   - packages
   - yumrepos
 
-- name: put rhel repos on rhel systems
-  copy: src="{{ files }}/common/rhel{{ ansible_distribution_major_version|int }}.repo" dest="/etc/yum.repos.d/rhel{{ ansible_distribution_major_version|int }}.repo"
+- name: Put rhel repos on rhel systems
+  ansible.builtin.copy: src="{{ files }}/common/rhel{{ ansible_distribution_major_version|int }}.repo" dest="/etc/yum.repos.d/rhel{{ ansible_distribution_major_version|int }}.repo"
   when: ansible_distribution == 'RedHat' and not inventory_hostname.startswith('ppc9') and datacenter != "aws"
   tags:
   - config
   - packages
   - yumrepos
-  when: False
 
-- name: put rhel repos on rhel systems (power9)
-  copy: src="{{ files }}/common/rhel{{ ansible_distribution_major_version|int }}-power9.repo" dest="/etc/yum.repos.d/rhel{{ ansible_distribution_major_version|int }}.repo"
+- name: Put rhel repos on rhel systems (power9)
+  ansible.builtin.copy: src="{{ files }}/common/rhel{{ ansible_distribution_major_version|int }}-power9.repo" dest="/etc/yum.repos.d/rhel{{ ansible_distribution_major_version|int }}.repo"
   when: ansible_distribution == 'RedHat' and inventory_hostname.startswith('ppc9') and datacenter != "aws"
   tags:
   - config
   - packages
   - yumrepos
 
-- name: put rhel rhev for power repos on rhel power systems
-  copy: src="{{ files }}/common/rhel7-power-rhev.repo" dest="/etc/yum.repos.d/rhel7-power-rhev.repo"
-  when: ansible_distribution == 'RedHat' and ansible_distribution_major_version|int == 7 and ansible_architecture =='ppc64le' and not inventory_hostname.startswith('ppc9')
-  tags:
-  - config
-  - packages
-  - yumrepos
-
-- name: put openshift 3.4 repo on os- systems
-  template: src="{{ files }}/openshift/openshift.repo" dest="/etc/yum.repos.d/openshift.repo"
-  when: ansible_distribution == 'RedHat' and ansible_distribution_major_version|int == 7 and inventory_hostname.startswith('os-') and datacenter != "aws"
-  tags:
-  - config
-  - packages
-  - yumrepos
-
-- name: put epel repos on el systems
-  copy: src="{{ files }}/common/epel{{ ansible_distribution_major_version|int }}.repo" dest="/etc/yum.repos.d/epel{{ ansible_distribution_major_version|int }}.repo"
+- name: Put epel repos on el systems
+  ansible.builtin.copy: src="{{ files }}/common/epel{{ ansible_distribution_major_version|int }}.repo" dest="/etc/yum.repos.d/epel{{ ansible_distribution_major_version|int }}.repo"
   when: ((ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and use_default_epel) and datacenter != "aws"
   tags:
   - config
   - packages
   - yumrepos
-  when: False
 
-- name: put epel repos on el systems (aws)
-  copy: src="{{ files }}/common/original-epel{{ ansible_distribution_major_version|int }}.repo" dest="/etc/yum.repos.d/epel{{ ansible_distribution_major_version|int }}.repo"
+- name: Put epel repos on el systems (aws)
+  ansible.builtin.copy: src="{{ files }}/common/original-epel{{ ansible_distribution_major_version|int }}.repo" dest="/etc/yum.repos.d/epel{{ ansible_distribution_major_version|int }}.repo"
   when: ((ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and use_default_epel) and datacenter == "aws"
   tags:
   - config
   - packages
   - yumrepos
 
-- name: put epel gpg key on el systems (aws)
-  copy: src="{{ files }}/common/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version|int }}" dest="/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version|int }}"
+- name: Put epel gpg key on el systems (aws)
+  ansible.builtin.copy: src="{{ files }}/common/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version|int }}" dest="/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version|int }}"
   when: ((ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and use_default_epel) and datacenter == "aws"
   tags:
   - config
   - packages
   - yumrepos
 
-- name: epel release on el systems (aws)
-  package:
+- name: Epel release on el systems (aws)
+  ansible.builtin.package:
     name: 'epel-release'
     state: present
-  when: ((ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and use_default_epel) and datacenter == "aws"
+  when: (((ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and ansible_distribution_major_version|int != 9) and use_default_epel) and datacenter == "aws"
   tags:
   - config
   - packages
   - yumrepos
 
-
-- name: add infrastructure tags repo - RHEL
-  copy: src="{{ files }}/common/rhel-infra-tags.repo" dest="/etc/yum.repos.d/infra-tags.repo"
-  when: (ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS')
+- name: Put fedora repos on primary architecture systems
+  ansible.builtin.template: src="{{ files }}/common/{{ item }}" dest="/etc/yum.repos.d/{{ item }}"
+  with_items:
+  - fedora.repo
+  - fedora-updates.repo
+  - fedora-updates-testing.repo
+  when: ansible_distribution == 'Fedora' and ansible_architecture not in ['ppc64le', 's390x'] and datacenter != "aws"
   tags:
   - config
   - packages
   - yumrepos
 
-- name: add infrastructure STAGING tags repo - RHEL
-  copy: src="{{ files }}/common/rhel-infra-tags-stg.repo" dest="/etc/yum.repos.d/infra-tags-stg.repo"
-  when: (ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and env in ['staging', 'pagure-staging']
+- name: Put fedora repos on secondary architecture systems
+  ansible.builtin.template: src="{{ files }}/common/{{ item }}-secondary" dest="/etc/yum.repos.d/{{ item }}"
+  with_items:
+  - fedora.repo
+  - fedora-updates.repo
+  - fedora-updates-testing.repo
+  when: ansible_distribution == 'Fedora' and ansible_architecture in ['ppc64le', 's390x'] and datacenter != "aws"
   tags:
   - config
   - packages
   - yumrepos
 
-- name: add infrastructure tags repo - Fedora
-  copy: src="{{ files }}/common/fedora-infra-tags.repo" dest="/etc/yum.repos.d/infra-tags.repo"
+- name: Add infrastructure tags repo - RHEL
+  ansible.builtin.copy: src="{{ files }}/common/rhel-infra-tags.repo" dest="/etc/yum.repos.d/infra-tags.repo"
+  when: ((ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and ansible_distribution_major_version|int < 10)
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: Add infrastructure STAGING tags repo - RHEL
+  ansible.builtin.copy: src="{{ files }}/common/rhel-infra-tags-stg.repo" dest="/etc/yum.repos.d/infra-tags-stg.repo"
+  when: (ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and env in ['staging', 'pagure-staging'] and ansible_distribution_major_version|int < 10
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: Add infrastructure tags repo - Fedora
+  ansible.builtin.copy: src="{{ files }}/common/fedora-infra-tags.repo" dest="/etc/yum.repos.d/infra-tags.repo"
   when: ansible_distribution == 'Fedora'
   tags:
   - config
   - packages
   - yumrepos
 
-- name: add infrastructure STAGING tags repo - Fedora
-  copy: src="{{ files }}/common/fedora-infra-tags-stg.repo" dest="/etc/yum.repos.d/infra-tags-stg.repo"
+- name: Add infrastructure STAGING tags repo - Fedora
+  ansible.builtin.copy: src="{{ files }}/common/fedora-infra-tags-stg.repo" dest="/etc/yum.repos.d/infra-tags-stg.repo"
   when: ansible_distribution == 'Fedora' and env in ['staging', 'pagure-staging']
   tags:
   - config
@@ -128,14 +133,55 @@
   - yumrepos
 
 - name: Make sure older infrastructure tags repos no longer exist
-  file: path="/etc/yum.repos.d/{{item}}" state=absent
+  ansible.builtin.file: path="/etc/yum.repos.d/{{item}}" state=absent
   with_items:
+  - fedora-modular.repo
+  - fedora-updates-modular.repo
+  - fedora-updates-testing-modular.repo
   - fedora-infra-tags.repo
   - fedora-infra-tags-stg.repo
   - rhel-infra-tags.repo
   - rhel-infra-tags-stg.repo
   - infrastructure.repo
   - infrastructure-testing.repo
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+# when batcave01 is on a newer ansible we won't need python3-dnf but
+# we *will* need python3-rpm (package_facts fails without it)
+- name: Ensure that python3-dnf is installed (needed till ansible on batcave01 supports dnf5)
+  when: "ansible_distribution == 'Fedora' and ansible_distribution_major_version|int > 40 and ansible_cmdline.ostree is not defined"
+  block:
+    - name: Check whether python3-dnf is installed
+      ansible.builtin.command: "rpm -q python3-dnf"
+      register: p3dnf
+      failed_when: "1 != 1"
+      changed_when: "1 != 1"
+      check_mode: no
+
+    - name: Install python3-dnf with direct dnf command
+      ansible.builtin.command: "dnf -y install python3-dnf"
+      when: "p3dnf.rc != 0"
+
+- name: Remove cisco repository to avoid issues with it, nothing in infra needs it
+  ansible.builtin.copy:
+    content: '# Unneeded, causes problems sometimes, and builders especially should use no external data'
+    dest: /etc/yum.repos.d/fedora-cisco-openh264.repo
+  when: "ansible_distribution == 'Fedora'"
+
+- name: Put RabbitMQ CentOS-9 SIG repos on el systems
+  ansible.builtin.copy: src="{{ files }}/common/centos9s-rabbitmq38.repo" dest="/etc/yum.repos.d/centos9s-rabbitmq38.repo"
+  when: inventory_hostname.startswith('rabbitmq') and (ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and ansible_distribution_major_version|int == 9
+  tags:
+  - config
+  - packages
+  - yumrepos
+
+- name: Put RabbitMQ CentOS-9 SIG gpg key on el systems
+  ansible.builtin.copy: src="{{ files }}/common/RPM-GPG-KEY-CentOS-SIG-Messaging" dest="/etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-Messaging"
+  when: inventory_hostname.startswith('rabbitmq') and (ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') and ansible_distribution_major_version|int == 9
   tags:
   - config
   - packages

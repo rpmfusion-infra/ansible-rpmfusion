@@ -1,0 +1,99 @@
+# use variables:
+#   swap_file_size_mb
+#   swap_file_path
+
+---
+- name: Touch an empty file that we will use for swap
+  ansible.builtin.copy:
+    content: ""
+    dest: "{{ swap_file_path }}"
+    force: no
+  register: swap_touch
+  tags:
+    - swap
+
+- name: On BTRFS we need NoCOW
+  ansible.builtin.file:
+    path: "{{ swap_file_path }}"
+    attr: +C
+  when:
+    - swap_touch.changed
+    - ansible_distribution == 'Fedora'
+  tags:
+    - swap
+
+- name: Create swap file
+  ansible.builtin.command:
+    cmd: "dd if=/dev/zero of={{ swap_file_path }} bs=1024 count={{ swap_file_size_mb }}k"
+  when: swap_touch.changed
+  tags:
+    - swap.file.create
+    - swap
+
+- name: Change swap file permissions
+  ansible.builtin.file: path="{{ swap_file_path }}"
+        owner=root
+        group=root
+        mode=0600
+  tags:
+    - swap.file.permissions
+    - swap
+
+- name: Check swap file type
+  ansible.builtin.command: file {{ swap_file_path }}
+  register: swapfile
+  changed_when: false
+  tags:
+    - swap.file.mkswap
+    - swap
+
+- name: Make swap file
+  filesystem:
+    fstype: swap
+    dev: "{{ swap_file_path }}"
+  when: swapfile.stdout.find('swap file') == -1
+  tags:
+    - swap.file.mkswap
+    - swap
+
+- name: Write swap entry in fstab
+  mount: path=none
+         src={{ swap_file_path }}
+         fstype=swap
+         opts=sw
+         passno=0
+         dump=0
+         state=present
+  register: swap_fstab_added
+  tags:
+    - swap.fstab
+    - swap
+
+- name: Mount swap
+  ansible.builtin.command: "swapon -a"
+  # when: ansible_swaptotal_mb|int < 1
+  when: swap_fstab_added.changed
+  tags:
+    - swap.file.swapon
+    - swap
+  notify: Restart swap.swap
+
+- name: Remove zram-generator-defaults
+  ansible.builtin.package:
+    name: zram-generator-defaults
+    state: absent
+  register: remove_zram_generator
+  tags:
+    - swap.file.dropzrampackage
+    - swap
+
+- name: Disable zram0
+  ansible.builtin.shell: swapoff /dev/zram0
+  tags:
+    - swap
+    - swap.file.swapoffzram
+  when:
+    - remove_zram_generator.changed
+
+# - name: Start swap.swap service
+#   service: state=started enabled=yes name="swap.swap"

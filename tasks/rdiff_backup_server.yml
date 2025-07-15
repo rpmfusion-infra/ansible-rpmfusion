@@ -1,7 +1,7 @@
 ---
 # tasklist for setting up a rdiff backup server.
-- name: install rdiff-backup
-  package: name={{ item }} state=present
+- name: Install rdiff-backup
+  ansible.builtin.package: name={{ item }} state=present
   with_items:
   - rdiff-backup
   - git
@@ -9,12 +9,12 @@
   tags:
   - packages
 
-- name: setup rdiff backup script
-  copy: src="{{ files }}/rdiff-backup/run-rdiff-backups" dest=/usr/local/bin/run-rdiff-backups mode=755
+- name: Setup rdiff backup script
+  ansible.builtin.copy: src="{{ files }}/rdiff-backup/run-rdiff-backups" dest=/usr/local/bin/run-rdiff-backups mode=755
   tags:
   - config
 
-- name: setup rdiff backup cron
-  copy: src="{{ files }}/rdiff-backup/run-rdiff-backups.cron" dest=/etc/cron.d/run-rdiff-backups
+- name: Setup rdiff backup cron
+  ansible.builtin.copy: src="{{ files }}/rdiff-backup/run-rdiff-backups.cron" dest=/etc/cron.d/run-rdiff-backups
   tags:
   - config

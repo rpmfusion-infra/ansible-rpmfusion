@@ -1,7 +1,7 @@
 ---
 
-- name: upstart serial setup
-  copy: src="{{ files }}/common/ttyS0.conf" dest=/etc/init/ttyS0.conf
+- name: Upstart serial setup
+  ansible.builtin.copy: src="{{ files }}/common/ttyS0.conf" dest=/etc/init/ttyS0.conf
   when: is_rhel is defined
   tags:
   - configs

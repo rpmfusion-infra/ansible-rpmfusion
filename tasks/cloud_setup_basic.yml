@@ -1,6 +1,6 @@
 ---
 - name: Install desired extra packages (yum)
-  package: state=present pkg={{ item }}
+  ansible.builtin.package: state=present pkg={{ item }}
   with_items:
   - ntpdate
   - ntp
@@ -14,7 +14,7 @@
 - name: Install desired extra packages (dnf)
   dnf:
     state: present
-    pkg: 
+    pkg:
     - chrony
     - python3-libselinux
   when: ansible_distribution_major_version|int > 7 and ansible_distribution == 'RedHat' and ansible_cmdline.ostree is not defined
@@ -24,12 +24,12 @@
 - name: Include basessh
   include_role: name=basessh
 
-#- name: edit hostname to be instance name - prefix hostbase var if it exists
-#  shell: hostname  {{ hostbase }}`curl -s http://169.254.169.254/latest/meta-data/instance-id`
+# - name: Edit hostname to be instance name - prefix hostbase var if it exists
+#  ansible.builtin.shell: hostname  {{ hostbase }}`curl -s http://169.254.169.254/latest/meta-data/instance-id`
 #  tags:
 #  - config
 
-- name: add ansible root key
+- name: Add ansible root key
   authorized_key: user=root key="{{ item }}"
   with_file:
   - /srv/web/infra/ansible/roles/base/files/ansible-pub-key
@@ -37,53 +37,54 @@
   - config
   - sshkeys
 
-- name: add root keys for sysadmin-main and other allowed users
+- name: Add root keys for sysadmin-main and other allowed users
   authorized_key: user=root key="{{ item }}"
   with_lines:
-   - "/srv/web/infra/ansible/scripts/auth-keys-from-fas @sysadmin-main {{ root_auth_users }}"
+    - "/srv/web/infra/ansible/scripts/auth-keys-from-fas @sysadmin-main {{ root_auth_users }}"
   tags:
   - config
   - sshkeys
+  # https://pagure.io/fedora-infrastructure/issue/10509
   ignore_errors: true
 
-- name: enable ssh_sysadm_login sebool
+- name: Enable ssh_sysadm_login sebool
   seboolean: name=ssh_sysadm_login state=yes persistent=yes
   ignore_errors: true
 
 # note - kinda should be a handler - but handlers need args
-- name: restorecon
-  file: path=/root/.ssh setype=ssh_home_t recurse=yes
+- name: Restorecon
+  ansible.builtin.file: path=/root/.ssh setype=ssh_home_t recurse=yes
   tags:
   - config
 
-- name: update all
-  command: yum -y update creates=/etc/sysconfig/global-update-applied
+- name: Update all
+  ansible.builtin.command: yum -y update creates=/etc/sysconfig/global-update-applied
   register: updated
   when: ansible_distribution_major_version|int < 8 and ansible_distribution == 'RedHat'
   tags:
   - packages
 
-- name: update all
-  command: dnf -y update creates=/etc/sysconfig/global-update-applied
+- name: Update all
+  ansible.builtin.command: dnf -y update creates=/etc/sysconfig/global-update-applied
   register: updated
   when: ansible_distribution_major_version|int > 7 and ansible_distribution == 'RedHat' and ansible_cmdline.ostree is not defined
   tags:
   - packages
 
-- name: update all
-  command: dnf -y update creates=/etc/sysconfig/global-update-applied
+- name: Update all
+  ansible.builtin.command: dnf -y update creates=/etc/sysconfig/global-update-applied
   register: updated
   when: ansible_distribution_major_version|int >= 29 and ansible_distribution == 'Fedora' and ansible_cmdline.ostree is not defined
   tags:
   - packages
 
-- name: write out global-update-applied file if we updated
-  copy: content="updated" dest=/etc/sysconfig/global-update-applied
+- name: Write out global-update-applied file if we updated
+  ansible.builtin.copy: content="updated" dest=/etc/sysconfig/global-update-applied
   when: updated is defined
   tags:
   - packages
 
-- name: ensure tmp.mount is not masked, logrotate start would fail
+- name: Ensure tmp.mount is not masked, logrotate start would fail
   systemd:
     name: tmp.mount
     masked: no

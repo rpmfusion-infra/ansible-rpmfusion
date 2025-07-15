@@ -1,0 +1,114 @@
+# Inspired by persistent_cloud.yml, but the VM is not started automatically.
+# This only works with modern Fedora for now, not with RHEL/CentOS.
+
+---
+- include_vars: dir=/srv/web/infra/ansible/vars/all/ ignore_files=README
+
+- name: Check if the server is up, needs to be pre-started
+  local_action: shell nc -w 5 {{ inventory_hostname }} 22 < /dev/null
+  register: host_is_up
+  changed_when: false
+  check_mode: no
+
+- name: Birthday=on - drop the old known host entries
+  local_action: known_hosts path={{item}}
+                host={{ inventory_hostname }}
+                state=absent
+  with_items:
+  - /root/.ssh/known_hosts
+  when: birthday is defined
+
+- name: Birthday=on - drop other known host entries
+  local_action: known_hosts path={{ item.0 }}
+                host={{ item.1 }}
+                state=absent
+  with_nested:
+    - [/root/.ssh/known_hosts]
+    - "{{ additional_known_hosts_cleanup[inventory_hostname] }}"
+
+  when:
+    - birthday is defined
+    - additional_known_hosts_cleanup is defined
+    - additional_known_hosts_cleanup[inventory_hostname] is defined
+
+- name: Gather the temporary ssh host key from the new instance
+  local_action: command ssh-keyscan -t {{ item }} {{ inventory_hostname }}
+  register: hostkey
+  loop:
+    - rsa
+    - ed25519
+  when: birthday is defined
+
+- name: Add new ssh host key (until we can sign it)
+  local_action: known_hosts path={{item.0}} key="{{ item.1.stdout }}"
+                host={{ inventory_hostname }} state=present
+  with_nested:
+    - [/root/.ssh/known_hosts]
+    - "{{ hostkey.results }}"
+  when: birthday is defined
+
+- name: Find old signatures done against the other hostname
+  find:
+    paths: /etc/ssh
+    file_type: file
+    patterns: "ssh_host_*_key-cert.pub"
+  register: found_ssh_certs
+  when:
+    - birthday is defined
+    - additional_known_hosts_cleanup is defined
+    - additional_known_hosts_cleanup[inventory_hostname] is defined
+
+- name: Remove old signed certificates
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ found_ssh_certs.files }}"
+  when:
+    - found_ssh_certs is not skipped
+
+# from https://github.com/praiskup/ansible-role-fix-root-ssh
+- name: Allow root ssh connections
+  lineinfile:
+    path: /etc/cloud/cloud.cfg
+    regexp: '^disable_root:'
+    line: 'disable_root: 0'
+  remote_user: "{{ temporary_remote_user if temporary_remote_user is defined else 'fedora' }}"
+  become: true
+  become_user: root
+  when: birthday is defined
+
+- name: Use the same authorized_keys
+  replace:
+    path: /root/.ssh/authorized_keys
+    regexp: '.*Please login as the user.* ssh-rsa '
+    replace: 'ssh-rsa '
+    backup: yes
+  remote_user: "{{ temporary_remote_user if temporary_remote_user is defined else 'fedora' }}"
+  become: true
+  become_user: root
+  when: birthday is defined
+
+#
+# Next we try and gather facts. If the host doesn't have python2 this will fail.
+#
+
+- name: Gather facts
+  setup:
+  check_mode: no
+  ignore_errors: true
+  register: facts
+
+#
+# If that failed, then we use the raw module to install things
+#
+
+- name: Install python3 and dnf stuff
+  raw: sudo dnf -y install python3-dnf python3-libselinux python3
+  when:
+  - birthday is defined
+  # For copr-pulp-instance it doesn't fail even though python3 package
+  # is not installed
+  # - facts is failed
+
+# - name: Include SSH config
+#   import_role: name=basessh
