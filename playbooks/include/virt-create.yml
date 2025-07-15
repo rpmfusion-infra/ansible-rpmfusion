@@ -1,15 +1,15 @@
-- name: make the virtual instance
+---
+- name: Make the virtual instance
   hosts: "{{ myhosts }}"
-  gather_facts: False
+  gather_facts: false
 
   vars_files:
-   - /srv/web/infra/ansible/vars/global.yml
-   - "/srv/private/ansible/vars.yml"
-   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+    - /srv/web/infra/ansible/vars/global.yml
+    - "/srv/private/ansible/vars.yml"
+    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
 
   tasks:
   - import_tasks: "{{ tasks_path }}/virt_instance_create.yml"
 
   handlers:
   - import_tasks: "{{ handlers_path }}/restart_services.yml"
-

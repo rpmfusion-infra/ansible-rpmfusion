@@ -1,25 +1,26 @@
+---
 - name: Set up those proxy websites.  My, my..
   hosts: proxies_stg:proxies
   user: root
-  gather_facts: True
+  gather_facts: true
 
   vars_files:
-   - /srv/web/infra/ansible/vars/global.yml
-   - "/srv/private/ansible/vars.yml"
-   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+    - /srv/web/infra/ansible/vars/global.yml
+    - "/srv/private/ansible/vars.yml"
+    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
 
   handlers:
   - import_tasks: "{{ handlers_path }}/restart_services.yml"
 
   tasks:
   - name: Create /srv/web/ for all the goodies.
-    file: dest=/srv/web state=directory owner=root group=root mode=0755
+    ansible.builtin.file: dest=/srv/web state=directory owner=root group=root mode=0755
     tags:
     - httpd
     - httpd/website
 
-  - name: check the selinux context of webdir
-    command: matchpathcon /srv/web
+  - name: Check the selinux context of webdir
+    ansible.builtin.command: matchpathcon /srv/web
     register: webdir
     check_mode: no
     changed_when: "1 != 1"
@@ -30,7 +31,7 @@
     - httpd/website
 
   - name: /srv/web file contexts
-    command: semanage fcontext -a -t httpd_sys_content_t "/srv/web(/.*)?"
+    ansible.builtin.command: semanage fcontext -a -t httpd_sys_content_t "/srv/web(/.*)?"
     when: webdir.stdout.find('httpd_sys_content_t') == -1
     tags:
     - config
@@ -41,56 +42,128 @@
   roles:
 
   - role: httpd/website
-    name: rpmfusion.org
+    site_name: rpmfusion.org
+    sslonly: true
+    cert_name: "{{wildcard_cert_name}}"
     server_aliases:
+    - stg.rpmfusion.org
+    - localhost
     - www.rpmfusion.org
-    - www.rpmfusion.net
-    - rpmfusion.net
+    - hotspot-nocache.rpmfusion.org
+
+  - role: httpd/website
+    site_name: admin.rpmfusion.org
+    server_aliases: [admin.stg.rpmfusion.org]
     sslonly: true
-    sslonly_hsts: false
-    cert_name: rpmfusion.org
-    SSLCertificateChainFile : rpmfusion.org-intermediate.cert
+    cert_name: "{{wildcard_cert_name}}"
+
 
   - role: httpd/website
-    name: admin.rpmfusion.org
+    site_name: mirrors.rpmfusion.org
+    server_aliases:
+    - mirrors.stg.rpmfusion.org
+    cert_name: "{{wildcard_cert_name}}"
+
+  - role: httpd/website
+    site_name: "mirrormanager{{ env_suffix }}.rpmfusion.org"
     sslonly: true
-    cert_name: admin.rpmfusion.org
-    SSLCertificateChainFile : admin.rpmfusion.org-intermediate.cert
+    cert_name: "{{wildcard_cert_name}}"
+    tags:
+      - mirrormanager
 
   - role: httpd/website
-    name: bugzilla.rpmfusion.org
+    site_name: src.rpmfusion.org
+    server_aliases: [src.stg.rpmfusion.org]
+    cert_name: "{{wildcard_cert_name}}"
     sslonly: true
-    cert_name: bugzilla.rpmfusion.org
-    SSLCertificateChainFile : bugzilla.rpmfusion.org-intermediate.cert
+    use_h2: true
+    tags: src.rpmfusion.org
 
   - role: httpd/website
-    name: download0.rpmfusion.org
-    sslonly: false
-    cert_name: download0.rpmfusion.org
-    SSLCertificateChainFile : download0.rpmfusion.org-intermediate.cert
+    site_name: download0.rpmfusion.org
+    server_aliases:
+    - download1.rpmfusion.org
+    cert_name: "{{wildcard_cert_name}}"
 
   - role: httpd/website
-    name: id.rpmfusion.org
-    #server_aliases:
-    #- "*.id.rpmfusion.org"
+    site_name: koji.rpmfusion.org
+    sslonly: true
+    server_aliases:
+    - koji.stg.rpmfusion.org
+    - kojipkgs.stg.rpmfusion.org
+    - buildsys.rpmfusion.org
+    cert_name: "{{wildcard_cert_name}}"
+
+  - role: httpd/website
+    site_name: kojipkgs.rpmfusion.org
+    sslonly: true
+    server_aliases:
+    - kojipkgs01.rpmfusion.org
+    - kojipkgs02.rpmfusion.org
+    cert_name: "{{wildcard_cert_name}}"
+    use_h2: false
+    tags:
+    - kojipkgs.rpmfusion.org
+
+
+  - role: httpd/website
+    site_name: pdc.rpmfusion.org
+    server_aliases: [pdc.stg.rpmfusion.org]
+    sslonly: true
+    gzip: true
+    cert_name: "{{wildcard_cert_name}}"
+
+
+  - role: httpd/website
+    site_name: retrace.rpmfusion.org
+    server_aliases: [retrace.stg.rpmfusion.org]
+    sslonly: true
+    cert_name: "{{wildcard_cert_name}}"
+    when: env == "staging"
+
+  - role: httpd/website
+    site_name: lists.rpmfusion.org
+    server_aliases: [lists.stg.rpmfusion.org]
+    sslonly: true
+    cert_name: "{{wildcard_cert_name}}"
+    tags: lists.rpmfusion.org
+
+  - role: httpd/website
+    site_name: "id{{ env_suffix }}.rpmfusion.org"
+    sslonly: true
+    cert_name: rpmfusion
+    stssubdomains: false
+    tags:
+    - id.rpmfusion.org
+
+  - role: httpd/website
+    site_name: "sso{{ env_suffix }}.fedoraproject.org"
+    sslonly: true
+    cert_name: "{{wildcard_cert_name}}"
+    tags:
+    - sso.fedoraproject.org
+
+  - role: httpd/website
+    site_name: username.id.rpmfusion.org
+    server_aliases:
+    - "*.id.rpmfusion.org"
     # Must not be sslonly, because example.id.fedoraproject.org must be reachable
     # via plain http for openid identity support
     sslonly: false
-    cert_name: id.rpmfusion.org
-    SSLCertificateChainFile : id.rpmfusion.org-intermediate.cert
+    cert_name: wildcard-2024.id.rpmfusion.org
+    SSLCertificateChainFile: wildcard-2024.id.rpmfusion.org.intermediate.cert
+    tags:
+    - id.rpmfusion.org
+    when: env == "production"
 
   - role: httpd/website
-    name: lists.rpmfusion.org
+    site_name: pkgs.rpmfusion.org
+    ssl: true
     sslonly: true
-    cert_name: lists.rpmfusion.org
-    SSLCertificateChainFile : lists.rpmfusion.org-intermediate.cert
-
-
-# Overrided in distgit role
-#  - role: httpd/website
-#    name: pkgs.rpmfusion.org
-#    sslonly: false
-#    cert_name: pkgs.rpmfusion.org
-#    SSLCertificateChainFile : pkgs.rpmfusion.org-intermediate.cert
+    certbot: true
+    certbot_addhost: pkgs02.ovh.rpmfusion.net
+    tags:
+    - pkgs.rpmfusion.org
+    when: env == "production" and "ovh" in inventory_hostname
 
 

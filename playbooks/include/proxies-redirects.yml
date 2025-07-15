@@ -1,26 +1,52 @@
-- name: Set up those proxy redirects.  Wow!
+---
+- name: Set up those proxy redirects. Wow!
   hosts: proxies_stg:proxies
   user: root
-  gather_facts: True
+  gather_facts: true
 
   vars_files:
-   - /srv/web/infra/ansible/vars/global.yml
-   - "/srv/private/ansible/vars.yml"
-   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+    - /srv/web/infra/ansible/vars/global.yml
+    - "/srv/private/ansible/vars.yml"
+    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
 
   handlers:
   - import_tasks: "{{ handlers_path }}/restart_services.yml"
 
   roles:
 
-#  - role: httpd/redirect
-#    name: fas
-#    website: fas.rpmfusion.org
-#    target: https://admin.rpmfusion.org/accounts/
+  # An exceptional rewrite for bugz.fp.o
+  - role: packages3/bugz.fp.o
+    website: bugz.rpmfusion.org
+    tags:
+    - bugz
+
+  # A special rewrite for cgit
+  - role: httpd/redirect
+    shortname: cgit
+    website: src.rpmfusion.org
+    tags:
+    - cgit
+
+  - role: httpd/redirect
+    shortname: fas
+    website: fas.rpmfusion.org
+    target: https://accounts.rpmfusion.org/
+
+  - role: httpd/redirect
+    shortname: oldfas
+    website: admin.rpmfusion.org
+    path: /accounts/
+    target: https:/accounts.rpmfusion.org/
 
   - role: httpd/redirectmatch
-    name: mailman
+    shortname: mailman
     website: admin.rpmfusion.org
     regex: /mailman/(.*)$
     target: https://lists.rpmfusion.org/mailman/$1
+
+  - role: httpd/redirectmatch
+    shortname: mailman-pipermail
+    website: admin.rpmfusion.org
+    regex: /pipermail/(.*)$
+    target: https://lists.rpmfusion.org/pipermail/$1
 

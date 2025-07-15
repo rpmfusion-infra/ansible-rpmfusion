@@ -1,12 +1,13 @@
+---
 - name: Set up all the other proxy stuff -- miscellaneous
   hosts: proxies_stg:proxies
   user: root
-  gather_facts: True
+  gather_facts: true
 
   vars_files:
-   - /srv/web/infra/ansible/vars/global.yml
-   - "/srv/private/ansible/vars.yml"
-   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+    - /srv/web/infra/ansible/vars/global.yml
+    - "/srv/private/ansible/vars.yml"
+    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
 
   handlers:
   - import_tasks: "{{ handlers_path }}/restart_services.yml"
@@ -14,11 +15,11 @@
   tasks:
       # We retired this in favor of PDC
       # https://lists.fedoraproject.org/archives/list/rel-eng@lists.fedoraproject.org/thread/LOWVTF6WTS43LNPWDEISLXUELXAH5YXR/#LOWVTF6WTS43LNPWDEISLXUELXAH5YXR
-      - file:
-          dest=/etc/httpd/conf.d/apps.fedoraproject.org/fedora-releng-dash.conf
-          state=absent
-        tags: releng-dash
-        notify: reload proxyhttpd
+    - ansible.builtin.file:
+        dest=/etc/httpd/conf.d/apps.fedoraproject.org/fedora-releng-dash.conf
+        state=absent
+      tags: releng-dash
+      notify: Reload proxyhttpd
 
   roles:
 
@@ -27,15 +28,6 @@
     mimetype: image/vnd.microsoft.icon
     extensions:
     - .ico
-
-  - role: fedmsg/crl
-    website: fedoraproject.org
-    path: /fedmsg
-
-  - role: fedmsg/gateway/slave
-    stunnel_service: "websockets"
-    stunnel_source_port: 9939
-    stunnel_destination_port: 9938
 
   - role: httpd/fingerprints
     website: admin.fedoraproject.org
@@ -48,10 +40,6 @@
     website: fedoraproject.org
     path: /PackageReviewStatus
 
-  - role: membership-map/proxy
-    website: fedoraproject.org
-    path: /membership-map
-
   - role: apps-fp-o
     website: apps.fedoraproject.org
     path: /
@@ -59,3 +47,7 @@
   - role: pkgdb-proxy
     tags:
     - pkgdb2
+
+  - role: security.txt
+    tags:
+    - security.txt

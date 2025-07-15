@@ -1,39 +1,138 @@
+---
 - name: Set up those ProxyPassReverse statements.  Somebody get me a cup of coffee..
   hosts: proxies_stg:proxies
   user: root
-  gather_facts: True
+  gather_facts: true
 
   vars_files:
-   - /srv/web/infra/ansible/vars/global.yml
-   - "/srv/private/ansible/vars.yml"
-   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+    - /srv/web/infra/ansible/vars/global.yml
+    - "/srv/private/ansible/vars.yml"
+    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
 
   handlers:
   - import_tasks: "{{ handlers_path }}/restart_services.yml"
 
-  roles:
+  vars:
+  - varnish_url: http://localhost:6081
 
+  pre_tasks:
+
+  - name: Remove some crusty files from bygone eras
+    ansible.builtin.file: dest=/etc/httpd/conf.d/{{item}} state=absent
+    with_items:
+    - meetbot.fedoraproject.org/reversepassproxy.conf
+    - meetbot.fedoraproject.org/meetbot.conf
+    notify:
+    - Reload proxyhttpd
+    tags:
+    - httpd
+    - httpd/reverseproxy
+
+
+  roles:
   - role: httpd/reverseproxy
-    website: rpmfusion.org
-    destname: moin01
+    website: lists.rpmfusion.org
+    destname: mailman3
     localpath: /
     remotepath: /
-    proxyurl: http://moin01
+    header_scheme: true
+    keephost: true
+    proxyurl: "{{ varnish_url }}"
+    tags: lists.rpmfusion.org
+
+  - role: httpd/reverseproxy
+    website: "id{{ env_suffix }}.rpmfusion.org"
+    destname: id
+    proxyurl: http://localhost:10020
+    keephost: true
+    header_scheme: true
+    tags:
+    - id.rpmfusion.org
+
+  - role: httpd/reverseproxy
+    website: "username.id{{ env_suffix }}.rpmfusion.org"
+    destname: usernameid
+    proxyurl: http://localhost:10020
+    keephost: true
+    tags:
+    - id.rpmfusion.org
+
+  - role: httpd/reverseproxy
+    website: "id{{ env_suffix }}.rpmfusion.org"
+    destname: 00-kdcproxy
+    remotepath: /KdcProxy
+    localpath: /KdcProxy
+    proxyurl: http://localhost:10053
+    tags:
+    - id.rpmfusion.org
+
+  - role: httpd/reverseproxy
+    website: "id{{ env_suffix }}.rpmfusion.org"
+    destname: 00-ipa
+    remotepath: /ipa
+    localpath: /ipa
+    proxyurl: http://localhost:10061
+    tags:
+    - id.rpmfusion.org
+
 
   - role: httpd/reverseproxy
     website: admin.rpmfusion.org
-    destname: bodhi
-    localpath: /updates
-    remotepath: /
-    proxyurl: http://bodhi01
+    destname: collectd
+    localpath: /collectd
+    remotepath: /collectd
+    # Talk directly to the app server, not haproxy
+    proxyurl: http://log01
+    tags: data-analysis
 
   - role: httpd/reverseproxy
-    website: bugzilla.rpmfusion.org
-    destname: bugzilla02
-    proxyurl: http://bugzilla02
+    website: src.rpmfusion.org
+    destname: git
+    proxyurl: http://localhost:10057
+    header_scheme: true
+    keephost: true
+    tags:
+    - src.fedoraproject.org
 
   - role: httpd/reverseproxy
-    website: lists.rpmfusion.org
-    destname: se01
-    proxyurl: http://se01
+    website: koji.rpmfusion.org
+    destname: koji
+    keephost: true
+    balancer_name: koji
+    balancer_members:
+    - "koji01.{{ datacenter }}.rpmfusion.org"
+    - "koji02.{{ datacenter }}.rpmfusion.org"
+    http_not_https_yes_this_is_insecure_and_i_feel_bad: true
+    tags:
+    - koji-prod
+    when: env == "production"
+
+  - role: httpd/reverseproxy
+    website: koji.rpmfusion.org
+    destname: koji
+    keephost: true
+    balancer_name: koji
+    balancer_members:
+    - "koji01.stg.{{ datacenter }}.rpmfusion.org"
+    http_not_https_yes_this_is_insecure_and_i_feel_bad: true
+    tags:
+    - koji-stg
+    when: env == "staging"
+
+  - role: httpd/reverseproxy
+    website: kojipkgs.rpmfusion.org
+    destname: kojipkgs
+    proxyurl: http://localhost:10062
+    keephost: true
+    tags:
+    - kojipkgs-proxy
+
+  - role: httpd/reverseproxy
+    website: debuginfod.rpmfusion.org
+    destname: debuginfod
+    # manage non-trivial reverse-proxy specs in template
+    proxyurl: http://debuginfod01:8002
+    proxyopts: "connectiontimeout=600 timeout=600 keepalive=on nocanon"
+    tags:
+    - debuginfod
 

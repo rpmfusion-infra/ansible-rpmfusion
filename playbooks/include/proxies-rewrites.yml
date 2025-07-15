@@ -1,12 +1,13 @@
+---
 - name: Set up some domain rewrites.
   hosts: proxies_stg:proxies
   user: root
-  gather_facts: True
+  gather_facts: true
 
   vars_files:
-   - /srv/web/infra/ansible/vars/global.yml
-   - "/srv/private/ansible/vars.yml"
-   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+    - /srv/web/infra/ansible/vars/global.yml
+    - "/srv/private/ansible/vars.yml"
+    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
 
   handlers:
   - import_tasks: "{{ handlers_path }}/restart_services.yml"
@@ -14,12 +15,40 @@
   roles:
 
   - role: httpd/domainrewrite
+    destname: keys
+    website: keys.fedoraproject.org
+    path: ^.*$
+    status: 301,QSD
+    target: https://fedoraproject.org/wiki/Infrastructure/graveyard
+    tags: keys
+
+  - role: httpd/domainrewrite
     destname: admin
-    website: admin.rpmfusion.org
-    target: https://admin.rpmfusion.org/accounts
+    website: admin.fedoraproject.org
+    target: https://apps.fedoraproject.org/
 
   - role: httpd/domainrewrite
     destname: apache-status
-    website: admin.rpmfusion.org
+    website: admin.fedoraproject.org
     path: /status
 
+  - role: httpd/domainrewrite
+    destname: 00-apps
+    website: apps.fedoraproject.org
+    path: ^/favicon.ico$
+    status: 301
+    target: https://fedoraproject.org/favicon.ico
+
+  - role: httpd/domainrewrite
+    destname: 00-docs
+    website: docs.fedoraproject.org
+    path: ^/favicon.ico$
+    status: 301
+    target: https://fedoraproject.org/favicon.ico
+
+  - role: httpd/domainrewrite
+    destname: 00-registry-icon
+    website: registry.fedoraproject.org
+    path: ^/favicon.ico$
+    status: 301
+    target: https://fedoraproject.org/favicon.ico
