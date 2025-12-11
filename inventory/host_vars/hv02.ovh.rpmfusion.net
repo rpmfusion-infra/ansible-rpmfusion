@@ -1,6 +1,7 @@
 ---
 
 ansible_ifcfg_blocklist: true
+datacenter: ovh
 freezes: true
 dns: 213.186.33.99
 gw: 54.38.192.254
