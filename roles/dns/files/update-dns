@@ -1,5 +1,5 @@
 #!/bin/bash
-dnsgit=ssh://gitolite3@git.rpmfusion.org/infrastructure/dns.git'
+dnsgit='ssh://gitolite3@git.rpmfusion.org/infrastructure/dns.git'
 destdir='/var/named/master/'
 
 if [ ! -d $destdir ];
