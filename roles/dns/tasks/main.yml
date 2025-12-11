@@ -1,12 +1,10 @@
 ---
-- name: install packages
-  yum: name={{ item }} state=present
+- name: Install packages
+  ansible.builtin.package: name={{ item }} state=present
   with_items:
   - bind
   - unzip
   - git
-  - libsemanage-python
-  - policycoreutils-python
   tags:
   - packages
   - dns
@@ -35,7 +33,15 @@
   - config
   - dns
 
-- name: copy GeoIP.sh
+- name: Copy geoip.py
+  ansible.builtin.copy: src=geoip.py dest=/usr/local/bin/geoip.py mode=0755
+  notify:
+  - restart named
+  tags:
+  - config
+  - dns
+
+- name: Copy GeoIP.sh
   copy: src=GeoIP.sh dest=/var/named/GeoIP.sh mode=0755
   notify:
   - restart named
@@ -43,13 +49,13 @@
   - config
   - dns
 
-- name: create GeoIP acl
-  command: /var/named/GeoIP.sh
-  changed_when: "1 != 1"
-  notify:
-  - restart named
-  tags:
-  - dns
+# - name: Create GeoIP acl
+#  ansible.builtin.command: /var/named/GeoIP.sh
+#  changed_when: "1 != 1"
+#  notify:
+#  - Restart named
+#  tags:
+#  - dns
 
 - name: copy update-dns
   copy: src=update-dns dest=/usr/local/bin/update-dns mode=0755
