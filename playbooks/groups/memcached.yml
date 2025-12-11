@@ -1,21 +1,25 @@
-- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=memcached:memcached_stg"
+---
+- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml"
+  vars:
+    myhosts: "memcached:memcached_stg"
 
-- name: make the box be real
+- name: Make the box be real
   hosts: memcached:memcached_stg
   user: root
-  gather_facts: True
+  gather_facts: true
 
   vars_files:
-   - /srv/web/infra/ansible/vars/global.yml
-   - "/srv/private/ansible/vars.yml"
-   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+  - /srv/web/infra/ansible/vars/global.yml
+  - "/srv/private/ansible/vars.yml"
+  - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
 
   roles:
   - base
   - rkhunter
   - nagios_client
+  - zabbix/zabbix_agent
   - hosts
-  - fas_client
+  - ipa/client
   - collectd/base
   - collectd/memcached
   - sudo
@@ -23,10 +27,6 @@
 
   pre_tasks:
   - import_tasks: "{{ tasks_path }}/yumrepos.yml"
-
-  tasks:
-  - import_tasks: "{{ tasks_path }}/2fa_client.yml"
-  - import_tasks: "{{ tasks_path }}/motd.yml"
 
   handlers:
   - import_tasks: "{{ handlers_path }}/restart_services.yml"

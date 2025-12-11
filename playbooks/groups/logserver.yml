@@ -1,42 +1,54 @@
-- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=logging"
+---
+- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml"
+  vars:
+    myhosts: "logging"
 
-- name: make the box be real
+- name: Make the box be real
   hosts: logging
   user: root
-  gather_facts: True
+  gather_facts: true
 
   vars_files:
-   - /srv/web/infra/ansible/vars/global.yml
-   - "/srv/private/ansible/vars.yml"
-   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+    - /srv/web/infra/ansible/vars/global.yml
+    - "/srv/private/ansible/vars.yml"
+    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
 
   roles:
   - base
   - rkhunter
   - nagios_client
   - hosts
-  - fas_client
+  - openvpn/client
+  - ipa/client
   - apache
   - collectd/base
   - collectd/server
   - sudo
-  - epylog
-  - awstats
+  - web-data-analysis
+  - role: keytab/service
+    owner_user: apache
+    owner_group: apache
+    service: HTTP
+    host: "admin.rpmfusion.org"
+    when: env == "production"
+  # Set up for fedora-messaging
+  - role: rabbit/user
+    user_name: "logging{{ env_suffix }}"
+    user_sent_topics: ^org\.rpmfusion\.{{ env_short }}\.logging\.stats\..*
+  - logging
 
   pre_tasks:
   - import_tasks: "{{ tasks_path }}/yumrepos.yml"
 
 
   tasks:
-  - import_tasks: "{{ tasks_path }}/2fa_client.yml"
-  - import_tasks: "{{ tasks_path }}/motd.yml"
 
 #
 # We exclude some dirs from restorecon on updates on logservers as they are very large
 # and it takes a long long time to run restorecon over them.
 #
-  - name: exclude some directories from selinux relabeling on updates
-    copy: src="{{ files }}/logserver/fixfiles_exclude_dirs" dest=/etc/selinux/fixfiles_exclude_dirs owner=root mode=0644
+  - name: Exclude some directories from selinux relabeling on updates
+    ansible.builtin.copy: src="{{ files }}/logserver/fixfiles_exclude_dirs" dest=/etc/selinux/fixfiles_exclude_dirs owner=root mode=0644
 
   handlers:
   - import_tasks: "{{ handlers_path }}/restart_services.yml"

@@ -1,42 +1,36 @@
-# create a new koji builder on raw hw
-# NOTE: should be used with --limit most of the time
-# NOTE: most of these vars_path come from group_vars/buildhw or from hostvars
+---
+- import_playbook: "/srv/web/infra/ansible/playbooks/include/happy_birthday.yml"
+  vars:
+    myhosts: "buildhw:bkernel"
 
 - name: make koji builder(s) on raw hw
   hosts: buildhw:bkernel
   remote_user: root
-  gather_facts: True
+  gather_facts: true
 
   vars_files:
-   - /srv/web/infra/ansible/vars/global.yml
-   - "/srv/private/ansible/vars.yml"
-   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+    - /srv/web/infra/ansible/vars/global.yml
+    - "/srv/private/ansible/vars.yml"
+    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
 
   pre_tasks:
   - import_tasks: "{{ tasks_path }}/yumrepos.yml"
 
   roles:
   - base
-  - hosts
-  - { role: openvpn/client, when: datacenter != "online" }
-  - { role: nfs/client, mnt_dir: '/mnt/rpmfusion_koji',  nfs_src_dir: "{{ koji_hub_nfs }}", when: koji_hub_nfs is defined }
+  - { role: nfs/client, mnt_dir: '/mnt/fedora_koji', nfs_src_dir: "{{ koji_hub_nfs }}", when: koji_hub_nfs is defined }
   - koji_builder
-#  - { role: bkernel, when: inventory_hostname.startswith('bkernel') }
+
+  - role: bkernel
+    when: "'bkernel' in group_names"
+
+  - { role: linux-system-roles.nbde_client, when: "inventory_hostname.startswith(('bkernel', 'buildhw'))" }
+  - { role: serial-console, when: "inventory_hostname.startswith(('bkernel', 'buildhw-x86'))" }
   - hosts
-  - { role: sudo, when: not inventory_hostname.startswith('bkernel') }
+  - ipa/client
+  - role: sudo
 
   tasks:
-  - import_tasks: "{{ tasks_path }}/2fa_client.yml"
-    when: not inventory_hostname.startswith('bkernel')
-  - import_tasks: "{{ tasks_path }}/motd.yml"
-    when: not inventory_hostname.startswith('bkernel')
-  - import_tasks: "{{ tasks_path }}/create_swap_file.yml"
-    vars:
-       swap_file_path: /var/swap-file
-       swap_file_bs: 1M
-       swap_file_count: 4096
-    when: inventory_hostname.endswith('scaleway.rpmfusion.net')
-
   - name: make sure kojid is running
     service: name=kojid state=started enabled=yes
 

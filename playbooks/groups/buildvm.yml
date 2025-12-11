@@ -3,37 +3,49 @@
 # NOTE: make sure there is room/space for this builder on the buildvmhost
 # NOTE: most of these vars_path come from group_vars/buildvm or from hostvars
 
-- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=buildvm:buildvm_stg"
+---
+- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml"
+  vars:
+    myhosts: "buildvm:buildvm_stg:buildvm_aarch64:buildvm_ppc64le:buildvm_ppc64le_stg:buildvm_aarch64_stg:buildvm_s390x:buildvm_x86_riscv"
 
-- name: make koji builder(s)
-  hosts: buildvm:buildvm_stg:buildvm_aarch64:buildvm_arm
+- name: Make koji builder(s)
+  hosts: buildvm:buildvm_stg:buildvm_aarch64:buildvm_ppc64le:buildvm_ppc64le_stg:buildvm_aarch64_stg:buildvm_s390x:buildvm_s390x_stg:buildvm_x86_riscv
   user: root
-  gather_facts: True
+  gather_facts: true
 
   vars_files:
-   - /srv/web/infra/ansible/vars/global.yml
-   - "/srv/private/ansible/vars.yml"
-   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+    - /srv/web/infra/ansible/vars/global.yml
+    - "/srv/private/ansible/vars.yml"
+    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
 
   pre_tasks:
-  - import_tasks: "{{ tasks_path }}/yumrepos.yml"
+    - include_vars: dir=/srv/web/infra/ansible/vars/all/ ignore_files=README
+    - import_tasks: "{{ tasks_path }}/yumrepos.yml"
 
   roles:
-  - base
-  - hosts
-  - { role: openvpn/client, when: datacenter != "online" }
-  - { role: nfs/client, mnt_dir: '/mnt/rpmfusion_koji',  nfs_src_dir: "{{ koji_hub_nfs }}" }
-  - { role: sudo, when: not inventory_hostname.startswith('bkernel') }
-  - koji_builder
+    - base
+    - hosts
+    - {
+      role: nfs/client,
+      mnt_dir: "/mnt/fedora_koji",
+      nfs_src_dir: "{{ koji_hub_nfs }}"
+    }
+    - ipa/client
+    - role: sudo
+      when: not inventory_hostname.startswith('bkernel') and env == 'production'
+    - koji_builder
+    - role: nfs/client
+      mnt_dir: '/mnt/koji/ostree'
+      nfs_src_dir: 'fedora_ostree_content/ostree'
 
-  tasks:
-  - import_tasks: "{{ tasks_path }}/2fa_client.yml"
-    when: not inventory_hostname.startswith('bkernel')
-  - import_tasks: "{{ tasks_path }}/motd.yml"
-    when: not inventory_hostname.startswith('bkernel')
+    - role: nfs/client
+      mnt_dir: '/mnt/koji/compose/ostree'
+      nfs_src_dir: 'fedora_ostree_content/compose/ostree'
 
-  - name: make sure kojid is running
-    service: name=kojid state=started enabled=yes
+    - role: keytab/service
+      kt_location: /etc/kojid/kojid.keytab
+      service: compile
+      when: koji_instance != 'secondary'
 
   handlers:
-  - import_tasks: "{{ handlers_path }}/restart_services.yml"
+    - import_tasks: "{{ handlers_path }}/restart_services.yml"

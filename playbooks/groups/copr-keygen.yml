@@ -1,0 +1,59 @@
+---
+- name: Check/create instance
+  hosts: copr_keygen_dev_aws:copr_keygen_aws
+  gather_facts: false
+
+  vars_files:
+  - /srv/web/infra/ansible/vars/global.yml
+  - "/srv/private/ansible/vars.yml"
+
+  handlers:
+  - import_tasks: "{{ handlers_path }}/restart_services.yml"
+
+  tasks:
+  # - import_tasks: "{{ tasks_path }}/persistent_cloud.yml"
+  #   when: datacenter != 'aws'
+
+  - import_tasks: "{{ tasks_path }}/aws_cloud.yml"
+    when: datacenter == 'aws'
+
+
+  - name: Gather facts
+    setup:
+    check_mode: no
+    ignore_errors: true
+    register: facts
+  - name: Install python2 and dnf stuff
+    raw: dnf -y install python-dnf libselinux-python yum
+    when: facts is failed
+
+- name: Cloud basic setup
+  hosts: copr_keygen_dev_aws:copr_keygen_aws
+  gather_facts: true
+  vars_files:
+  - /srv/web/infra/ansible/vars/global.yml
+  - "/srv/private/ansible/vars.yml"
+
+  pre_tasks:
+  - import_tasks: "{{ tasks_path }}/yumrepos.yml"
+
+  tasks:
+  - import_tasks: "{{ tasks_path }}/cloud_setup_basic.yml"
+  - name: Set hostname (required by some services, at least postfix need it)
+    hostname: name="{{copr_hostbase}}.cloud.fedoraproject.org"
+    when: datacenter != "aws"
+
+- name: Provision instance
+  hosts: copr_keygen_dev_aws:copr_keygen_aws
+  gather_facts: true
+
+  vars_files:
+    - /srv/web/infra/ansible/vars/global.yml
+    - "/srv/private/ansible/vars.yml"
+    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+    - copr/pre
+    - base
+    - nagios_client
+    - copr/keygen

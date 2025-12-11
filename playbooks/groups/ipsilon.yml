@@ -1,51 +1,97 @@
-# create a new FedOAuth server
-# NOTE: should be used with --limit most of the time
-# NOTE: make sure there is room/space for this server on the vmhost
-# NOTE: most of these vars_path come from group_vars/ipsilon* or from hostvars
+---
+- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml"
+  vars:
+    myhosts: "ipsilon:ipsilon_stg"
 
-- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=ipsilon:ipsilon-stg"
 
-- name: make the box be real
-  hosts: ipsilon:ipsilon-stg
+- name: Make the box be real
+  hosts: ipsilon:ipsilon_stg
   user: root
-  gather_facts: True
+  gather_facts: true
 
-  vars_files: 
-   - /srv/web/infra/ansible/vars/global.yml
-   - "/srv/private/ansible/vars.yml"
-   - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+  vars_files:
+  - /srv/web/infra/ansible/vars/global.yml
+  - "/srv/private/ansible/vars.yml"
+  - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
 
   roles:
   - base
   - rkhunter
   - nagios_client
   - hosts
-  - fas_client
   - rsyncd
   - sudo
-  - apache
+  - collectd/base
+  - {role: openvpn/client,
+     when: env != "staging"}
+  - mod_wsgi
+  - role: keytab/service
+    owner_user: apache
+    owner_group: apache
+    service: HTTP
+    host: "id{{ env_suffix }}.rpmfusion.org"
 
-  tasks:
+  pre_tasks:
   - import_tasks: "{{ tasks_path }}/yumrepos.yml"
-  - import_tasks: "{{ tasks_path }}/2fa_client.yml"
-  - import_tasks: "{{ tasks_path }}/motd.yml"
-  - import_tasks: "{{ tasks_path }}/mod_wsgi.yml"
 
   handlers:
   - import_tasks: "{{ handlers_path }}/restart_services.yml"
 
-- name: deploy ipsilon itself
-  hosts: ipsilon:ipsilon-stg
+- name: Deploy ipsilon itself
+  hosts: ipsilon:ipsilon_stg
   user: root
-  gather_facts: True
+  gather_facts: true
 
   vars_files:
-   - /srv/web/infra/ansible/vars/global.yml
-   - "/srv/private/ansible/vars.yml"
-   - "{{ vars_path }}/{{ ansible_distribution }}.yml"
+  - /srv/web/infra/ansible/vars/global.yml
+  - "/srv/private/ansible/vars.yml"
+  - "{{ vars_path }}/{{ ansible_distribution }}.yml"
 
   roles:
   - ipsilon
 
   handlers:
   - import_tasks: "{{ handlers_path }}/restart_services.yml"
+
+
+# This next block configures IPA, it only needs to be run on one member of the cluster.
+# Run it after setting up Ipsilon because the host need to be declared in IPA already.
+- name: Setup IPA
+  hosts: ipa_ovh[0]:ipa_stg_ovh[0]
+  user: root
+  gather_facts: true
+
+  vars_files:
+  - /srv/web/infra/ansible/vars/global.yml
+  - "/srv/private/ansible/vars.yml"
+  - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  tasks:
+  - name: Add the ipsilon HBAC service in IPA
+    ipahbacsvc:
+      name: ipsilon
+      description: Ipsilon authentication service
+      ipaadmin_password: "{{ ipa_admin_password }}"
+    tags:
+    - ipsilon
+
+  - name: Allow login through ipsilon
+    ipahbacrule:
+      name: ipsilon
+      description: Login through ipsilon
+      hbacsvc:
+      - ipsilon
+      usercategory: all
+      host: "{{ (env == 'production')|ternary(groups['ipsilon'], groups['ipsilon_stg']) }}"
+      ipaadmin_password: "{{ ipa_admin_password }}"
+    tags:
+    - ipsilon
+
+  - name: Allow login through ipsilon for the CentOS instance
+    ipahbacrule:
+      name: ipsilon
+      action: member
+      host: "{{ (env == 'production')|ternary(['ipsilon.rdu3.centos.org'], ['ipsilon.stg.rdu3.centos.org']) }}"
+      ipaadmin_password: "{{ ipa_admin_password }}"
+    tags:
+    - ipsilon

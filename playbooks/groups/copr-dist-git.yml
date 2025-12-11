@@ -1,0 +1,59 @@
+---
+- name: Check/create instance
+  hosts: copr_dist_git_dev_aws:copr_dist_git_aws
+  user: root
+  gather_facts: false
+
+  vars_files:
+  - /srv/web/infra/ansible/vars/global.yml
+  - "/srv/private/ansible/vars.yml"
+
+  handlers:
+  - import_tasks: "{{ handlers_path }}/restart_services.yml"
+
+  tasks:
+  # - import_tasks: "{{ tasks_path }}/persistent_cloud.yml"
+  #   when: datacenter != 'aws'
+
+  - import_tasks: "{{ tasks_path }}/aws_cloud.yml"
+    when: datacenter == 'aws'
+
+- name: Cloud basic setup
+  hosts: copr_dist_git_dev_aws:copr_dist_git_aws
+  user: root
+  gather_facts: true
+  vars_files:
+  - /srv/web/infra/ansible/vars/global.yml
+  - "/srv/private/ansible/vars.yml"
+
+  pre_tasks:
+  - import_tasks: "{{ tasks_path }}/yumrepos.yml"
+
+  tasks:
+  - import_tasks: "{{ tasks_path }}/swap.yml"
+    when:
+      - datacenter == 'aws'
+      - swap_file_size_mb is defined
+  - import_tasks: "{{ tasks_path }}/cloud_setup_basic.yml"
+  - name: Set hostname (required by some services, at least postfix need it)
+    hostname: name="{{copr_hostbase}}.fedorainfracloud.org"
+    when: datacenter != "aws"
+
+- name: Provision instance
+  hosts: copr_dist_git_dev_aws:copr_dist_git_aws
+  user: root
+  gather_facts: true
+
+  vars_files:
+    - /srv/web/infra/ansible/vars/global.yml
+    - "/srv/private/ansible/vars.yml"
+    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+    - copr/pre
+    - base
+    - nagios_client
+    - copr/dist_git
+
+  handlers:
+  - import_tasks: "{{ handlers_path }}/restart_services.yml"

@@ -1,0 +1,110 @@
+---
+- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml"
+  vars:
+    myhosts: "ipa:ipa_stg"
+
+- name: Make the box be real
+  hosts: ipa:ipa_stg
+  user: root
+  gather_facts: true
+
+  vars_files:
+  - /srv/web/infra/ansible/vars/global.yml
+  - "/srv/private/ansible/vars.yml"
+  - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  roles:
+  - base
+  - rkhunter
+  - nagios_client
+  - zabbix/zabbix_agent
+  - collectd/base
+  - hosts
+  - {role: openvpn/client,
+     when: env != "staging"}
+  - ipa/client
+  - rsyncd
+  - sudo
+  # Set up for fedora-messaging
+  - role: rabbit/user
+    user_name: "ipa{{ env_suffix }}"
+    user_sent_topics: ^org\.fedoraproject\.{{ env_short }}\.ipa\..*
+    when: inventory_hostname.startswith('ipa01')
+
+  pre_tasks:
+  - import_tasks: "{{ tasks_path }}/yumrepos.yml"
+
+  handlers:
+  - import_tasks: "{{ handlers_path }}/restart_services.yml"
+
+- name: Deploy ipa itself
+  hosts: ipa:ipa_stg
+  user: root
+  gather_facts: true
+
+  vars_files:
+  - /srv/web/infra/ansible/vars/global.yml
+  - "/srv/private/ansible/vars.yml"
+  - "{{ vars_path }}/{{ ansible_distribution }}.yml"
+
+  roles:
+  - ipa/server
+  - role: keytab/service
+    owner_user: apache
+    owner_group: apache
+    service: HTTP
+    host: "id{{env_suffix}}.fedoraproject.org"
+    notify:
+    - Combine IPA http keytabs
+
+  handlers:
+  - import_tasks: "{{ handlers_path }}/restart_services.yml"
+
+  tasks:
+  - name: Combine IPA keytabs
+    ansible.builtin.shell: printf "%b" "read_kt /etc/httpd/conf/ipa.keytab\nread_kt /etc/krb5.HTTP_id{{env_suffix}}.fedoraproject.org.keytab\nwrite_kt /etc/krb5.HTTP_id{{env_suffix}}.fedoraproject.org.keytab.combined" | ktutil
+    changed_when: false
+    tags:
+    - krb5
+    - ipa/server
+  - name: Set owner and permissions on combined keytab
+    ansible.builtin.file: path="/etc/krb5.HTTP_id{{env_suffix}}.fedoraproject.org.keytab.combined"
+          owner=apache
+          group=apache
+          mode=0600
+    tags:
+    - krb5
+    - ipa/server
+  # original: /etc/httpd/conf/ipa.keytab
+  # - name: Make IPA HTTP use the combined keytab
+  #  lineinfile: dest=/etc/httpd/conf.d/ipa.conf
+  #              regexp='GssapiCredStore keytab:'
+  #              line='  GssapiCredStore keytab:/etc/krb5.HTTP_id{{env_suffix}}.fedoraproject.org.keytab.combined'
+  #  tags:
+  #  - krb5
+  #  - ipa/server
+  #  - config
+  # - name: Make IPA HTTP use the id.fp.o client keytab
+  #  lineinfile: dest=/etc/httpd/conf.d/ipa.conf
+  #              regexp='GssapiCredStore client_keytab:'
+  #              line='  GssapiCredStore client_keytab:/etc/krb5.HTTP_id{{env_suffix}}.fedoraproject.org.keytab'
+  #  tags:
+  #  - krb5
+  #  - ipa/server
+  #  - config
+
+- name: Do base role once more to revert any resolvconf changes
+  hosts: ipa:ipa_stg
+  user: root
+  gather_facts: true
+
+  vars_files:
+  - /srv/web/infra/ansible/vars/global.yml
+  - "/srv/private/ansible/vars.yml"
+  - "{{ vars_path }}/{{ ansible_distribution }}.yml"
+
+  roles:
+  - base
+
+  handlers:
+  - import_tasks: "{{ handlers_path }}/restart_services.yml"

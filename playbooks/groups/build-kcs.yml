@@ -1,0 +1,29 @@
+# This playbook is meant to call out the roles for any configuration
+# issues to get a Kojid cloud scheduled builder in place.
+# Creation of the system is done by a different process so is not
+# covered by this playbook.
+
+---
+- name: Enable an ephemeral builder
+  hosts: build_x86_kcs:build_x86_kcs_stg
+  user: root
+  gather_facts: false
+
+  vars_files:
+    - /srv/web/infra/ansible/vars/global.yml
+    - "/srv/private/ansible/vars.yml"
+    - /srv/web/infra/ansible/vars/{{ ansible_distribution }}.yml
+
+  pre_tasks:
+    - include_vars: dir=/srv/web/infra/ansible/vars/all/ ignore_files=README
+    - import_tasks: "{{ tasks_path }}/yumrepos.yml"
+
+  tasks:
+    - name: Make a keytab dir
+      ansible.builtin.file: dest="/etc/kojid-cloud-scheduler/" state=directory
+
+  roles:
+    - role: keytab/service
+      kt_location: /etc/kojid-cloud-scheduler/kojid-cloud-scheduler.keytab
+      hostname: "{{ inventory_hostname }}"
+      service: compile
