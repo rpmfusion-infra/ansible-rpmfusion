@@ -14,7 +14,14 @@
 # hv01 online - vpn
 192.168.182.1 hv01.vpn.rpmfusion.net proxy.vpn.rpmfusion.net nfs-server.vpn.rpmfusion.net nfs-server log01
 
-# osuosl
+# osuosl - public
+140.211.11.94 bastion01.osuosl.rpmfusion.net bastion01 proxy.osuosl.rpmfusion.net proxy
+
+# osuosl - internal arm64
+192.168.24.142 aarch64-01.osuosl.rpmfusion.net aarch64-01
+192.168.24.198 aarch64-02.osuosl.rpmfusion.net aarch64-02
+
+# osuosl - ppc64le
 #buildppc-01.osuosl.rpmfusion.net
 #buildppc-02.osuosl.rpmfusion.net
 
