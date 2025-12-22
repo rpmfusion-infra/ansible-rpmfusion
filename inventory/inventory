@@ -1,7 +1,7 @@
 [bastion]
 hv01.online.rpmfusion.net
 hv02.ovh.rpmfusion.net
-bastion02.linaro.rpmfusion.net
+bastion01.osuosl.rpmfusion.net
 
 [bodhi2]
 #bodhi01.online.rpmfusion.net
@@ -51,6 +51,9 @@ moin01.online.rpmfusion.net
 [openqa_lab_workers]
 
 [osuosl]
+aarch64-01.osuosl.rpmfusion.net
+aarch64-02.osuosl.rpmfusion.net
+bastion01.osuosl.rpmfusion.net
 buildppcle-01.osuosl.rpmfusion.net
 buildppcle-02.osuosl.rpmfusion.net
 
@@ -78,7 +81,7 @@ sign-vault01.online.rpmfusion.net ansible_ssh_user=root
 [squid]
 hv01.online.rpmfusion.net
 hv02.ovh.rpmfusion.net
-bastion02.linaro.rpmfusion.net ansible_become=yes ansible_ssh_user=cloud-user
+bastion01.osuosl.rpmfusion.net
 buildppcle-01.osuosl.rpmfusion.net
 buildppcle-02.osuosl.rpmfusion.net
 
@@ -96,9 +99,6 @@ hv02.ovh.rpmfusion.net
 [scaleway]
 proxy01.scaleway.rpmfusion.net
 #test01.scaleway.rpmfusion.net
-
-[linaro]
-bastion02.linaro.rpmfusion.net
 
 [virtservers:children]
 virthost

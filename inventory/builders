@@ -1,8 +1,6 @@
-[buildhw_aarch64_linaro]
-#aarch64-01.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_python_interpreter=/usr/bin/python3
-aarch64-02.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_python_interpreter=/usr/bin/python3
-aarch64-03.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_python_interpreter=/usr/bin/python3
-aarch64-04.linaro.rpmfusion.net ansible_user=fedora ansible_become=yes ansible_python_interpreter=/usr/bin/python3
+[buildhw_aarch64_osuosl]
+aarch64-01.osuosl.rpmfusion.net ansible_user=fedora
+aarch64-02.osuosl.rpmfusion.net ansible_user=fedora
 
 [buildhw_aarch64_home]
 aarch64-jetson-tx1.home.rpmfusion.net
@@ -21,8 +19,6 @@ buildvm-03.online.rpmfusion.net
 buildvm-07.virt.rpmfusion.net
 buildvm-08.virt.rpmfusion.net
 
-[buildhw_ppc64]
-
 [buildhw_ppc64le]
 buildppcle-01.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
 buildppcle-02.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
@@ -30,21 +26,17 @@ buildppcle-02.osuosl.rpmfusion.net ansible_user=fedora ansible_become=yes
 [bkernel]
 
 
-[linaro:children]
-buildhw_aarch64_linaro
-
 [osuosl:children]
-buildhw_ppc64
 buildhw_ppc64le
+buildhw_aarch64_osuosl
 
 [builders:children]
 buildhw
 buildvm
 
 [buildhw:children]
-buildhw_ppc64
 buildhw_ppc64le
-buildhw_aarch64_linaro
+buildhw_aarch64_osuosl
 buildhw_aarch64_home
 
 [buildvm:children]
