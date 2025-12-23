@@ -25,16 +25,6 @@
   - /root/.ssh/known_hosts
   when: birthday is defined
 
-- name: Make sure libselinux-python is installed
-  ansible.builtin.package: name=libselinux-python state=present
-  tags:
-  - basessh
-  - sshd_config
-  - config
-  - sshd
-  - selinux
-  when: ansible_distribution == 'RedHat' and ansible_distribution_major_version|int < 8
-
 - name: Make sure python3-libselinux is installed
   ansible.builtin.package: name=python3-libselinux state=present
   tags:
@@ -43,7 +33,6 @@
   - config
   - sshd
   - selinux
-  when: ( ansible_distribution == 'Fedora' and ansible_distribution_major_version|int >= 30 ) or ( ansible_distribution == 'RedHat' and ansible_distribution_major_version|int >= 8 )
 
 - name: Check if sshd port is already known by selinux
   ansible.builtin.shell: semanage port -l | grep ssh
@@ -72,7 +61,7 @@
   - base
 
 - name: Sshd_config
-  ansible.builtin.template: src=sshd_config dest=/etc/ssh/sshd_config mode=0600
+  ansible.builtin.template: src=sshd_config.j2 dest=/etc/ssh/sshd_config mode=0600
   notify:
   - Restart sshd
   tags:
