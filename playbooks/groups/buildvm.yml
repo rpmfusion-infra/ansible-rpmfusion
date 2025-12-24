@@ -27,7 +27,7 @@
     - hosts
     - {
       role: nfs/client,
-      mnt_dir: "/mnt/fedora_koji",
+      mnt_dir: "/mnt/rpmfusion_koji",
       nfs_src_dir: "{{ koji_hub_nfs }}"
     }
     - ipa/client

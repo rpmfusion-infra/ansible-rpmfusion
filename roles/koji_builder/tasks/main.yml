@@ -90,17 +90,16 @@
     - strace
     - mock
     - mock-rpmautospec
-    - kernel-firmware
     - kernel-modules
     - rsyslog
     - audit
     - pycdio
     - python3-kickstart
     - libvirt-client
-    - oz
-    - imagefactory
     - pykickstart
     - nosync
+    - ipset
+    - libvirt
   tags:
   - koji_builder
 #
@@ -131,8 +130,13 @@
   tags:
   - koji_builder
   - rpmautospec
+
+# edk2-arm is dead as of F42 ...
+#  From: https://src.fedoraproject.org/rpms/edk2/
+#  commit 53fa21dafcef14a7d264a89c2977cdbef58df770
+# edk2-aarch64 says: UEFI firmware for aarch64 virtual machines
 - name: Install arm UEFI firmware package (aarch64 only)
-  package: name=edk2-arm state=present
+  ansible.builtin.package: name=edk2-aarch64 state=present
   tags:
   - koji_builder
   when: "ansible_architecture is defined and ansible_architecture == 'aarch64'"
@@ -253,16 +257,6 @@
   tags:
   - koji_builder
 
-# non-bkernel x86_64 builders run container_build, which needs osbs
-- name: special pkgs for the x86_64 builders
-  package:
-    state: present
-    name:
-    - python3-osbs-client.noarch
-  when: "ansible_architecture == 'x86_64' and not inventory_hostname.startswith('bkernel')"
-  tags:
-  - koji_builder
-
 # Before, the builders had the "apache" role. This is a temporary play to remove the httpd daemon everywhere
 - name: Uninstall httpd
   package: name=httpd
@@ -333,13 +327,14 @@
   tags:
   - koji_builder
   - koji_builder/rngd
+  when: ansible_architecture == 'x86_64'
 
 - name: Start rngd
   service: name=rngd state=started enabled=yes
   tags:
   - koji_builder
   - koji_builder/rngd
-  when: ansible_architecture != 's390x' and ansible_architecture != 'ppc64le'
+  when: ansible_architecture == 'x86_64'
 
 - name: disable systemd-oomd we do not need or want it
   systemd: name=systemd-oomd state=stopped enabled=no masked=true
