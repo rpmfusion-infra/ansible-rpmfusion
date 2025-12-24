@@ -146,9 +146,9 @@
 
 - name: Create directory for storing pubkeys
   ansible.builtin.file: path="{{pubkeydir}}"
-        owner=root
-        group=root
-        mode=0600
+        owner=kwizart
+        group=kwizart
+        mode=0700
         state=directory
   delegate_to: localhost
   run_once: true
