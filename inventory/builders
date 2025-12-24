@@ -1,6 +1,6 @@
 [buildhw_aarch64_osuosl]
-aarch64-01.osuosl.rpmfusion.net ansible_user=fedora
-aarch64-02.osuosl.rpmfusion.net ansible_user=fedora
+aarch64-01.osuosl.rpmfusion.net
+aarch64-02.osuosl.rpmfusion.net
 
 [buildhw_aarch64_home]
 aarch64-jetson-tx1.home.rpmfusion.net
