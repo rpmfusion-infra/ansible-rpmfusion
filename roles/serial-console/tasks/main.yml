@@ -1,31 +1,37 @@
 #
-# This role sets up serial console on ttyS0
+# This role sets up serial console on ttyS1
 #
-- name: check for grub serial setup
-  command: cat /etc/grub2.cfg
+---
+- name: Check for grub serial setup
+  ansible.builtin.shell: grep options /boot/loader/entries/*
   register: serial
   check_mode: no
   changed_when: '1 != 1'
+  failed_when: '1 != 1'
   tags:
   - serial-console
 
-- name: set grub to use serial console
-  command: /sbin/grubby --update-kernel=ALL --args="console=tty0 console=ttyS0,115200"
-  when: serial is defined and serial.stdout.find("console=tty0 console=ttyS0,115200") == -1
+- name: Set grub to use serial console
+  ansible.builtin.command: /sbin/grubby --update-kernel=ALL --args="console=tty0 console=ttyS0,115200 console=ttyS1,115200"
+  when: serial is defined and serial.stdout.find("console=tty0 console=ttyS0,115200 console=ttyS1,115200") == -1
+  failed_when: '1 != 1'
   tags:
   - serial-console
 
-- name: setup systemd links for getty (S0)
-  copy: src=serial-getty@.service dest=/etc/systemd/system/serial-getty@ttyS0.service
+- name: Enable and start getty on both serial ports
+  systemd:
+    name: serial-getty@ttyS0
+    state: started
+    enabled: true
+  when: ansible_architecture == 'x86_64'
   tags:
   - serial-console
 
-- name: link template in
-  file: dest=/etc/systemd/system/getty.target.wants/serial-getty@ttyS0 src=/etc/systemd/system/serial-getty@ttyS0.service state=link
-  tags:
-  - serial-console
-
-- name: start and enable
-  service: name=serial-getty@ttyS0 enabled=yes state=started
+- name: Enable and start getty on both serial ports
+  systemd:
+    name: serial-getty@ttyS1
+    state: started
+    enabled: true
+  when: ansible_architecture == 'x86_64'
   tags:
   - serial-console
