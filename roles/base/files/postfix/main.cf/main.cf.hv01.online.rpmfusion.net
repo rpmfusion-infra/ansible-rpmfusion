@@ -5,12 +5,29 @@
 # For common configuration examples, see BASIC_CONFIGURATION_README
 # and STANDARD_CONFIGURATION_README. To find these documents, use
 # the command "postconf html_directory readme_directory", or go to
-# http://www.postfix.org/.
+# http://www.postfix.org/BASIC_CONFIGURATION_README.html etc.
 #
 # For best results, change no more than 2-3 parameters at a time,
 # and test if Postfix still works after every change.
 
-# Custom rules
+# COMPATIBILITY
+#
+# The compatibility_level determines what default settings Postfix
+# will use for main.cf and master.cf settings. These defaults will
+# change over time.
+#
+# To avoid breaking things, Postfix will use backwards-compatible
+# default settings and log where it uses those old backwards-compatible
+# default settings, until the system administrator has determined
+# if any backwards-compatible default settings need to be made
+# permanent in main.cf or master.cf.
+#
+# When this review is complete, update the compatibility_level setting
+# below as recommended in the RELEASE_NOTES file.
+#
+# The level below is what should be used with new (not upgrade) installs.
+#
+compatibility_level = 2
 
 # SOFT BOUNCE
 #
@@ -167,8 +184,7 @@ inet_interfaces = all
 #
 # See also below, section "REJECTING MAIL FOR UNKNOWN LOCAL USERS".
 #
-
-mydestination = $myhostname, localhost.$mydomain
+mydestination = $myhostname, localhost.$mydomain, localhost
 #mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain
 #mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain,
 #	mail.$mydomain, www.$mydomain, ftp.$mydomain
@@ -478,6 +494,8 @@ recipient_delimiter = +
 # the main.cf file, otherwise the SMTP server will reject mail for    
 # non-UNIX accounts with "User unknown in local recipient table".
 #
+# Cyrus IMAP over LMTP. Specify ``lmtpunix      cmd="lmtpd"
+# listen="/var/imap/socket/lmtp" prefork=0'' in cyrus.conf.
 #mailbox_transport = lmtp:unix:/var/lib/imap/socket/lmtp
 
 # If using the cyrus-imapd IMAP server deliver local mail to the IMAP
@@ -498,9 +516,10 @@ recipient_delimiter = +
 # can be used to take advantage of the single instance message store
 # capability of Cyrus. The concurrency limit can be used to control
 # how many simultaneous LMTP sessions will be permitted to the Cyrus
-# message store. 
+# message store.
 #
-# To use the old cyrus deliver program you have to set:
+# Cyrus IMAP via command line. Uncomment the "cyrus...pipe" and
+# subsequent line in master.cf.
 #mailbox_transport = cyrus
 
 # The fallback_transport specifies the optional transport in master.cf
@@ -559,7 +578,7 @@ transport_maps = hash:/etc/postfix/transport
 #
 # For details, see "man header_checks".
 #
-#header_checks = regexp:/etc/postfix/header_checks
+header_checks = regexp:/etc/postfix/header_checks
 
 # FAST ETRN SERVICE
 #
@@ -641,7 +660,7 @@ debugger_command =
 #	>$config_directory/$process_name.$process_id.log & sleep 5
 #
 # Another possibility is to run gdb under a detached screen session.
-# To attach to the screen sesssion, su root and run "screen -r
+# To attach to the screen session, su root and run "screen -r
 # <id_string>" where <id_string> uniquely matches one of the detached
 # sessions (from "screen -list").
 #
@@ -686,14 +705,14 @@ manpage_directory = /usr/share/man
 # sample_directory: The location of the Postfix sample configuration files.
 # This parameter is obsolete as of Postfix 2.1.
 #
-sample_directory = /usr/share/doc/postfix-2.10.1/samples
+sample_directory = /usr/share/doc/postfix/samples
 
 # readme_directory: The location of the Postfix README files.
 #
-readme_directory = /usr/share/doc/postfix-2.10.1/README_FILES
+readme_directory = /usr/share/doc/postfix/README_FILES
 
-# Enable IPv4, and IPv6 if supported
-inet_protocols = ipv4
+# add this to new postfix to get it to add proper message-id and other
+# headers to outgoing emails via the gateway.
 
 virtual_alias_domains =
   rpmfusion.net,
