@@ -1,0 +1,18 @@
+# There are a bunch of users we want to prefer the local version instead of the ipa/ldap version.
+# But in at least one case, there is a real user ('mock') that we want to exclude on most machines,
+# but not on people and ipsilon to allow them access to their people space and be able to login to things.
+{% if inventory_hostname in groups['people'] or inventory_hostname in groups['ipsilon'] or inventory_hostname in groups['ipsilon_stg'] %}
+## This file contains users who are in ipa to stop people from
+## creating restricted accounts but we want to make sure the id in
+## /etc/passwd and /etc/group are used.
+[nss]
+filter_users = root,bin,daemon,adm,lp,sync,shutdown,halt,mail,operator,games,ftp,nobody,avahi-autoipd,dbus,polkitd,rpc,tss,ntp,rpcuser,nfsnobody,postfix,sshd,nagios,nrpe,openvpn,chrony,sssd,named,apache,blockerbugs,mirrormanager,postgres,zabbix,ftbfs,masher,git,paguremirroring
+filter_groups = root,bin,daemon,sys,adm,tty,disk,lp,mem,kmem,wheel,cdrom,mail,man,dialout,floppy,games,tape,video,ftp,lock,audio,nobody,users,utmp,utempter,avahi-autoipd,ssh_keys,systemd-journal,dbus,rpc,tss,ntp,dip,rpcuser,nfsnobody,postdrop,postfix,sshd,screen,nagios,nrpe,openvpn,input,systemd-bus-proxy,systemd-network,cgred,chrony,printadmin,sssd,named,apache,blockerbugs,mirrormanager,postgres,ftbfs,masher,git,paguremirroring
+{% else %}
+## This file contains users who are in ipa to stop people from
+## creating restricted accounts but we want to make sure the id in
+## /etc/passwd and /etc/group are used.
+[nss]
+filter_users = root,bin,daemon,adm,lp,sync,shutdown,halt,mail,operator,games,ftp,nobody,avahi-autoipd,dbus,polkitd,rpc,tss,ntp,rpcuser,nfsnobody,postfix,sshd,nagios,nrpe,openvpn,chrony,sssd,named,mock,apache,bodhi,ftpsync,blockerbugs,mirrormanager,rabbitmq,postgres,rawhide,mysql,zabbix,pagure,ftbfs,masher,git,paguremirroring
+filter_groups = root,bin,daemon,sys,adm,tty,disk,lp,mem,kmem,wheel,cdrom,mail,man,dialout,floppy,games,tape,video,ftp,lock,audio,nobody,users,utmp,utempter,avahi-autoipd,ssh_keys,systemd-journal,dbus,rpc,tss,ntp,dip,rpcuser,nfsnobody,postdrop,postfix,sshd,screen,nagios,nrpe,openvpn,input,systemd-bus-proxy,systemd-network,cgred,chrony,printadmin,sssd,named,mock,apache,blockerbugs,mirrormanager,rabbitmq,postgres,rawhide,mysql,pagure,ftbfs,masher,git,paguremirroring
+{% endif %}

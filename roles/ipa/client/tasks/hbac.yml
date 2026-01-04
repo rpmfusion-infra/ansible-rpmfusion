@@ -1,0 +1,122 @@
+---
+## This will only run once per play (as per `main.yml`), so needs to consider all affected hosts.
+
+## Cluster-wide rules
+
+- name: "Give members of group sysadmin-main access to anything, anywhere"
+  delegate_to: "{{ item }}"
+  ipahbacrule:
+    name: "usergroup/sysadmin-main"
+    description: "Give members of group sysadmin-main access to anything, anywhere"
+    hostcategory: "all"
+    servicecategory: "all"
+    ipaadmin_password: "{{ ipa_server_admin_passwords[item] }}"
+    state: present
+    group:
+      - sysadmin-main
+  notify: Clean sss caches
+  no_log: true
+  loop: "{{ ipa_servers }}"
+  when: ipa_servers is defined
+
+- name: "Enable usergroup/sysadmin-main HBAC rule"
+  delegate_to: "{{ item }}"
+  ipahbacrule:
+    name: "usergroup/sysadmin-main"
+    ipaadmin_password: "{{ ipa_server_admin_passwords[item] }}"
+    state: enabled
+  notify: Clean sss caches
+  no_log: true
+  loop: "{{ ipa_servers }}"
+  when: ipa_servers is defined
+
+- name: "Disable allow_all HBAC rule"
+  delegate_to: "{{ item }}"
+  ipahbacrule:
+    name: allow_all
+    ipaadmin_password: "{{ ipa_server_admin_passwords[item] }}"
+    state: disabled
+  notify: Clean sss caches
+  no_log: true
+  loop: "{{ ipa_servers }}"
+  when: ipa_servers is defined
+
+- name: Print ipa_servers
+  debug: "var=ipa_servers"
+
+- name: "Let everybody run sudo"
+  delegate_to: "{{ item }}"
+  ipahbacrule:
+    name: "all-users/sudo"
+    description: "Allow all users to execute the sudo command"
+    state: present
+    ipaadmin_password: "{{ ipa_server_admin_passwords[item] }}"
+    hostcategory: "all"
+    usercategory: "all"
+    hbacsvcgroup:
+      - sudo
+  notify: Clean sss caches
+  no_log: true
+  loop: "{{ ipa_servers }}"
+  when: ipa_servers is defined
+
+- name: Add the sshd HBAC service in IPA
+  delegate_to: "{{ item }}"
+  ipahbacsvc:
+    name: sshd
+    description: SSH daemon
+    ipaadmin_password: "{{ ipa_server_admin_passwords[item] }}"
+  no_log: true
+  loop: "{{ ipa_servers }}"
+  when: ipa_servers is defined
+
+- name: Add the shell-access service group in IPA
+  delegate_to: "{{ item }}"
+  ipahbacsvcgroup:
+    name: shell-access
+    description: Group of shell access services
+    ipaadmin_password: "{{ ipa_server_admin_passwords[item] }}"
+    hbacsvc:
+      - sshd
+  no_log: true
+  loop: "{{ ipa_servers }}"
+  when: ipa_servers is defined
+
+## Host group- & host-specific rules
+
+# shell access
+
+- name: "Warn if essential IPA client variables are unset"
+  fail:
+    msg: "`{{ item }}` is not defined"
+  ignore_errors: true
+  changed_when: false
+  when: lookup('vars', item, default="<undefined-sentinel>") == "<undefined-sentinel>"
+  loop:
+    - ipa_host_group
+    - ipa_host_group_desc
+
+- name: Ensure shell access HBAC rule exists
+  delegate_to: "{{ item[0] }}"
+  ipahbacrule:
+    name: "hostgroup/{{ item[1] }}/shell-access"
+    description: "Grant shell access on host group {{ item[1] }}"
+    ipaadmin_password: "{{ ipa_server_admin_passwords[item[0]] }}"
+    hbacsvcgroup:
+      - shell-access
+    state: present
+    hostgroup: "{{ item[1] }}"
+  loop: "{{ ipa_server_host_groups }}"
+  when: ipa_server_host_groups is defined
+
+- name: Give certain groups shell access per host group
+  delegate_to: "{{ item[0] }}"
+  ipahbacrule:
+    name: "hostgroup/{{ item[1] }}/shell-access"
+    ipaadmin_password: "{{ ipa_server_admin_passwords[item[0]] }}"
+    action: member
+    state: present
+    group: "{{ ipa_server_host_groups_dict[item[0]][item[1]]['shell_groups'] }}"
+  notify: Clean sss caches
+  loop: "{{ ipa_server_host_groups }}"
+  when: ipa_server_host_groups is defined and ipa_server_host_groups_dict[item[0]][item[1]]['shell_groups'] is defined

@@ -1,0 +1,10 @@
+---
+- name: Install /etc/hosts for VPN clients
+  when: "(vpn | default(false)) and (datacenter | default('ovh')) != 'ovh'"
+  include_role:
+    name: hosts
+    apply:
+      tags:
+        - ipa/client
+        - config
+        - vpn-client-enablement

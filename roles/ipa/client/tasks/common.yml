@@ -1,0 +1,41 @@
+---
+## This will only run once per play (as per `main.yml`), so needs to consider all affected hosts.
+
+## Cluster-wide rules
+
+# This is supposed to fail if a configured group doesn't exist. In this case, either add the group
+# manually or remove the reference from configuration.
+
+- name: Check that sysadmin-main and referenced groups exist on IPA server(s)
+  delegate_to: "{{ item[0] }}"
+  ansible.builtin.command: "getent group {{ item[1] }}"
+  changed_when: false
+  loop: >-
+    {{
+      (ipa_server_user_groups | default([]))
+      + (ipa_server_all_groups_hosts_dict | default({}) | list | product(['sysadmin-main']) | list)
+    }}
+  when: ipa_server_user_groups is defined or ipa_server_all_groups_hosts_dict is defined
+
+## Rules specific to hosts, host groups
+
+- name: Ensure IPA host groups exist on IPA server(s)
+  delegate_to: "{{ item[0] }}"
+  ipahostgroup:
+    name: "{{ item[1] }}"
+    description: "{{ ipa_server_host_groups_dict[item[1]].desc | default(omit) }}"
+    ipaadmin_password: "{{ ipa_server_admin_passwords[item[0]] }}"
+    state: present
+  loop: "{{ ipa_server_host_groups }}"
+  when: ipa_server_host_groups is defined
+
+- name: Ensure hosts are in IPA host groups
+  delegate_to: "{{ item[0] }}"
+  ipahostgroup:
+    name: "{{ item[1] }}"
+    ipaadmin_password: "{{ ipa_server_admin_passwords[item[0]] }}"
+    action: member
+    state: present
+    host: "{{ item[2] | list | sort }}"
+  loop: "{{ ipa_server_host_groups_hosts }}"
+  when: ipa_server_host_groups_hosts is defined

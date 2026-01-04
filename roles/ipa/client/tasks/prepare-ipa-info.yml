@@ -1,0 +1,199 @@
+---
+# NOTE: configuration is based on host groups, i.e. set the ipa_* vars only in group_vars
+#
+# NOTE^2: This will be "active" if only one host with the role is in the play, so we need to filter
+#         on something, this something is the `primary_auth_source` variable which can be either
+#         `fas` or `ipa`. Only hosts that have it set to `ipa` should be listed in the following
+#         variables.
+
+# Thanks to having two environments, staging and prod, this has to deal with the "responsible" IPA
+# server for individual hosts.
+
+# ipa_hosts_combined_shell_groups_dict ->
+#   {
+#     "ansible_host_1": ["shell_group_1", "shell_group_2", ...],
+#     "ansible_host_2": ["shell_group_3", "shell_group_4", ...],
+#     ...
+#   }
+- name: Combine own and inherited shell groups per host
+  set_fact:
+    ipa_hosts_combined_shell_groups_dict: >-
+      {{
+        ipa_hosts_combined_shell_groups_dict | default({}) | combine(
+          {
+            item:
+              (hostvars[item]['ipa_client_shell_groups_inherit_from'] | default([]))
+              | map('extract', groups, 0)
+              | map('extract', hostvars, 'ipa_client_shell_groups')
+              | flatten
+              | union(hostvars[item]['ipa_client_shell_groups'] | default([]))
+              | sort
+          },
+          recursive=True
+        )
+      }}
+  loop: "{{ ansible_play_hosts }}"
+
+# ipa_server_host_groups_dict ->
+#   {
+#     "ipa_server_1": {
+#       "host_group_1": {
+#         "shell_groups": [...],
+#         "sudo_groups": [...],
+#         "sudo_nopasswd_groups": [...],
+#         "hosts": {        # <-- This could be a list with Ansible >= 2.10
+#           "host_1": true,
+#           ...,
+#         }
+#       }, ...
+#     }, ...
+#   }
+#
+# ipa_server_all_groups_hosts_dict ->
+#   {
+#     "ipa_server_1": {
+#       groups: [...],
+#       hosts: {
+#         "host_1": true,
+#         ...,
+#       }
+#     }, ...
+#   }
+#
+# ipa_server_admin_passwords ->
+#   {
+#     "ipa_server_1": "ipa_password_1",
+#     "ipa_server_2": "ipa_password_2",
+#     ...
+#   }
+#
+# ipa_servers ->
+#   [
+#     "ipa_server_1",
+#     "ipa_server_2",
+#     ...
+#   ]
+- name: Create dictionaries and lists containing IPA configuration for the play
+  set_fact:
+    ipa_server_host_groups_dict: >-
+      {{
+        ipa_server_host_groups_dict | default({}) | combine(
+          {
+            hostvars[item]['ipa_server']: {
+              hostvars[item]['ipa_host_group']: {
+                'desc': hostvars[item]['ipa_host_group_desc'] | default(omit),
+                'shell_groups':
+                  (ipa_hosts_combined_shell_groups_dict[item] | length > 0)
+                  | ternary(ipa_hosts_combined_shell_groups_dict[item], omit),
+                'sudo_groups': hostvars[item]['ipa_client_sudo_groups'] | default(omit),
+                'sudo_nopasswd_groups':
+                    hostvars[item]['ipa_client_sudo_nopasswd_groups'] | default(omit),
+                'hosts': {item: true},
+              }
+            }
+          },
+          recursive=True
+        )
+      }}
+    ipa_server_all_groups_hosts_dict: >-
+      {{
+        (ipa_server_all_groups_hosts_dict | default({})) | combine(
+          {
+            hostvars[item]['ipa_server']: {
+              'groups': ipa_hosts_combined_shell_groups_dict[item] | union(
+                hostvars[item]['ipa_client_sudo_groups'] | default([])
+              ) | union(
+                hostvars[item]['ipa_client_sudo_nopasswd_groups'] | default([])
+              ),
+              'hosts': {item: True},
+            }
+          },
+          recursive=True
+        )
+      }}
+    ipa_server_admin_passwords: >-
+      {{
+        (ipa_server_admin_passwords | default({})) | combine(
+          {hostvars[item]['ipa_server']: hostvars[item]['ipa_admin_password']}
+        )
+      }}
+    ipa_servers: "{{ ipa_servers | default([]) | union([hostvars[item]['ipa_server']]) }}"
+  loop: "{{ ansible_play_hosts }}"
+  when: >-
+    (hostvars[item]['primary_auth_source'] | default("fas")) == "ipa"
+    and
+    hostvars[item]['ipa_server'] is defined
+    and
+    hostvars[item]['ipa_host_group'] is defined
+
+# ipa_server_host_groups ->
+#   [
+#     ["ipa_server_1", "host_group_1"],
+#     ["ipa_server_1", "host_group_2"],
+#     ...
+#     ["ipa_server_2", "host_group_1"],
+#     ...
+#   ]
+- name: Transform ipa_server_host_groups_dict into an iterable list
+  set_fact:
+    ipa_server_host_groups: >-
+      {{
+        (ipa_server_host_groups | default([]))
+        + ([item.key] | product(item.value | list) | list)
+      }}
+  loop: "{{ ipa_server_host_groups_dict | dict2items }}"
+  when: ipa_server_host_groups_dict is defined
+
+# ipa_server_user_groups ->
+#   [
+#     ["ipa_server_1", "user_group_1"],
+#     ["ipa_server_1", "user_group_2"],
+#     ...
+#     ["ipa_server_2", "user_group_1"],
+#     ...
+#   ]
+- name: Make an iterable list our of IPA server and all involved user groups
+  set_fact:
+    ipa_server_user_groups: >-
+      {{
+        (ipa_server_user_groups | default([]))
+        + ([item.key] | product(item.value.groups) | list)
+      }}
+  loop: "{{ ipa_server_all_groups_hosts_dict | dict2items }}"
+  when: ipa_server_all_groups_hosts_dict is defined
+
+# ipa_server_host_groups_hosts ->
+#   [
+#     [
+#       "ipa_server_1",
+#       "host_group_1",
+#       ["host_1", ...],
+#     ],
+#     [
+#       "ipa_server_1",
+#       "host_group_2",
+#       ["host_2", ...],
+#     ],
+#     ...
+#     [
+#       "ipa_server_2",
+#       "host_group_1",
+#       ["host_3", ...],
+#     ],
+#     ...
+#   ]
+- name: Make semi-flat list of IPA servers, host groups and the user groups and hosts contained
+  set_fact:
+    ipa_server_host_groups_hosts: >-
+      {{
+        ipa_server_host_groups_hosts | default([])
+        + [
+            [
+              item[0],
+              item[1],
+              ipa_server_host_groups_dict[item[0]][item[1]]['hosts'] | list,
+            ]
+          ]
+      }}
+  loop: "{{ ipa_server_host_groups }}"
+  when: ipa_server_host_groups is defined

@@ -1,0 +1,101 @@
+---
+- name: Install IPA client packages
+  ansible.builtin.package:
+    name:
+      - freeipa-client
+    state: present
+  tags:
+    - ipa/client
+    - packages
+
+- name: Enable VPN hosts to talk to IPA
+  import_tasks: vpn.yml
+  tags:
+    - ipa/client
+    - vpn-client-enablement
+
+- name: Enroll system as IPA client
+  ansible.builtin.command:
+    cmd: ipa-client-install
+         {% if (vpn | default(false)) %}{% for node in ipa_server_nodes | default([]) %}
+         --server={{ node }}
+         {% endfor %}{% endif %}
+         --hostname={{ inventory_hostname }}
+         --domain={{ ipa_realm | lower }}
+         --realm={{ ipa_realm }}
+         -p admin -w {{ ipa_admin_password }}
+         -U -N --force-join
+         --mkhomedir
+         --no-ssh
+    creates: /etc/ipa/default.conf
+  notify: Clean sss caches
+  tags:
+    - ipa/client
+    - config
+
+- name: Prepare IPA-related information to make the following more efficient
+  delegate_to: localhost
+  import_tasks: prepare-ipa-info.yml
+  tags:
+    - ipa/client
+    - config
+  run_once: yes
+
+- name: Basic configuration for clients on IPA cluster
+  delegate_to: localhost
+  import_tasks: common.yml
+  tags:
+    - ipa/client
+    - config
+  run_once: yes
+
+- name: Configure HBAC on IPA cluster
+  delegate_to: "{{ ipa_server }}"
+  import_tasks: hbac.yml
+  tags:
+    - ipa/client
+    - config
+  run_once: yes
+
+- name: Configure sudo on IPA cluster
+  # delegate_to: "{{ ipa_server }}"
+  import_tasks: sudo.yml
+  tags:
+    - ipa/client
+    - config
+  run_once: yes
+
+- name: Ensure that nss knows to skip certain users (rhel)
+  ansible.builtin.template: src=fedora-nss-ignore.conf.j2 dest=/etc/sssd/conf.d/fedora-nss-ignore.conf mode=600 owner=root group=root
+  tags:
+  - ipa/client
+  - config
+  - fedora-nss-ignore
+  notify:
+    - Restart sssd
+    - Clean sss caches
+  when: ansible_distribution == 'RedHat'
+
+- name: Ensure that nss knows to skip certain users (f41+)
+  ansible.builtin.template: src=fedora-nss-ignore.conf.j2 dest=/etc/sssd/conf.d/fedora-nss-ignore.conf mode=640 owner=root group=sssd
+  tags:
+  - ipa/client
+  - config
+  - fedora-nss-ignore
+  notify:
+    - Restart sssd
+    - Clean sss caches
+  when: ansible_distribution == 'Fedora' and ansible_distribution_major_version|int >= 41
+
+- name: Ensure that nss knows to skip certain users (f40)
+  ansible.builtin.template: src=fedora-nss-ignore.conf.j2 dest=/etc/sssd/conf.d/fedora-nss-ignore.conf mode=600 owner=root group=root
+  tags:
+  - ipa/client
+  - config
+  - fedora-nss-ignore
+  notify:
+    - Restart sssd
+    - Clean sss caches
+  when: ansible_distribution_major_version|int == 40
+
+- meta: flush_handlers

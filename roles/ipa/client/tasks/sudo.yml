@@ -1,0 +1,53 @@
+---
+## This will only run once per play (as per `main.yml`), so needs to consider all affected hosts.
+
+- name: "Give members of `sysadmin-main` sudo access to anything, anywhere"
+  delegate_to: "{{ item }}"
+  ipasudorule:
+    name: "usergroup/sysadmin-main"
+    description: "Allow members of `sysadmin-main` to use sudo to do anything, anywhere"
+    ipaadmin_password: "{{ ipa_server_admin_passwords[item] }}"
+    state: present
+    cmdcategory: "all"
+    hostcategory: "all"
+    runasusercategory: "all"
+    runasgroupcategory: "all"
+    group:
+      - sysadmin-main
+  notify: Clean sss caches
+  no_log: true
+  loop: "{{ ipa_servers }}"
+  when: ipa_servers is defined
+
+- name: Give certain groups sudo access to anything per host group
+  delegate_to: "{{ item[0] }}"
+  ipasudorule:
+    name: "hostgroup/{{ item[1] }}"
+    description: "Grant sudo access to anything on host group {{ item[1] }}"
+    ipaadmin_password: "{{ ipa_server_admin_passwords[item[0]] }}"
+    state: present
+    group: "{{ ipa_server_host_groups_dict[item[0]][item[1]]['sudo_groups'] }}"
+    hostgroup: "{{ item[1] }}"
+    cmdcategory: "all"
+    runasusercategory: "all"
+    runasgroupcategory: "all"
+  notify: Clean sss caches
+  loop: "{{ ipa_server_host_groups }}"
+  when: ipa_server_host_groups is defined and ipa_server_host_groups_dict[item[0]][item[1]]['sudo_groups'] is defined
+
+- name: Give certain groups passwordless sudo access to anything per host group
+  delegate_to: "{{ item[0] }}"
+  ipasudorule:
+    name: "hostgroup/{{ item[1] }}/nopasswd"
+    description: "Grant passwordless sudo access to anything on host group {{ item[1] }}"
+    ipaadmin_password: "{{ ipa_server_admin_passwords[item[0]] }}"
+    state: present
+    group: "{{ ipa_server_host_groups_dict[item[0]][item[1]]['sudo_nopasswd_groups'] }}"
+    hostgroup: "{{ item[1] }}"
+    cmdcategory: "all"
+    runasusercategory: "all"
+    runasgroupcategory: "all"
+    options: "!authenticate"
+  notify: Clean sss caches
+  loop: "{{ ipa_server_host_groups }}"
+  when: ipa_server_host_groups is defined and ipa_server_host_groups_dict[item[0]][item[1]]['sudo_nopasswd_groups'] is defined
