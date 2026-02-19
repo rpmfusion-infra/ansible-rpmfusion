@@ -14,7 +14,7 @@ buildvm-02.online.rpmfusion.net
 
 [buildvm_aarch64]
 
-[buildhw]
+[buildhw_x86_64]
 buildvm-03.online.rpmfusion.net
 buildvm-07.virt.rpmfusion.net
 buildvm-08.virt.rpmfusion.net
@@ -38,6 +38,7 @@ buildvm
 buildhw_ppc64le
 buildhw_aarch64_osuosl
 buildhw_aarch64_home
+buildhw_x86_64
 
 [buildvm:children]
 buildvm_aarch64
