@@ -30,7 +30,7 @@
       mnt_dir: "/mnt/rpmfusion_koji",
       nfs_src_dir: "{{ koji_hub_nfs }}"
     }
-    - ipa/client
+#    - ipa/client
     - role: sudo
       when: not inventory_hostname.startswith('bkernel') and env == 'production'
     - koji_builder
