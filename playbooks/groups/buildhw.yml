@@ -26,10 +26,10 @@
   - role: bkernel
     when: "'bkernel' in group_names"
 
-  - { role: linux-system-roles.nbde_client, when: "inventory_hostname.startswith(('bkernel', 'buildhw'))" }
-  - { role: serial-console, when: "inventory_hostname.startswith(('bkernel', 'buildhw-x86'))" }
+#  - { role: linux-system-roles.nbde_client, when: "inventory_hostname.startswith(('bkernel', 'buildhw'))" }
+#  - { role: serial-console, when: "inventory_hostname.startswith(('bkernel', 'buildhw-x86'))" }
   - hosts
-  - ipa/client
+# - ipa/client
   - role: sudo
 
   tasks:
