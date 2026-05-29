@@ -1,4 +1,4 @@
-#!/usr/bin/python -tt
+#!/usr/bin/python3 -tt
 # Author: Toshio Kuratomi <toshio@fedoraproject.org>
 # Copyright: December 2015, November 2016
 # License: LGPLv3+

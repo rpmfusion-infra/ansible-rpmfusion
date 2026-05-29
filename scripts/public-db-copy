@@ -4,6 +4,14 @@
 # A simple script to copy database dumps over to public space on batcave01
 # Only the most recent dump is published
 #
+
+# We need to set -e so that `chronic` will make the right decision about alerting
+# us to any failures.
+set -e
+
+# This changes really often ;)
+bkup_domain=bastion01.osuosl.rpmfusion.net
+
 scp db02:/backups/koji-$(date +%F).dump.xz /srv/web/infra/db-dumps/koji.dump.xz
 scp db02:/backups/pkgdb2-$(date +%F).dump.xz /srv/web/infra/db-dumps/pkgdb2.dump.xz
 scp db02:/backups/bodhi2-$(date +%F).dump.xz /srv/web/infra/db-dumps/bodhi2.dump.xz

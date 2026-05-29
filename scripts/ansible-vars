@@ -120,12 +120,12 @@ class Cli(object):
         hosts = I.list_hosts(pattern)
         groups = I.get_groups()
         if len(hosts) == 0:
-            print >>sys.stderr, "No hosts matched"
+            print("No hosts matched", file=sys.stderr)
             sys.exit(1)
 
         if options.listhosts:
             for host in hosts:
-                print '%s' % host
+                print('%s' % host)
             sys.exit(0)
 
         if options.listgroups:
@@ -135,8 +135,8 @@ class Cli(object):
                 group_subset = list(set(flatten(group_subset)))
             for group in group_subset:
                 parents = group.get_ancestors()
-                print '%s (depth %s): parents: %s' % (group.name, group.depth,
-                                             [ '%s (depth %s)' % (x.name, x.depth) for x in parents ])
+                print('%s (depth %s): parents: %s' % (group.name, group.depth,
+                                             [ '%s (depth %s)' % (x.name, x.depth) for x in parents ]))
             sys.exit(0)
 
         results = { }
@@ -158,12 +158,12 @@ if __name__ == '__main__':
     (options, args) = cli.parse()
     try:
         results = cli.run(options, args)
-    except errors.AnsibleError, e:
+    except errors.AnsibleError as e:
         # Generic handler for ansible specific errors
-        print "ERROR: %s" % str(e)
+        print("ERROR: %s" % str(e))
         sys.exit(1)
     if options.json and not options.yaml:
-        print jsonify(results, format=True)
+        print(jsonify(results, format=True))
     else:
-        print yaml.dump(results, Dumper=Dumper, allow_unicode=True)
+        print(yaml.dump(results, Dumper=Dumper, allow_unicode=True))
 

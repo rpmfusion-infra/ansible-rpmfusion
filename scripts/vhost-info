@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # by skvidal
 # ported by doteast to ansible 2.0
 # gplv2+
@@ -6,7 +6,7 @@
 
 
 import sys
-from collections import namedtuple
+from ansible.module_utils.common.collections import ImmutableDict
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars.manager import VariableManager
 from ansible.inventory.manager import InventoryManager
@@ -14,6 +14,7 @@ from ansible import constants as C
 from ansible.playbook.play import Play
 from ansible.executor.task_queue_manager import TaskQueueManager
 from ansible.plugins.callback import CallbackBase
+from ansible import context
 from optparse import OptionParser
 
 
@@ -26,73 +27,104 @@ class OutputCallback(CallbackBase):
         self.mem_used_in_vm = {}
         self.cpu_used_in_vm = {}
 
+    # To increate debugging info
+    #        self._display.verbosity = 5
 
     def v2_runner_on_unreachable(self, result):
         self.unreachable.add(result._host.get_name())
 
+    # Comment this out if you need to debug further the script
+    #    def v2_on_any(self, *args, **kwargs):
+    #        print("OutputCallback - any")
+    #        print(args)
+    #        print(kwargs)
+    #        result = args[0]
+    #        print(result._result)
+
     def v2_runner_on_ok(self, result, *args, **kwargs):
-        vhostname=result._host.get_name()
-        if result._result['invocation']['module_args']['command'] == 'nodeinfo':
-         self.cpu_per_host[vhostname]=int(result._result['cpus'])
-         self.mem_per_host[vhostname]=int(result._result['phymemory'])
+        vhostname = result._host.get_name()
+        if result._result["invocation"]["module_args"]["command"] == "nodeinfo":
+            self.cpu_per_host[vhostname] = int(result._result["cpus"])
+            self.mem_per_host[vhostname] = int(result._result["phymemory"])
+
+        if result._result["invocation"]["module_args"]["command"] == "info":
+            mem_used = 0
+            cpu_used = 0
+            for vm in result._result:
+                if vm not in ["invocation", "changed", "_ansible_no_log"]:
+                    if vm and type(result._result[vm]) == dict:
+                        mem_used += int(result._result[vm]["memory"]) / 1024
+                        cpu_used += int(result._result[vm]["nrVirtCpu"])
+
+                self.mem_used_in_vm[vhostname] = mem_used
+                self.cpu_used_in_vm[vhostname] = cpu_used
 
 
-        if result._result['invocation']['module_args']['command'] == 'info':
-         mem_used = 0
-         cpu_used = 0
-         for vm in result._result.keys():
-          if vm not in ['invocation', 'changed', '_ansible_no_log']:
-           if vm and type(result._result[vm]) == dict:
-            mem_used += int(result._result[vm]['memory'])/1024
-            cpu_used += int(result._result[vm]['nrVirtCpu'])
-    
-         self.mem_used_in_vm[vhostname]=mem_used
-         self.cpu_used_in_vm[vhostname]=cpu_used
-
-parser = OptionParser(version = "1.0")
-parser.add_option('--host', default=[], action='append', help="hosts to act on, defaults to virtservers")
-parser.add_option('--hosts-from-file', default=C.DEFAULT_HOST_LIST, dest="host_file", help="read list of hosts from this file")
+parser = OptionParser(version="1.0")
+parser.add_option(
+    "--host",
+    default=[],
+    action="append",
+    help="hosts to act on, defaults to virtservers",
+)
+parser.add_option(
+    "--hosts-from-file",
+    default=C.DEFAULT_HOST_LIST,
+    dest="host_file",
+    help="read list of hosts from this file",
+)
 (opts, args) = parser.parse_args(sys.argv[1:])
 
 if not opts.host:
- hosts = ["virtservers"]
+    hosts = ["virtservers"]
 else:
- hosts = ';'.join(opts.host)
+    hosts = ";".join(opts.host)
 
-
-
-Options = namedtuple('Options', ['connection','module_path', 'forks', 'remote_user', 'private_key_file', 'ssh_common_args', 'ssh_extra_args', 'sftp_extra_args', 'scp_extra_args', 'become', 'become_method', 'become_user', 'verbosity', 'check', 'timeout', 'diff'])
-
-options = Options(connection='ssh', module_path=None, forks=25, remote_user=None, private_key_file=None, ssh_common_args=None, ssh_extra_args=None, sftp_extra_args=None, scp_extra_args=None, become=None, become_method=None, become_user=None, verbosity=None, check=False, timeout=10, diff=False)
-
+# since the API is constructed for CLI it expects certain options to always be set in the context object
+context.CLIARGS = ImmutableDict(
+    connection="ssh",
+    module_path=["/usr/lib/python3.6/site-packages/ansible/modules/"],
+    forks=25,
+    become=None,
+    become_method=None,
+    become_user=None,
+    check=False,
+    diff=False,
+    verbosity=0,
+)
 
 # create inventory and pass to var manager
 loader = DataLoader()
 inv = InventoryManager(loader=loader, sources=opts.host_file)
 variable_manager = VariableManager(loader=loader, inventory=inv)
 
-unpatched_spectre = loader.load_from_file('/srv/private/ansible/vars.yml')['non_spectre_patched']
+unpatched_spectre = loader.load_from_file("/srv/private/ansible/vars.yml")[
+    "non_spectre_patched"
+]
 
 # create play with tasks
-play_source =  dict(
-        name = "vhost-info",
-        hosts = hosts,
-        gather_facts = 'no',
-        tasks = [ dict(action=dict(module='virt', args=dict(command='nodeinfo'))), dict(action=dict(module='virt', args=dict(command='info'))) ]
-    )
+play_source = dict(
+    name="vhost-info",
+    hosts=hosts,
+    gather_facts="no",
+    tasks=[
+        dict(action=dict(module="virt", args=dict(command="nodeinfo"))),
+        dict(action=dict(module="virt", args=dict(command="info"))),
+    ],
+)
 play = Play().load(play_source, variable_manager=variable_manager, loader=loader)
 
-cb=OutputCallback()
+cb = OutputCallback()
 tqm = None
 try:
     tqm = TaskQueueManager(
-              inventory=inv,
-              variable_manager=variable_manager,
-              loader=loader,
-              options=options,
-              passwords=None,run_additional_callbacks=False,
-              stdout_callback=cb,
-          )
+        inventory=inv,
+        variable_manager=variable_manager,
+        loader=loader,
+        passwords=None,
+        run_additional_callbacks=False,
+        stdout_callback=cb,
+    )
     result = tqm.run(play)
 finally:
     if tqm is not None:
@@ -101,8 +133,19 @@ finally:
 for vhostname in sorted(cb.mem_per_host):
     freemem = cb.mem_per_host[vhostname] - cb.mem_used_in_vm[vhostname]
     freecpu = cb.cpu_per_host[vhostname] - cb.cpu_used_in_vm[vhostname]
-    insecure = ''
+    insecure = ""
     if vhostname in unpatched_spectre:
-        insecure = ' (NOT PATCHED FOR SPECTRE)'
-    print '%s:\t%s/%s mem(unused/total)\t%s/%s cpus(unused/total) %s' % (
-        vhostname, freemem, cb.mem_per_host[vhostname], freecpu, cb.cpu_per_host[vhostname], insecure)
+        insecure = " (NOT PATCHED FOR SPECTRE)"
+    print(
+        (
+            "%s:\t%s/%s mem(unused/total)\t%s/%s cpus(unused/total) %s"
+            % (
+                vhostname,
+                freemem,
+                cb.mem_per_host[vhostname],
+                freecpu,
+                cb.cpu_per_host[vhostname],
+                insecure,
+            )
+        )
+    )

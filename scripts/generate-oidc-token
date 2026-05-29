@@ -34,7 +34,7 @@ Run this SQL against Ipsilon's database:
 
 --------START CUTTING HERE--------
 BEGIN;
-insert into token values ('{uuid}','username','{service_name}@service');
+insert into token values ('{uuid}','username','{username}');
 insert into token values ('{uuid}','security_check','{secret}');
 insert into token values ('{uuid}','client_id','{service_name}');
 insert into token values ('{uuid}','expires_at','{expiration}');
@@ -71,7 +71,9 @@ def validate_scopes(ctx, param, scopes):
 @click.option('--scope', '-s', multiple=True, callback=validate_scopes,
               help='A scope to include for this token. May be supplied multiple times.')
 @click.option('--no-openid', is_flag=True, help='Do not use "openid" as the first item in scope.')
-def generate_token(service_name, expiration, scope, no_openid):
+@click.option('--username', '-u', default=None,
+              help='The username associated with the token. Defaults to SERVICE_NAME@service.')
+def generate_token(service_name, expiration, scope, no_openid, username):
     """
     Print out SQL to insert a token in the Ipsilon database, and the token itself.
 
@@ -87,8 +89,10 @@ def generate_token(service_name, expiration, scope, no_openid):
         scope.insert(0, 'openid')
     scope = json.dumps(scope)
 
+    username = username or "{}@service".format(service_name)
+
     print(template.format(uuid=identifier, service_name=service_name, secret=secret,
-                          expiration=expiration, scope=scope, now=now))
+                          expiration=expiration, scope=scope, username=username, now=now))
 
     print("Token: {}_{}\n".format(identifier, secret))
 

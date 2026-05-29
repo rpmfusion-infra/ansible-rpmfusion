@@ -1,21 +1,7 @@
-#!/usr/bin/python -tt
-import os
-import os.path
-import subprocess
+#! /bin/sh
 
-rootpath = "/srv/web/infra/ansible/playbooks"
+rootpath="/srv/web/infra/ansible/playbooks"
+parallel=8 # limit since ansible-playbook takes O(1GB) RAM each on batcave
 
-#
-# Find all the .yml files under playbooks/groups and hosts and run ansible-playbook on them
-# With --check and --diff for now. We don't run the 'manual' subdir ones. 
-
-for dir in ("hosts", "groups"):
-    hostsplaybookspath = os.path.join(rootpath, dir)
-    for path, dirs, files in os.walk(hostsplaybookspath):
-        for file in files:
-            if not file.endswith(".yml"):
-                continue  
-            playbookpath = os.path.join(path, file)
-            cmd = ("ansible-playbook", playbookpath, "--check", "--diff")
-            ansibleprocess = subprocess.Popen(cmd)
-            ansibleprocess.communicate() 
+find $rootpath/hosts $rootpath/groups -type f -name '*.yml' |
+   xargs -I'{}' -P $parallel ansible-playbook '{}' --check --diff
