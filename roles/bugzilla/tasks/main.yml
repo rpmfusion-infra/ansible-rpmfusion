@@ -5,11 +5,11 @@
   ansible.builtin.package:
     state: present
     name:
-  - bugzilla
-  - bugzilla-contrib
-  - perl-Encode-Detect
-  - perl-Test-Taint
-  - perl-XMLRPC-Lite
+    - bugzilla
+    - bugzilla-contrib
+    - perl-Encode-Detect
+    - perl-Test-Taint
+    - perl-XMLRPC-Lite
   tags:
   - packages
   - bugzilla
