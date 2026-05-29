@@ -1,0 +1,6 @@
+datacenter: ovh
+ansible_ifcfg_blocklist: true
+
+bugzilla_db_host: localhost
+bugzilla_db_driver: MySQL
+dbs_to_backup: bugs
