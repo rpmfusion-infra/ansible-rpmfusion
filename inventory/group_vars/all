@@ -77,7 +77,7 @@ ansible_ifcfg_infra_net_devices: ['eth0', 'enc900']
 ansible_python_interpreter: auto
 # Set variable if we want to use our global iptables defaults
 # Some things need to set their own.
-baseiptables: True
+baseiptables: false
 # by default set become to false here We can override it as needed.
 # Note that if become is true, you need to unset requiretty for
 # ssh controlpersist to work.
@@ -399,17 +399,17 @@ createrepo: True
 
 # Nagios global variables
 nagios_Check_Services:
-  mail: true
-  nrpe: true
-  sshd: true
+  mail: false
+  nrpe: false
+  sshd: false
   named: false
   dhcpd: false
   httpd: false
-  swap: true
-  ping: true
+  swap: false
+  ping: false
   raid: false
 
-nagios_Can_Connect: true
+nagios_Can_Connect: false
 
 # Most of our machines have manual resolv.conf files
 # These settings are for machines where NM is supposed to control resolv.conf.
