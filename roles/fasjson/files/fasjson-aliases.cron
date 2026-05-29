@@ -1,0 +1,1 @@
+00 19 * * * root /usr/local/bin/lock-wrapper fasjson-aliases "/usr/local/bin/fasjson-aliases 2>&1 | /usr/local/bin/nag-once fasjson-aliases 1d 2>&1"

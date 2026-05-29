@@ -1,0 +1,138 @@
+#!/usr/bin/python3
+import os
+import sys
+import tempfile
+import subprocess
+
+from fasjson_client import Client, errors
+
+fasjson_url = "{{ fasjson_url }}"
+aliases_static_file = "/etc/aliases.static"
+aliases_file = "/etc/aliases"
+
+
+def gen_all_aliases():
+
+    # API query
+    try:
+        client = Client(url=fasjson_url)
+
+        try:
+            users = client.list_group_members(groupname="fedora-contributor").result
+            groups = client.list_groups().result
+            temporary_file = tempfile.NamedTemporaryFile(
+                "w+", delete=False, dir=os.getcwd()
+            )
+
+            with open(temporary_file.name, "w+") as temp:
+                with open(aliases_static_file, "r") as aliases_static:
+                    for line in aliases_static:
+                        temp.write(line)
+                    for user in users:
+                        username = user['username']
+                        userinfo = client.get_user(username=username).result
+                        email = userinfo['emails'][0]
+
+                        temp.write(f'{username}: {email} \n')
+
+                for group in groups:
+                    groupname = group['groupname']
+
+                    sponsor_list = ','.join(
+                        sponsor['username']
+                        for sponsor in client.list_group_sponsors(
+                            groupname=groupname).result
+                    )
+                    if sponsor_list:
+                        temp.write(
+                            f'{groupname}-administrators: {groupname}-sponsors \n'
+                        )
+                        temp.write(f"{groupname}-sponsors: {sponsor_list} \n")
+
+                    member_list = ','.join(
+                        member['username']
+                        for member in client.list_group_members(
+                            groupname=groupname).result
+                    )
+
+                    if member_list:
+                        temp.write(f"{groupname}-members: {member_list} \n")
+
+            rename(temporary_file.name, aliases_file)
+        except errors.APIError as e:
+            print(f"Something went wrong querying the fasjson API. {e}", file=sys.stderr)
+            raise
+        except IOError as e:
+            print(e, file=sys.stderr)
+            raise
+    except errors.ClientSetupError as e:
+        print(f"Something went wrong creating the fasjson client: {e}", file=sys.stderr)
+        raise
+
+
+def update_user(username):
+    try:
+        client = Client(url=fasjson_url)
+        user = client.get_user(username=username).result
+        email = user['emails'][0]
+
+        try:
+            # get the user and their new email address
+            temporary_file = tempfile.NamedTemporaryFile(
+                "w+", delete=False, dir=os.getcwd()
+            )
+
+            with open(aliases_file, 'r') as aliases:
+                with open(temporary_file.name, 'w+') as temp:
+                    for line in aliases:
+                        if not line.startswith(f"{username}: "):
+                            temp.write(line)
+                        else:
+                            temp.write(f"{username}: {email} \n")
+            rename(temporary_file.name, aliases_file)
+
+        except IOError as e:
+            print(e, file=sys.stderr)
+            raise
+    except errors.ClientError as e:
+        print(f"Something went wrong contacting fasjson {e}", file=sys.stderr)
+        raise
+
+
+def rename(filename, aliases_file):
+    try:
+        os.rename(filename, aliases_file)
+        if (os.path.exists(filename)):
+            os.remove(filename)
+    except IOError as e:
+        print(f"Error updating aliases file {e}", file=sys.stderr)
+        raise
+
+def selinux():
+    try:
+        subprocess.check_call(['/usr/sbin/restorecon', '-R', aliases_file])
+    except IOError as e:
+        print(f"Error restoring file context {e}", file=sys.stderr)
+
+def main():
+    args = sys.argv[1:]
+
+    # Use the system's keytab for authentication
+    os.environ["KRB5_CLIENT_KTNAME"] = "/etc/krb5.keytab"
+
+    if not args:
+       gen_all_aliases()
+       selinux()
+       # call newaliases script so postfix gets updated
+       subprocess.check_call(['/usr/bin/newaliases'])
+    elif len(args) == 2 and args[0] == "update":
+        update_user(args[1])
+        # call newaliases script so postfix gets updated
+        subprocess.check_call(['/usr/bin/newaliases'])
+    else:
+        print(f"Usage: {sys.argv[0]} [update <username>]", file=sys.stderr)
+        exit(1)
+
+
+if __name__ == "__main__":
+    main()

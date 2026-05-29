@@ -1,0 +1,35 @@
+---
+#
+# This task sets up fasjson-client on a machine.
+# It installs the fasjson-client package and a cron job update.
+#
+
+- name: Install fasjson-client
+  ansible.builtin.package:
+    state: present
+    name:
+    - fasjson-client
+  tags:
+  - packages
+  - fasjson
+
+- name: Fasjson-aliases script
+  ansible.builtin.template: src=fasjson-aliases.j2 dest=/usr/local/bin/fasjson-aliases owner=root mode=0755
+  tags:
+  - config
+  - fasjson
+  when: fasjson_aliases is defined
+
+- name: Fasjson-aliases cron job
+  ansible.builtin.copy: src=fasjson-aliases.cron dest=/etc/cron.d/fasjson-aliases owner=root mode=0644
+  tags:
+  - config
+  - fasjson
+  when: fasjson_aliases is defined
+
+- name: Fasjson-aliases base static file
+  ansible.builtin.copy: src=aliases.static dest=/etc/aliases.static owner=root mode=0644
+  tags:
+  - config
+  - fasjson
+  when: fasjson_aliases is defined
