@@ -1,3 +1,5 @@
-domain scaleway.rpmfusion.net
-nameserver 10.1.31.38
-nameserver 10.1.31.39
+# Generated via Ansible
+search scaleway.rpmfusion.net
+nameserver 151.115.69.15
+nameserver 151.115.69.26
+options rotate timeout:1
