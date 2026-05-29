@@ -11,9 +11,11 @@ bodhi-backend01.online.rpmfusion.net
 
 [bugzilla]
 bugzilla02.online.rpmfusion.net
+bugzilla02.ovh.rpmfusion.net
 
 [dbserver]
 db02.online.rpmfusion.net
+db02.ovh.rpmfusion.net
 
 [dns]
 hv01.online.rpmfusion.net
@@ -31,15 +33,17 @@ ipsilon01.online.rpmfusion.net
 
 [koji]
 koji01.online.rpmfusion.net
-koji02.online.rpmfusion.net
+koji02.ovh.rpmfusion.net
 
 [mailman]
 se01.online.rpmfusion.net
+se02.ovh.rpmfusion.net
 
 [mailman_stg]
 
 [mailman_db]
 db02.online.rpmfusion.net
+db02.ovh.rpmfusion.net
 
 [mailman_stg]
 
@@ -74,9 +78,11 @@ bodhi-backend01.online.rpmfusion.net
 
 [sign_bridge]
 koji01.online.rpmfusion.net
+koji02.ovh.rpmfusion.net
 
 [sign_vault]
 sign-vault01.online.rpmfusion.net ansible_ssh_user=root
+sign-vault02.ovh.rpmfusion.net ansible_ssh_user=root
 
 [squid]
 hv01.online.rpmfusion.net
@@ -97,8 +103,7 @@ hv01.online.rpmfusion.net
 hv02.ovh.rpmfusion.net
 
 [scaleway]
-proxy01.scaleway.rpmfusion.net
-#test01.scaleway.rpmfusion.net
+vm01.scaleway.rpmfusion.net
 
 [virtservers:children]
 virthost
