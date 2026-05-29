@@ -1,11 +1,21 @@
-- name: ensure packages required for mariadb are installed
-  dnf: name={{ item }} state=present
-  with_items:
+---
+- name: Ensure packages required for mariadb are installed
+  ansible.builtin.package:
+    state: present
+    name:
     - mariadb-server
-    - python3-PyMySQL
+    - pxz
+  when: ansible_cmdline.ostree is not defined
 
-- name: copy my.cnf
-  copy: src={{ item }} dest=/etc/my.cnf owner=root group=root mode=0644
+- name: Ensure packages required for mariadb are installed (el8)
+  ansible.builtin.package:
+    state: present
+    name:
+    - python3-PyMySQL
+  when: ansible_distribution_major_version|int >= 8
+
+- name: Copy my.cnf
+  ansible.builtin.copy: src={{ item }} dest=/etc/my.cnf owner=root group=root mode=0644
   with_first_found:
     - "{{ mariadb_config }}"
     - my.cnf.{{ inventory_hostname }}
@@ -15,30 +25,37 @@
     - my.cnf.{{ ansible_distribution_version }}
     - my.cnf.default
   notify:
-    - restart mariadb
+    - Restart mariadb
 
-- name: enable and start mariadb database
+- name: Enable and start mariadb database
   service: name=mariadb enabled=yes state=started
 
-- name: set mariaddb root user password
-  no_log: True
-  mysql_user: name=root password={{ mariadb_root_password }} check_implicit_admin=true
+- name: Set mariaddb root user password
+  no_log: true
+  mysql_user:
+    name: root
+    login_user: root
+    login_password: "{{ mariadb_root_password }}"
+    user: root
+    password: "{{ mariadb_root_password }}"
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    check_implicit_admin: true
 
-- name: create .my.cnf file for future logins
-  template: src=dotmy.cnf.j2 dest=/root/.my.cnf owner=root group=root mode=0700
+- name: Create .my.cnf file for future logins
+  ansible.builtin.template: src=dotmy.cnf.j2 dest=/root/.my.cnf owner=root group=root mode=0700
 
 - name: Ensure mariadb has a place to backup to
-  file: dest=/backups state=directory owner=mysql
+  ansible.builtin.file: dest=/backups state=directory owner=mysql
   tags:
   - mariadb-server
 
 - name: Copy over backup scriplet
-  copy: src=backup-database dest=/usr/local/bin/backup-database mode=0755
+  ansible.builtin.copy: src=backup-database dest=/usr/local/bin/backup-database mode=0755
   tags:
   - mariadb-server
 
 - name: Set up some cronjobs to backup databases as configured
-  template: >
+  ansible.builtin.template: >
     src=cron-backup-database
     dest=/etc/cron.d/cron-backup-database-{{ item }}
   with_items:
@@ -47,3 +64,6 @@
   tags:
   - cron
   - mariadb-server
+
+- name: Set domain_can_mmap_files so collectd and nagios work
+  seboolean: name=domain_can_mmap_files state=yes persistent=yes
