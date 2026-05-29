@@ -1,2 +1,3 @@
-- name: restart apache
-  command: /usr/local/bin/conditional-restart.sh httpd httpd
+---
+- name: Restart apache
+  ansible.builtin.command: /usr/local/bin/conditional-restart.sh httpd httpd
