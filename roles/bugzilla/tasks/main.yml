@@ -1,17 +1,10 @@
 ---
 # tasks file for bugzilla
 #
-- name: install eseyman bugzilla 5.0 copr repo
-  copy: src="eseyman-bugzilla-5.0-epel-7.repo" dest="/etc/yum.repos.d/bugzilla-epel.repo" owner=root group=root
-  tags:
-  - config
-  - packages
-  - yumrepos
-  when: ansible_distribution_major_version|int == 7
-
-- name: install needed packages for bugzilla
-  yum: pkg={{ item }} state=present
-  with_items:
+- name: Install needed packages for bugzilla
+  ansible.builtin.package:
+    state: present
+    name:
   - bugzilla
   - bugzilla-contrib
   - perl-Encode-Detect
@@ -21,28 +14,32 @@
   - packages
   - bugzilla
 
-- name: install perl-DBD-MySQL if needed by bugzilla
-  yum: pkg=perl-DBD-MySQL state=present
+- name: Install perl-DBD-MySQL if needed by bugzilla
+  ansible.builtin.package:
+    state: present
+    name: perl-DBD-MySQL
   when: bugzilla_db_driver == 'MySQL'
   tags:
   - packages
   - bugzilla
 
-- name: install perl-DBD-Pg if needed by bugzilla
-  yum: pkg=perl-DBD-Pg state=present
+- name: Install perl-DBD-Pg if needed by bugzilla
+  ansible.builtin.package:
+    state: present
+    name: perl-DBD-Pg
   when: bugzilla_db_driver == 'Pg'
   tags:
   - packages
   - bugzilla
 
-- name: bugzilla localconfig in place
-  template: src=localconfig dest=/etc/bugzilla/localconfig mode=0640 owner=root group=apache
+- name: Bugzilla localconfig in place
+  ansible.builtin.template: src=localconfig dest=/etc/bugzilla/localconfig mode=0640 owner=root group=apache
   tags:
   - config
   - bugzilla
 
-- name: install apache httpd bugzilla
-  copy: src="bugzilla-httpd.conf" dest="/etc/httpd/conf.d/bugzilla.conf" owner=root group=root
+- name: Install apache httpd bugzilla
+  ansible.builtin.copy: src="bugzilla-httpd.conf" dest="/etc/httpd/conf.d/bugzilla.conf" owner=root group=root
   tags:
   - config
 
