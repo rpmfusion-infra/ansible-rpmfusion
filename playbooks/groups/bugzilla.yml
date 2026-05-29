@@ -17,9 +17,8 @@
   roles:
   - base
   - rkhunter
-  - nagios_client
   - hosts
-  - fas_client
+  - ipa/client
   - collectd/base
   - sudo
   - apache
