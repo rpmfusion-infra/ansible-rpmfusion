@@ -49,22 +49,6 @@
     - not inventory_hostname.startswith(('buildvm-','buildhw-','compose'))
     - not inventory_hostname.startswith('copr')
 
-#  See the comment in the patch, el10 ansible-core/urls is incompatible with
-# el10 python/ssl
-#
-# We could be super safe and tst using md5sum/rpm-q and call something like:
-#  patch -i name.patch -F 0 -d /usr/lib/python3.12/site-packages/ansible/module_utils
-# ...but this is tested/used magic, so just do it?
-- name: Patch local ansible-core for authorized_key usage.
-  patch:
-    src: batcave-ansible-core-2.16.16-2.el10_2.1-urls.patch
-    dest: /usr/lib/python3.12/site-packages/ansible/module_utils/urls.py
-  delegate_to: localhost
-  tags:
-  - config
-  - base
-  - patches
-
 - name: Add ansible root key
   authorized_key: user=root key="{{ item }}"
   with_file:
