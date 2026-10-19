@@ -1,0 +1,27 @@
+---
+- name: Importing specific distro variables to an OS key
+  ansible.builtin.include_vars:
+    file: "{{ item }}"
+    name: 'os_vars'
+  with_first_found:
+    - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "{{ ansible_distribution }}.yml"
+    - common.yml
+  tags:
+    - zabbix_agent
+
+- name: Set OS dependent variables, if not already defined by user
+  ansible.builtin.set_fact:
+    "{{ item.key }}": "{{ item.value }}"
+  when: "not lookup('varnames', '^' + item.key + '$')"
+  loop: "{{ os_vars | dict2items }}"
+  tags:
+    - zabbix_agent
+
+- name: Installing Zabbix packages
+  ansible.builtin.dnf:
+    name: "{{ zabbix_pkgs_list }}"
+    state: installed
+  register: pkg_install
+  tags:
+    - zabbix_agent
