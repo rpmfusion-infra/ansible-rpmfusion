@@ -610,7 +610,7 @@
 
 - name: Setup host keytab
   import_tasks: keytab.yml
-  when: not inventory_hostname.startswith('ipa')
+  when: inventory_hostname.startswith('ipa')
 
 # SSSD-KCM has been showing way too many bugs with it saying "I have a ticket" while the ticket
 # is actually expired, and kinit's still not refreshing them and such alike.
