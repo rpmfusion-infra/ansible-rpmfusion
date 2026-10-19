@@ -1,13 +1,12 @@
 ---
-nm: 255.255.255.0
-gw: 192.168.181.254
 volgroup: /dev/vg_hv02
-eth0_ip: 192.168.181.202
+eth0_ipv4_ip: 192.168.181.202
+eth0_ipv4_gw: 192.168.181.254
 vmhost: hv02.ovh.rpmfusion.net
 datacenter: ovh
 
-ks_url: http://192.168.181.254/install/ks/db02.ks
-
+ks_repo: https://192.168.181.254/repo/rhel/RHEL10-x86_64/
+ks_url: https://192.168.181.254/repo/rhel/ks/kvm-rhel-10
 
 # This is a generic list, monitored by collectd
 databases:
