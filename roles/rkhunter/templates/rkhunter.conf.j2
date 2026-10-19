@@ -195,12 +195,7 @@ ALLOW_SSH_PROT_V1=0
 # tests, the test names, and how rkhunter behaves when these options are used.
 #
 ENABLE_TESTS="all"
-{% if ansible_hostname.startswith(('cloud', 'buildvmhost-s390x')) %}
-# Disable the promisc test here as openstack has it set on interfaces
-DISABLE_TESTS="suspscan hidden_procs deleted_files packet_cap_apps apps promisc"
-{% else %}
 DISABLE_TESTS="suspscan hidden_procs deleted_files packet_cap_apps apps"
-{% endif %}
 
 #
 # The HASH_FUNC option can be used to specify the command to use
@@ -335,10 +330,12 @@ ALLOWHIDDENFILE=/dev/.udev/queue.bin
 ALLOWHIDDENFILE=/dev/.udev/uevent_seqnum
 # Fedora 21+ and RHEL 7.2+ have a /etc/.updated file
 ALLOWHIDDENFILE=/etc/.updated
-{% if ansible_hostname.startswith('cloud') %}
 ALLOWHIDDENFILE=/etc/.etckeeper
 ALLOWHIDDENFILE=/etc/.gitignore
-{% endif %}
+# containers-common
+ALLOWHIDDENFILE=/usr/share/man/man5/.containerignore.5.gz
+# containers-common (older versions)
+ALLOWHIDDENFILE=/usr/share/man/man5/.dockerignore.5.gz
 
 #
 # Allow the specified processes to use deleted files.
@@ -383,9 +380,6 @@ ALLOWDEVFILE=/dev/.udev/db/*
 ALLOWDEVFILE=/dev/.udev/rules.d/99-root.rules
 ALLOWDEVFILE=/dev/.udev/uevent_seqnum
 ALLOWDEVFILE=/dev/md/autorebuild.pid
-{% if ansible_hostname == 'notifs-backend01' %}
-ALLOWDEVFILE=/dev/shm/fmn-cache.dbm
-{% endif %}
 {% if ansible_hostname.startswith('kojipkgs') %}
 ALLOWDEVFILE=/dev/shm/squid-squid-page-pool.shm
 ALLOWDEVFILE=/dev/shm/squid-cache_mem.shm
@@ -405,13 +399,16 @@ ALLOWDEVFILE=/dev/shm/spice.*
 {% if inventory_hostname in groups['ipa'] or inventory_hostname in groups['ipa_stg'] %}
 ALLOWDEVFILE=/dev/shm/sem.slapd*.stats
 {% endif %}
-{% if inventory_hostname in groups['proxies'] or inventory_hostname in groups['proxies_stg'] %}
-ALLOWDEVFILE=/dev/shm/libpod_lock
+{% if inventory_hostname in groups['retrace'] or inventory_hostname in groups['releng_compose'] or inventory_hostname in groups['releng_compose_stg'] %}
+ALLOWDEVFILE=/dev/shm/libpod_*
 {% endif %}
-{% if inventory_hostname in groups['dbserver'] or inventory_hostname in groups['pkgs'] or inventory_hostname in groups['pagure']  %}
+{% if inventory_hostname in groups['dbserver'] or inventory_hostname in groups['dbserver_stg'] or inventory_hostname in groups['pkgs'] or inventory_hostname in groups['pagure'] or inventory_hostname in groups['pagure_stg'] or inventory_hostname in groups['zabbix'] or  inventory_hostname in groups['zabbix_stg'] or inventory_hostname in groups['retrace'] %}
 ALLOWDEVFILE=/dev/shm/PostgreSQL*
 {% endif %}
 
+{% if inventory_hostname in groups['proxies'] or inventory_hostname in groups['proxies_stg'] %}
+ALLOWDEVFILE=/dev/shm/ShM.*
+{% endif %}
 #
 # This setting tells rkhunter where the inetd configuration
 # file is located.
@@ -522,6 +519,13 @@ PASSWORD_FILE=/etc/shadow
 # usually need to be set.
 #
 #SYSLOG_CONFIG_FILE=/etc/syslog.conf
+{% if ansible_distribution_major_version|int >= 40 %}
+# On Fedora 41 /etc/systemd/journald.conf isn't shipped by default anymore.
+# Instead /usr/lib/systemd/journalc.conf is the default
+# Oh RHEL and older Fedora's we can just not set this and it will
+# find the default one.
+SYSLOG_CONFIG_FILE="/etc/rsyslog.conf /usr/lib/systemd/journald.conf"
+{% endif %}
 
 #
 # This option permits the use of syslog remote logging.
@@ -538,16 +542,16 @@ ALLOW_SYSLOG_REMOTE_LOGGING=1
 #
 APP_WHITELIST="sshd:4.3p2 sshd:5.2p1 httpd:2.2.3 httpd:2.2.13 php:5.1.6 named:9.3.6 openssl:0.9.8e php:5.2.6 named:9.3.6-P1"
 
-# 
+#
 # Scan for suspicious files in directories containing temporary files and
 # directories posing a relatively higher risk due to user write access.
 # Please do not enable by default as suspscan is CPU and I/O intensive and prone to
 # producing false positives. Do review all settings before usage.
 # Also be aware that running suspscan in combination with verbose logging on,
 # RKH's default, will show all ignored files.
-# Please consider adding all directories the user the (web)server runs as has 
+# Please consider adding all directories the user the (web)server runs as has
 # write access to including the document root (example: "/var/www") and log
-# directories (example: "/var/log/httpd"). 
+# directories (example: "/var/log/httpd").
 #
 # A space-separated list of directories to scan.
 #
@@ -569,7 +573,7 @@ SUSPSCAN_MAXSIZE=10240000
 #
 # Score threshold. Below this value no hits will be reported.
 # A value of "200" seems "good" after testing on malware. Please adjust
-# locally if necessary. 
+# locally if necessary.
 #
 SUSPSCAN_THRESH=200
 
@@ -623,8 +627,7 @@ OS_VERSION_FILE=/etc/{{ ansible_distribution|lower }}-release
 #RTKT_DIR_WHITELIST=""
 #RTKT_FILE_WHITELIST=""
 {% if inventory_hostname in groups['ipa'] or inventory_hostname in groups['ipa_stg'] %}
-RTKT_FILE_WHITELIST="/var/log/pki/pki-tomcat/ca/system"
-RTKT_FILE_WHITELIST="/var/log/pki/pki-tomcat/kra/system"
+RTKT_DIR_WHITELIST="/var/log/pki/pki-tomcat"
 {% endif %}
 
 #
@@ -645,7 +648,7 @@ SCRIPTWHITELIST=/usr/bin/whatis
 SCRIPTWHITELIST=/usr/bin/ldd
 SCRIPTWHITELIST=/usr/bin/groups
 SCRIPTWHITELIST=/usr/bin/GET
-{% if ansible_distribution_major_version|int >= 30 %}
+{% if ansible_distribution_major_version|int >= 9 %}
 # no network-scripts on newest fedora
 #SCRIPTWHITELIST=/sbin/ifup
 #SCRIPTWHITELIST=/sbin/ifdown
@@ -653,7 +656,5 @@ SCRIPTWHITELIST=/usr/bin/GET
 SCRIPTWHITELIST=/sbin/ifup
 SCRIPTWHITELIST=/sbin/ifdown
 {% endif %}
-{% if inventory_hostname.startswith(('db','pagure','retrace','anitya','upstream')) %}
-# Set this size very large on postgres running servers.
+# zabbix uses shm and can grow quite large, so bump this limit a lot.
 IPC_SEG_SIZE=100000000000
-{% endif %}
