@@ -1,0 +1,14 @@
+---
+ipa_client_shell_groups:
+  - fi-apprentice
+  - sysadmin-analysis
+  - sysadmin-logs
+  - sysadmin-noc
+  - sysadmin-osbuild
+  - sysadmin-veteran
+ipa_client_sudo_groups:
+  - sysadmin-analysis
+  - sysadmin-logs
+ipa_host_group: logging
+ipa_host_group_desc: Logging hosts
+primary_auth_source: ipa

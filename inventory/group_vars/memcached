@@ -1,0 +1,18 @@
+---
+# Define resources for this group of hosts here.
+ipa_client_shell_groups:
+  - fi-apprentice
+  - sysadmin-noc
+  - sysadmin-veteran
+  - sysadmin-web
+ipa_client_sudo_groups:
+  - sysadmin-web
+ipa_host_group: memcached
+ipa_host_group_desc: Distributed Memory Caching service
+lvm_size: 25000
+mem_size: 8192
+num_cpus: 2
+primary_auth_source: ipa
+# for systems that do not match the above - specify the same parameter in
+# the host_vars/$hostname file
+tcp_ports: [11211]
