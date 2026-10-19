@@ -1,14 +1,48 @@
 ---
 #
-# Setup postgresql server. 
+# Setup postgresql server.
 #
-- name: install postgresql server packages
-  yum: name={{ item }}  state=present
-  with_items:
-  - postgresql-server
-  - postgresql-contrib
-  - postgresql-plpython
-  - python-psycopg2
+- name: Install postgresql server packages (Fedora)
+  ansible.builtin.package:
+    state: present
+    name:
+    - postgresql-server
+    - postgresql-contrib
+    - postgresql-plpython3
+    - python3-psycopg2
+    - pxz
+    - mbuffer
+  when: ansible_distribution_major_version|int >= 29 and ansible_distribution == 'Fedora' and ansible_cmdline.ostree is not defined
+  tags:
+  - packages
+  - postgresql
+
+- name: Install postgresql server packages (EL 8 and 9)
+  ansible.builtin.package:
+    state: present
+    name:
+    - postgresql-server
+    - postgresql-contrib
+    - postgresql-plpython3
+    - python3-psycopg2
+    - pxz
+    - mbuffer
+  when: ansible_distribution_major_version|int < 10 and ansible_distribution == 'RedHat' and ansible_cmdline.ostree is not defined
+  tags:
+  - packages
+  - postgresql
+
+- name: Install postgresql server packages (EL 10)
+  ansible.builtin.package:
+    state: present
+    name:
+    - postgresql18-server
+    - postgresql18-contrib
+    - postgresql18-plpython3
+    - python3-psycopg2
+    - pxz
+    - mbuffer
+  when: ansible_distribution_major_version|int == 10 and ansible_distribution == 'RedHat' and ansible_cmdline.ostree is not defined
   tags:
   - packages
   - postgresql
@@ -17,15 +51,15 @@
   sysctl: name=kernel.shmmax value={{ kernel_shmmax }}
   when: kernel_shmmax is defined
   notify:
-  - restart postgresql
+  - Restart postgresql
   tags:
   - postgresql
 
 - name: Initialize postgres if necessary
-  command: /usr/bin/postgresql-setup initdb
-           creates=/var/lib/pgsql/data
+  ansible.builtin.command: /usr/bin/postgresql-setup initdb
+           creates=/var/lib/pgsql/data/postgresql.conf
   notify:
-  - restart postgresql
+  - Restart postgresql
   tags:
   - postgresql
 
@@ -33,44 +67,47 @@
   service: name=postgresql enabled=yes
   ignore_errors: true
   notify:
-  - restart postgresql
+  - Restart postgresql
   tags:
   - service
   - postgresql
 
 - name: Add our postgres config file.
-  copy: >
+  ansible.builtin.copy: >
     src={{ item }}
     dest=/var/lib/pgsql/data/{{ item }}
     owner=postgres
   with_items:
   - pg_hba.conf
   notify:
-  - restart postgresql
+  - Restart postgresql
   tags:
   - config
   - postgresql
 
-- name: postgresql config template
-  template: dest=/var/lib/pgsql/data/postgresql.conf src=postgresql.conf
+  # Eg. postgresql18
+- name: Postgresql config template (el10 / postgresql 18)
+  ansible.builtin.template: dest=/var/lib/pgsql/data/postgresql.conf src=postgresql.conf-18
+  when: (ansible_distribution_major_version|int == 10 and ansible_distribution == 'RedHat')
   notify:
-  - restart postgresql
+  - Restart postgresql
   tags:
   - config
   - postgresql
 
 - name: Ensure postgres has a place to backup to
-  file: dest=/backups state=directory owner=postgres
+  ansible.builtin.file: dest=/backups state=directory owner=postgres
   tags:
   - postgresql
 
 - name: Copy over backup scriplet
-  copy: src=backup-database dest=/usr/local/bin/backup-database mode=0755
+  ansible.builtin.copy: src=backup-database dest=/usr/local/bin/backup-database mode=0755
+  when: not inventory_hostname.startswith(('db-koji01.rdu3', 'db-datanommer'))
   tags:
   - postgresql
 
 - name: Set up some cronjobs to backup databases as configured
-  template: >
+  ansible.builtin.template: >
     src=cron-backup-database
     dest=/etc/cron.d/cron-backup-database-{{ item }}
   with_items:
@@ -80,49 +117,4 @@
   - cron
   - postgresql
 
-- name: Set up a cron job to clean long koji sessions on koji database server only
-  copy: >
-    src=koji-cleanup-sessions.cron
-    dest=/etc/cron.d/koji-cleanup-sessions.cron
-  when: inventory_hostname.startswith('db02')
-  tags:
-  - cron
-  - postgresql
 
-- name: install script to kill long running pgsql jobs
-  copy: >
-    src=kill_idle_xact_92.sh
-    dest=/usr/local/bin/kill_idle_xact_92.sh
-    mode=0755
-  when: inventory_hostname.startswith('db02')
-  tags:
-  - cron
-  - postgresql
-
-- name: Set up a cron job to kill long postresql queries
-  copy: >
-    src=koji-cleanup-locks.cron
-    dest=/etc/cron.d/koji-cleanup-locks.cron
-  when: inventory_hostname.startswith('db02')
-  tags:
-  - cron
-  - postgresql
-
-- name: Set up a script for cron job to clean long fas sessions on fas database server only
-  copy: >
-    src=fasdb-cleanup-sessions
-    dest=/usr/local/bin/fasdb-cleanup-sessions
-    mode=755
-  when: inventory_hostname.startswith('db-fas01')
-  tags:
-  - cron
-  - postgresql
-
-- name: Set up a cron job to clean long fas sessions on fas database server only
-  copy: >
-    src=fasdb-cleanup-sessions.cron
-    dest=/etc/cron.d/fasdb-cleanup-sessions.cron
-  when: inventory_hostname.startswith('db-fas01')
-  tags:
-  - cron
-  - postgresql
