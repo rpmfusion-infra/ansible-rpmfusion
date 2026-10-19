@@ -1,54 +1,55 @@
 #
 # This is a base koji_builder role.
 #
-- name: set hostname
+---
+- name: Set hostname
   hostname: name="{{inventory_hostname}}"
   tags:
   - koji_builder
 
-- name: set root passwd
+- name: Set root passwd
   user: name=root password={{ builder_rootpw }} state=present
   tags:
   - koji_builder
   - rootpw
 
-- name: add mock user as 425
+- name: Add mock user as 425
   user: name=mock uid=425 state=present home=/var/lib/mock createhome=yes system=yes
   tags:
   - koji_builder
 
-- name: make mock homedir perms
-  file: state=directory path=/var/lib/mock mode=2775 owner=root group=mock
+- name: Make mock homedir perms
+  ansible.builtin.file: state=directory path=/var/lib/mock mode=2775 owner=root group=mock
   tags:
   - koji_builder
 
-- name: add mock ssh dir
-  file: state=directory path=/var/lib/mock/.ssh mode=700 owner=mock group=mock
+- name: Add mock ssh dir
+  ansible.builtin.file: state=directory path=/var/lib/mock/.ssh mode=700 owner=mock group=mock
   tags:
   - koji_builder
 
-- name: add mock ssh keys
-  copy: src=mock_auth_keys dest=/var/lib/mock/.ssh/authorized_keys mode=640 owner=mock group=mock
+- name: Add mock ssh keys
+  ansible.builtin.copy: src=mock_auth_keys dest=/var/lib/mock/.ssh/authorized_keys mode=640 owner=mock group=mock
   tags:
   - koji_builder
 
-- name: add kojibuilder
+- name: Add kojibuilder
   user: name=kojibuilder groups=mock
   tags:
   - koji_builder
 
-- name: add mockbuilder
+- name: Add mockbuilder
   user: name=mockbuilder groups=mock
   tags:
   - koji_builder
 
-- name: mockbuilder .ssh dir
-  file: state=directory path=/home/mockbuilder/.ssh mode=700 owner=mockbuilder group=mockbuilder
+- name: Mockbuilder .ssh dir
+  ansible.builtin.file: state=directory path=/home/mockbuilder/.ssh mode=700 owner=mockbuilder group=mockbuilder
   tags:
   - koji_builder
 
-- name: mockbuilder ssh key
-  copy: src=ftbfs_auth_keys dest=/home/mockbuilder/.ssh/authorized_keys mode=644 owner=mockbuilder group=mockbuilder
+- name: Mockbuilder ssh key
+  ansible.builtin.copy: src=ftbfs_auth_keys dest=/home/mockbuilder/.ssh/authorized_keys mode=644 owner=mockbuilder group=mockbuilder
   tags:
   - koji_builder
 
@@ -62,8 +63,8 @@
   tags:
   - koji_builder
 
-- name: make a bunch of dirs
-  file: state=directory path={{ item }}
+- name: Make a bunch of dirs
+  ansible.builtin.file: state=directory path={{ item }}
   with_items:
     - /pub
     - /mnt/rpmfusion_koji
@@ -80,8 +81,8 @@
   tags:
     - koji_builder
 
-- name: add pkgs
-  package:
+- name: Install packages needed by koji_builders
+  ansible.builtin.package:
     state: present
     name:
     - koji-builder
@@ -106,8 +107,8 @@
 # rpmautospec plugin
 #
 
-- name: remove koji builder rpmautospec plugin
-  package:
+- name: Remove koji builder rpmautospec plugin
+  ansible.builtin.package:
     name:
       - koji-builder-plugin-rpmautospec
       - python3-rpmautospec
@@ -118,8 +119,8 @@
   - koji_builder
   - rpmautospec
 
-- name: remove obsolete configuration of rpmautospec
-  file:
+- name: Remove obsolete configuration of rpmautospec
+  ansible.builtin.file:
     path: "/etc/kojid/plugins/{{ item }}"
     state: absent
   loop:
@@ -141,18 +142,18 @@
   - koji_builder
   when: "ansible_architecture is defined and ansible_architecture == 'aarch64'"
 
-- name: enable virtlogd service
+- name: Enable virtlogd service
   service: name=virtlogd state=started enabled=yes
   tags:
   - koji_builder
 
-- name: create kojid service override directory
-  file: path=/etc/systemd/system/kojid.service.d state=directory
+- name: Create kojid service override directory
+  ansible.builtin.file: path=/etc/systemd/system/kojid.service.d state=directory
   tags:
   - koji_buidler
  
-- name: systemd kojid service override
-  copy: src=builders/kojid.service.d.override.conf dest=/etc/systemd/system/kojid.service.d/override.conf
+- name: Create systemd kojid service override
+  ansible.builtin.copy: src=builders/kojid.service.d.override.conf dest=/etc/systemd/system/kojid.service.d/override.conf
   notify:
   - reload systemd
 
@@ -198,8 +199,8 @@
 - name: copy over koji ca cert
   copy: src="{{ private }}/files/koji/buildercerts/rpmfusion-ca.cert" dest=/etc/kojid/cacert.pem
 
-- name: copy over /etc/security/limits.conf
-  copy: src=limits.conf dest=/etc/security/limits.conf
+- name: Copy over /etc/security/limits.conf
+  ansible.builtin.copy: src=limits.conf dest=/etc/security/limits.conf
   tags:
   - koji_builder
 
@@ -231,13 +232,13 @@
 # On primary we want to make a /mnt/koji link to /mnt/rpmfusion_koji/koji
 #
 
-- name: make a mnt/koji link
-  file: state=link src=/mnt/rpmfusion_koji/koji dest=/mnt/koji
+- name: Make a mnt/koji link
+  ansible.builtin.file: state=link src=/mnt/rpmfusion_koji/koji dest=/mnt/koji
   tags:
   - koji_builder
 
-- name: mock site-defaults.cfg
-  copy: src=builders/site-defaults.cfg dest=/etc/mock/site-defaults.cfg mode=0644 owner=root group=mock
+- name: Copy mock site-defaults.cfg
+  ansible.builtin.copy: src=builders/site-defaults.cfg dest=/etc/mock/site-defaults.cfg mode=0644 owner=root group=mock
   tags:
   - koji_builder
 
@@ -248,8 +249,8 @@
 
 # x86_64 builders run both x86_64 and i686 builds, that requires multilib
 # version of nosync installed to fully take advantage of nosync
-- name: special pkgs for the x86_64 builders
-  package:
+- name: Special pkgs for the x86_64 builders
+  ansible.builtin.package:
     state: present
     name:
     - nosync.i686
@@ -259,7 +260,7 @@
 
 # Before, the builders had the "apache" role. This is a temporary play to remove the httpd daemon everywhere
 - name: Uninstall httpd
-  package: name=httpd
+  ansible.builtin.package: name=httpd
            state=absent
   tags:
   - koji_builder
@@ -287,24 +288,24 @@
   - koji_builder
   - removehttpd
 
-- name: make sure we are in permissive selinux mode
+- name: Make sure we are in permissive selinux mode
   selinux: policy=targeted state=permissive
   tags:
   - koji_builder
   - selinux
 
 - name: Create directory for shared secrets
-  file:
+  ansible.builtin.file:
     path: /etc/kojid/secrets
     state: directory
     owner: root
     group: root
-    mode: 0660
+    mode: "0660"
   tags:
   - koji_builder
 
-# https://pagure.io/fedora-infrastructure/issue/6636
-- name: install libkcapi to get increased sockets on armv7
+# https://forge.fedoraproject.org/infra/tickets/issues/6636
+- name: Install libkcapi to get increased sockets on armv7
   dnf: name=libkcapi enablerepo=updates-testing state=present
   tags:
   - koji_builder
@@ -313,7 +314,7 @@
 # set highmem_is_dirtyable in compose armv7 machines.
 # see: https://bugzilla.redhat.com/show_bug.cgi?id=1504264
 #
-- name: set highmem_is_dirtyable on armv7 builders that are in the compose channel.
+- name: Set highmem_is_dirtyable on armv7 builders that are in the compose channel.
   sysctl: name=vm.highmem_is_dirtyable value=1 state=present sysctl_set=yes reload=yes
   tags:
   - koji_builder
@@ -323,7 +324,7 @@
 # Add rngd so that virtual maachines have enough randomness to boot in our lifetimes
 #
 - name: Install rng-tools for entropy
-  package: name=rng-tools state=present
+  ansible.builtin.package: name=rng-tools state=present
   tags:
   - koji_builder
   - koji_builder/rngd
@@ -336,8 +337,27 @@
   - koji_builder/rngd
   when: ansible_architecture == 'x86_64'
 
-- name: disable systemd-oomd we do not need or want it
+- name: Disable systemd-oomd we do not need or want it
   systemd: name=systemd-oomd state=stopped enabled=no masked=true
   tags:
   - koji_builder
   - koji_builder/oomd
+
+- name: Create override dir for systemd-nspawn containers config
+  ansible.builtin.file:
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+    path: /etc/systemd/system/machine-.scope.d
+  when: inventory_hostname.startswith(('buildhw-a64'))
+  tags:
+  - koji_builder
+  - koji_builder/nspawn
+
+- name: Create override config for systemd-nspawn containers to allow coredumps
+  ansible.builtin.template: src=nspawn-override.conf dest=/etc/systemd/system/machine-.scope.d/80-infra.conf mode=0644
+  when: inventory_hostname.startswith(('buildhw-a64'))
+  tags:
+  - koji_builder
+  - koji_builder/nspawn
