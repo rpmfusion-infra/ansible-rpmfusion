@@ -6,8 +6,8 @@
 #
 # Put in place the default sysadmin-main sudoers file.
 #
-- name: setup /etc/sudoers.d/01-sysadmin-main
-  copy: src="{{ private }}/files/sudo/sysadmin-main" dest=/etc/sudoers.d/01-sysadmin-main owner=root group=root mode=0600
+- name: Setup /etc/sudoers.d/01-sysadmin-main
+  ansible.builtin.copy: src="{{ private }}/files/sudo/sysadmin-main" dest=/etc/sudoers.d/01-sysadmin-main owner=root group=root mode=0600
   when: "sudoers_main is not defined and (primary_auth_source | default('fas')) == 'fas'"
   tags:
   - config
@@ -17,16 +17,16 @@
 #
 # Put in place the default sysadmin-main sudoers file. (nopasswd edition)
 #
-- name: setup /etc/sudoers.d/01-sysadmin-main (nopasswd)
-  copy: src="{{ private }}/files/sudo/sysadmin-main-nopasswd" dest=/etc/sudoers.d/01-sysadmin-main owner=root group=root mode=0600
+- name: Setup /etc/sudoers.d/01-sysadmin-main (nopasswd)
+  ansible.builtin.copy: src="{{ private }}/files/sudo/sysadmin-main-nopasswd" dest=/etc/sudoers.d/01-sysadmin-main owner=root group=root mode=0600
   when: sudoers_main is defined and sudoers_main == 'nopasswd'
   tags:
   - config
   - sudo
   - sudoers
 
-- name: remove old sysadmin-main file if its still around
-  file: dest=/etc/sudoers.d/sysadmin-main state=absent
+- name: Remove old sysadmin-main file if its still around
+  ansible.builtin.file: dest=/etc/sudoers.d/sysadmin-main state=absent
   tags:
   - config
   - sudo
@@ -35,8 +35,8 @@
 #
 # This will move a /etc/sudoers.d/ file in place
 #
-- name: setup /etc/sudoers.d/sudoer file for client use
-  copy: src={{ item }} dest=/etc/sudoers.d/{{ item | basename | replace('.', '_') }}
+- name: Setup /etc/sudoers.d/sudoer file for client use
+  ansible.builtin.copy: src={{ item }} dest=/etc/sudoers.d/{{ item | basename | replace('.', '_') }}
           owner=root group=root mode=0600
   with_first_found:
   - "{{ sudoers }}"
