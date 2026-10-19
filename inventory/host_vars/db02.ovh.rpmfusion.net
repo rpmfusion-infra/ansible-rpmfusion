@@ -1,0 +1,49 @@
+---
+nm: 255.255.255.0
+gw: 192.168.181.254
+volgroup: /dev/vg_hv02
+eth0_ip: 192.168.181.202
+vmhost: hv02.ovh.rpmfusion.net
+datacenter: ovh
+
+ks_url: http://192.168.181.254/install/ks/db02.ks
+
+
+# This is a generic list, monitored by collectd
+databases:
+- bugzilla
+- pkgdb2
+- koji
+
+# This is a more strict list of databases to backup every day
+dbs_to_backup:
+- bugzilla
+- pkgdb2
+- koji
+- fas2
+- hyperkitty
+- mailman
+
+
+# These are normally group variables, but in this case db servers are often different
+lvm_size: 10240
+mem_size: 2048
+num_cpus: 1
+fas_client_groups: sysadmin-db
+
+is_kojidb: True
+
+#
+# We should narrow this down at some point
+#
+custom_rules: [ '-A INPUT -p tcp -m tcp --dport 5432 -j ACCEPT' ]
+
+#
+# db01 handles lots of apps, could have many procs if they are busy.
+# 
+nrpe_procs_warn: 800
+nrpe_procs_crit: 900
+
+host_backup_targets: ['/backups']
+shared_buffers: "1GB"
+effective_cache_size: "1GB"

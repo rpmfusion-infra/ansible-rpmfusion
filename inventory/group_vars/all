@@ -414,7 +414,7 @@ nagios_Can_Connect: false
 # These settings are for machines where NM is supposed to control resolv.conf.
 nm_controlled_resolv: False
 dns1: "192.168.181.254"
-dns2: "62.210.16.6"
+dns2: "1.1.1.1"
 
 # This is a list of services that need to wait for VPN to be up before getting started.
 postvpnservices: []
