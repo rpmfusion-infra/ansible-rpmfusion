@@ -76,8 +76,6 @@ lvm_size: 20000
 # qa02.qa it's em3. currently this only affects whether GATEWAY, DOMAIN
 # and DNS1/DNS2 lines are put into ifcfg-(device).
 ansible_ifcfg_infra_net_devices: ['eth0', 'enc900']
-# Work around for https://github.com/ansible/ansible/issues/82685
-ansible_facts_parallel: false
 #
 # Autodetect python version
 #
