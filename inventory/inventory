@@ -67,6 +67,8 @@ buildppcle-02.osuosl.rpmfusion.net
 
 [pagure]
 
+[pagure_stg]
+
 [pkgdb]
 pkgdb02.online.rpmfusion.net
 
@@ -132,5 +134,7 @@ mirrorlist05.ovh.rpmfusion.net
 
 [zabbix]
 zabbix01.ovh.rpmfusion.net
+
+[zabbix_stg]
 
 [zombie_infested]
