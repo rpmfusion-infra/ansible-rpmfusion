@@ -1,11 +1,12 @@
 /var/log/merged/*.log {
     missingok
-    rotate 1 
+    rotate 3
     nodateext
-    daily  
+    daily
+    maxsize 8G
     create 0644 root root
     copytruncate
     compress
-    compresscmd /bin/gzip
-    uncompresscmd /bin/gzip
+    compresscmd /bin/xz
+    uncompresscmd /bin/xz
 }

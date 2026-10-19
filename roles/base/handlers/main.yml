@@ -1,37 +1,56 @@
 ---
-- name: apply interface-changes
-  command: nmcli con up {{ item.split()[1] }}
+- name: Apply interface-changes
+  ansible.builtin.command: nmcli con up {{ item.split()[1] }}
   async: 1
   poll: 0
   with_items:
   - "{{ if_uuid.stdout_lines }}"
 
-- name: restart iptables
-  service: name=iptables state=restarted
+- name: Restart iptables
+  ansible.builtin.service:
+    name: iptables
+    state: restarted
 
-- name: restart docker
-  command: systemctl try-restart docker
-  ignore_errors: true
+- name: Restart nftables
+  ansible.builtin.service:
+    name: nftables
+    state: restarted
 
-- name: restart ip6tables
-  service: name=ip6tables state=restarted
+- name: Restart ip6tables
+  ansible.builtin.service:
+    name: ip6tables
+    state: restarted
 
-- name: restart NetworkManager
-  service: name=NetworkManager state=restarted
+- name: Restart NetworkManager
+  ansible.builtin.service:
+    name: NetworkManager
+    state: restarted
 
-- name: reload NetworkManager-connections
-  command: nmcli c reload
+- name: Reload NetworkManager-connections
+  ansible.builtin.command: nmcli c reload
 
-- name: restart postfix
-  service: name=postfix state=restarted
+- name: Restart postfix
+  ansible.builtin.service:
+    name: postfix
+    state: restarted
 
-- name: restart rsyslog
-  service: name=rsyslog state=restarted
+- name: Restart rsyslog
+  ansible.builtin.service:
+    name: rsyslog
+    state: restarted
 
-- name: restart watchdog
-  service: name=watchdog state=restarted
+- name: Restart watchdog
+  ansible.builtin.service:
+    name: watchdog
+    state: restarted
 
-- name: reload libvirtd
-  service: name=libvirtd state=reloaded
+- name: Reload libvirtd
+  ansible.builtin.service:
+    name: libvirtd
+    state: reloaded
   ignore_errors: true
   when: ansible_virtualization_role == 'host'
+
+- name: Create lmdb files
+  ansible.builtin.include_tasks: lmdb.yml
+  listen: "Create lmdb files"

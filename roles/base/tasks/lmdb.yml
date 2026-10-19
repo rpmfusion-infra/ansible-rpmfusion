@@ -1,0 +1,17 @@
+---
+- name: Read the config file
+  ansible.builtin.slurp:
+    src: /etc/postfix/main.cf
+  register: maincf
+
+- name: Find all the lmdb files
+  ansible.builtin.set_fact:
+    lmdb_files: "{{ (maincf.content | b64decode) | regex_findall('lmdb:([^,\\s]+)') }}"
+
+- name: Convert to lmdb
+  ansible.builtin.command: "{{ (item == '/etc/aliases') | ternary('postalias', 'postmap') }} lmdb:{{ item }}"
+  args:
+    creates: "{{ item }}.lmdb"
+  loop: "{{ lmdb_files }}"
+  register: result
+  failed_when: result.rc != 0

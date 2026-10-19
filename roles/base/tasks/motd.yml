@@ -1,0 +1,7 @@
+---
+- name: Add motd to system
+  ansible.builtin.template: src=motd.j2 dest=/etc/motd
+
+  tags:
+    - motd
+    - base

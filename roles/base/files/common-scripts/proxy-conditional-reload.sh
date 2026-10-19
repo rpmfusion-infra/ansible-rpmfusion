@@ -1,7 +1,7 @@
 #!/bin/bash
 # reload SERVICE only if PACKAGE is installed.
 # We use this throughout handlers/restart_services.yml
-
+HOST=$(hostname -s)
 SERVICE=$1
 PACKAGE=$2
 
@@ -9,8 +9,8 @@ rpm -q $PACKAGE
 
 INSTALLED=$?
 
-if [ ! -f /etc/httpd/ticketkey_*.tkey ]; then
-    # This host is not configured yet, do not try and restart httpd
+if [[ ! -f "/etc/httpd/ticketkey.tkey" && "$HOST" =~ "^proxy" ]]; then
+    # This host is not configured yet and not proxy host, do not try and restart httpd
     exit 0
 fi
 

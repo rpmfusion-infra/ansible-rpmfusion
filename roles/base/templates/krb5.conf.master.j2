@@ -1,0 +1,54 @@
+includedir /var/lib/sss/pubconf/krb5.include.d/
+
+[logging]
+ default = FILE:/var/log/krb5libs.log
+ kdc = FILE:/var/log/krb5kdc.log
+ admin_server = FILE:/var/log/kadmind.log
+
+[libdefaults]
+{% if env == "production" %}
+ default_realm = RPMFUSION.ORG
+{% else %}
+ default_realm = STG.RPMFUSION.ORG
+{% endif %}
+ dns_lookup_realm = false
+ dns_lookup_kdc = false
+ ticket_lifetime = 24h
+ renew_lifetime = 7d
+ forwardable = true
+ dns_canonicalize_hostname = false
+ rdns = false
+
+[realms]
+{% if env == "production" %}
+ RPMFUSION.ORG = {
+  default_domain = fedoraproject.org
+{% else %}
+ STG.RPMFUSION.ORG = {
+  default_domain = stg.fedoraproject.org
+{% endif %}
+  kdc = {{inventory_hostname}}:88
+  master_kdc = {{inventory_hostname}}:88
+  admin_server = {{inventory_hostname}}:749
+  pkinit_anchors = FILE:/etc/ipa/ca.crt
+}
+
+[domain_realm]
+{% if env == "production" %}
+ .rpmfusion.org = RPMFUSION.ORG
+ rpmfusion.org = RPMFUSION.ORG
+ {{inventory_hostname}} = RPMFUSION.ORG
+{% else %}
+ .stg.rpmfusion.org = STG.RPMFUSION.ORG
+ stg.rpmfusion.org = STG.RPMFUSION.ORG
+ {{inventory_hostname}} = STG.RPMFUSION.ORG
+{% endif %}
+
+[dbmodules]
+{% if env == "production" %}
+ RPMFUSION.ORG = {
+{% else %}
+ STG.RPMFUSION.ORG = {
+{% endif %}
+      db_library = ipadb.so
+  }

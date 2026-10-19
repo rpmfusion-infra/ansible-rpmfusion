@@ -14,7 +14,6 @@
 -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
 # Established connections allowed
--A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
 -A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
 
 # if the blocked_ips is defined - drop them

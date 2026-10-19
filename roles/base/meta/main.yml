@@ -1,6 +1,6 @@
 ---
 dependencies:
-#    - { role: linux-system-roles.network, when: network_connections is defined, tags: ['linux-system-roles.network'] }
-    - { role: basessh }
-    - { role: chrony }
-    - { role: dnf-automatic }
+  - { role: linux-system-roles.network, when: "'no_linux_system_roles' not in group_names", tags: ['linux-system-roles.network'] }
+  - { role: basessh, tags: ['basessh'] }
+  - { role: chrony }
+  - { role: dnf-automatic, tags: ['dnf-automatic'] }

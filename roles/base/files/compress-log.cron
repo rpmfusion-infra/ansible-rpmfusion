@@ -1,0 +1,13 @@
+# Note % in the CMD is \n unless escaped:
+
+# Compress host log files daily.
+0 06  * * * root /usr/bin/find /var/log/hosts -type f -name "*.log" -print | grep -v "$(date +'/\%Y/\%m/\%d/')" | xargs -r -n1 xz -1 > /dev/null
+
+#  Compress the log files from 12 days ago, every day. date should just dtrt
+# here and don't need the next entry.
+0 07  * * * root /usr/bin/find "/mnt/fedora_stats/combined-http/$(date --date='12 Days ago' +\%Y/\%m/\%d)" -type f -name "*.log" -print | xargs -r -n 1 -P 2 nice xz -1 > /dev/null
+# Compress entire month from _two_ months ago log files in fedora_stats.
+# Everything should be already compressed, but just in case.
+# NOTE: We don't do it on the 1st for an abundance of caution.
+0 08  8 * * root /usr/bin/find "/mnt/fedora_stats/combined-http/$(date --date='2 Month ago' +\%Y/\%m)" -type f -name "*.log" -print | xargs -r -n 1 -P 2 nice xz -1 > /dev/null
+

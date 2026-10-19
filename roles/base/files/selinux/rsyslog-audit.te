@@ -1,4 +1,4 @@
-module rsyslog-audit 1.2;
+module rsyslog-audit 1.3;
 
 require {
 	type auditd_log_t;

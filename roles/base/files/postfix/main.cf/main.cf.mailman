@@ -80,8 +80,6 @@ smtp_helo_name = $myhostname
 #
 #mydomain = domain.tld
 
-mydomain = rpmfusion.org
-
 # SENDING MAIL
 # 
 # The myorigin parameter specifies the domain that locally-posted
@@ -98,6 +96,7 @@ mydomain = rpmfusion.org
 #myorigin = $myhostname
 #myorigin = $mydomain
 
+mydomain = rpmfusion.org
 myorigin = rpmfusion.org
 
 # RECEIVING MAIL
