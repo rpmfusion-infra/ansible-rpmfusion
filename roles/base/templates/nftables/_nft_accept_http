@@ -1,0 +1,6 @@
+# _nft_accept_http
+# Accept HTTP(s)
+
+add rule {{_tn}} INPUT ct state new tcp dport  80 counter accept
+add rule {{_tn}} INPUT ct state new tcp dport 443 counter accept
+

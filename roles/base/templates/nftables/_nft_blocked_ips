@@ -1,0 +1,9 @@
+# _nft_blocked_ips
+# Block IPs, if requested
+
+# if the blocked_ips is defined - drop them
+{% if blocked_ips is defined %}
+{% for ip in blocked_ips %}
+add rule {{_tn}} INPUT ip saddr {{ ip }} counter drop
+{% endfor %}
+{% endif %}

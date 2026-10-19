@@ -1,0 +1,61 @@
+# {{ ansible_managed }}
+# {{ template_path }}
+
+{#
+# Set small Table Names.
+# We need the big global ones so we can use them in *_rules but, that would be
+# a lot in these files.
+#}
+{% set _tn = nft_table_filter %}
+{% set _tnat = nft_table_nat %}
+
+
+{% include '_nft_drop_beg' %}
+
+{% include '_nft_drop_std' %}
+
+{% include '_nft_blocked_ips' %}
+
+# DNS
+add rule {{_tn}} OUTPUT ip daddr 192.168.181.254 udp dport 53 counter accept
+
+# bastion smtp
+add rule {{_tn}} OUTPUT ip daddr 192.168.181.254 tcp dport 25 counter accept
+
+# infra
+add rule {{_tn}} OUTPUT ip daddr 192.168.181.254 tcp dport  80 counter accept
+add rule {{_tn}} OUTPUT ip daddr 192.168.181.254 tcp dport 443 counter accept
+
+# rsyslog out to log01
+add rule {{_tn}} OUTPUT ip daddr 192.168.181.254/32 tcp dport 514 counter accept
+
+# SSH
+add rule {{_tn}}  INPUT ip saddr 192.168.181.0/24 tcp dport 22 counter accept
+add rule {{_tn}} OUTPUT ip daddr 192.168.181.0/24 tcp sport 22 counter accept
+
+{% if inventory_hostname in groups['secureboot'] %}
+# Allow secure boot signing to contact the sign bridge
+add rule {{_tn}} OUTPUT ip daddr 192.168.181.0/24 tcp dport 44334 counter accept
+{% endif %}
+
+# http to pull sources from pkgs lookaside
+add rule {{_tn}} OUTPUT ip daddr 192.168.181.0/24 tcp dport 80 counter accept
+
+# https git on pagure,io
+add rule {{_tn}} OUTPUT ip daddr 192.168.181.0/24 tcp dport 443 counter accept
+
+# NFS for rdu3
+
+# a little to wide-open - but kinda necessary
+add rule {{_tn}}  INPUT ip saddr 192.168.181.0/24 counter accept
+add rule {{_tn}} OUTPUT ip daddr 192.168.181.0/24 counter accept
+# ntp
+add rule {{_tn}} OUTPUT ip daddr 192.168.181.254/32 udp dport 123 counter accept
+add rule {{_tn}} OUTPUT ip daddr 192.168.181.254/32 udp dport 123 counter accept
+
+# dhcp
+add rule {{_tn}} OUTPUT ip daddr 192.168.181.254/32 udp dport 67 counter accept
+
+{% include '_nft_accept_ports' %}
+
+{% include '_nft_custom_rules' %}

@@ -1,0 +1,12 @@
+# _nft_drop_std
+# Std. allow rules for the drop policy
+
+
+{% include '_nft_accept_std' %}
+
+# MORE loopback allowed
+add rule {{_tn}} OUTPUT oifname "lo" counter accept
+add rule {{_tn}}  INPUT iifname "virbr0" counter accept
+add rule {{_tn}} OUTPUT oifname "virbr0" counter accept
+add rule {{_tn}}  INPUT ip daddr 127.0.0.0/8 counter accept
+add rule {{_tn}} OUTPUT ip daddr 127.0.0.0/8 counter accept

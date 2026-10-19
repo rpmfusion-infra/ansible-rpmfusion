@@ -1,0 +1,30 @@
+# _nft_accept_vpn
+# Default accept policy, vpn stuff.
+# NOTE: That the end of this file rejects all other VPN traffic.
+
+{% if vpn %}
+#
+# We want to have all vpn hosts reject most things from the 'less secure' vpn network
+#
+{% if inventory_hostname == 'hv02.ovh.rpmfusion.org' %}
+# Allow all vpn hosts to talk to the log server for rsyslog
+add rule {{_tn}} INPUT ip saddr 192.168.181.0/24 tcp dport   514 counter accept
+#add rule {{_tn}} INPUT ip saddr 192.168.181.0/24 udp dport 25826 counter accept
+{% endif %}
+
+{% if inventory_hostname in groups['ipa'] %}
+# Allow all vpn hosts to talk to the ipa servers for auth
+add rule {{_tn}} INPUT ip saddr 192.168.181.0/24 tcp dport  80 counter accept
+add rule {{_tn}} INPUT ip saddr 192.168.181.0/24 tcp dport  88 counter accept
+add rule {{_tn}} INPUT ip saddr 192.168.181.0/24 tcp dport 389 counter accept
+add rule {{_tn}} INPUT ip saddr 192.168.181.0/24 tcp dport 443 counter accept
+add rule {{_tn}} INPUT ip saddr 192.168.181.0/24 tcp dport 464 counter accept
+add rule {{_tn}} INPUT ip saddr 192.168.181.0/24 tcp dport 636 counter accept
+
+add rule {{_tn}} INPUT ip saddr 192.168.181.0/24 udp dport  88 counter accept
+add rule {{_tn}} INPUT ip saddr 192.168.181.0/24 udp dport 464 counter accept
+{% endif %}
+
+# Reject all further connections from less secure vpn
+add rule {{_tn}} INPUT ip saddr 192.168.181.0/24 counter reject with icmp type host-prohibited
+{% endif %}

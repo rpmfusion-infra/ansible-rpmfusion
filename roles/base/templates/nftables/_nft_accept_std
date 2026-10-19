@@ -1,0 +1,12 @@
+# _nft_accept_std
+# Standard accept lines, SSH is _not_ here.
+
+# allow ping and traceroute
+add rule {{_tn}} INPUT ip protocol icmp counter accept
+
+# localhost is fine
+add rule {{_tn}} INPUT iifname "lo" counter accept
+
+# Established connections allowed
+add rule {{_tn}}  INPUT ct state related,established counter accept
+add rule {{_tn}} OUTPUT ct state related,established counter accept

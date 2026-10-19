@@ -1,0 +1,68 @@
+# {{ ansible_managed }}
+# {{ template_path }}
+
+# ############################################################################
+# NOTE: If we start using ipv6, then this should be split out and use includes.
+# ############################################################################
+
+{#
+# Set small Table Names.
+# We need the big global ones so we can use them in *_rules but, that would be
+# a lot in these files.
+#}
+{% set _tn6 = nft_table6_filter %}
+
+add table {{_tn6}}
+add chain {{_tn6}} INPUT { type filter hook input priority 0; policy accept; }
+add chain {{_tn6}} FORWARD { type filter hook forward priority 0; policy accept; }
+add chain {{_tn6}} OUTPUT { type filter hook output priority 0; policy accept; }
+
+# loopback allowed
+add rule {{_tn6}} INPUT iifname "lo" counter accept
+
+# Accept ping and traceroute (needs icmp)
+add rule {{_tn6}} INPUT meta l4proto ipv6-icmp counter accept
+
+# Established connections allowed
+add rule {{_tn6}} INPUT ct state related,established counter accept
+
+# Established connections allowed
+add rule {{_tn6}} OUTPUT ct state related,established counter accept
+
+# allow dhcp6d from aws
+add rule {{_tn6}} INPUT ip6 daddr fe80::/64 udp sport 547 udp dport 546 counter accept
+
+# if the blocked_ips is defined - drop them
+{% if blocked_ip_v6 is defined %}
+{% for ip in blocked_ip_v6 %}
+add rule {{_tn6}} INPUT ip6 saddr {{ ip }} counter drop
+{% endfor %}
+{% endif %}
+
+# allow ssh - always
+add rule {{_tn6}} INPUT ct state new tcp dport 22 counter accept
+
+# if the host/group defines incoming tcp_ports - allow them
+{% if tcp_ports is defined %}
+{% for port in tcp_ports %}
+add rule {{_tn6}} INPUT tcp dport {{ port }} counter accept
+{% endfor %}
+{% endif %}
+
+# if the host/group defines incoming udp_ports - allow them
+{% if udp_ports is defined %}
+{% for port in udp_ports %}
+add rule {{_tn6}} INPUT udp dport {{ port }} counter accept
+{% endfor %}
+{% endif %}
+
+# if there are custom6 rules - put them in as-is
+{% if nft_custom6_rules is defined %}
+{% for rule in nft_custom6_rules %}
+{{ rule }}
+{% endfor %}
+{% endif %}
+
+# otherwise kick everything out
+add rule {{_tn6}} INPUT counter reject with icmpv6 type admin-prohibited
+add rule {{_tn6}} FORWARD counter reject with icmpv6 type admin-prohibited

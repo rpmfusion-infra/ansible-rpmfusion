@@ -1,0 +1,6 @@
+# _nft_accept_monitoring
+# Default accept policy, let things be monitored
+
+#  Greg has configured zabbix so the host calls out to the server, so we
+# shouldn't need to accept anything on 10050/10051.
+

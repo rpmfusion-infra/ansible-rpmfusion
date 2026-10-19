@@ -1,0 +1,7 @@
+# _nft_accept_end
+# Default accept policy, standard end rules
+# This kind of makes it default drop, but the spelling is weird.
+
+# otherwise kick everything out
+add rule {{_tn}} INPUT   counter reject with icmp type host-prohibited
+add rule {{_tn}} FORWARD counter reject with icmp type host-prohibited

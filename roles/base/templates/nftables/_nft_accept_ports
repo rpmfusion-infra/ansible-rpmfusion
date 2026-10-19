@@ -1,0 +1,16 @@
+# _nft_accept_ports
+# Default accept policy, accept host defined tcp/udp ports
+
+# if the host/group defines incoming tcp_ports - allow them
+{% if tcp_ports is defined %}
+{% for port in tcp_ports %}
+add rule {{_tn}} INPUT tcp dport {{ port }} counter accept
+{% endfor %}
+{% endif %}
+
+# if the host/group defines incoming udp_ports - allow them
+{% if udp_ports is defined %}
+{% for port in udp_ports %}
+add rule {{_tn}} INPUT udp dport {{ port }} counter accept
+{% endfor %}
+{% endif %}

@@ -1,0 +1,13 @@
+# _nft_accept_staging_friends
+
+{% if env != 'staging' and datacenter == 'ovh' and inventory_hostname not in groups['staging_friendly'] %}
+#
+# In the rdu3 datacenter, both production and staging hosts are in different
+# vlans, and different subnets. However, just as a precaution, we want prod machines to
+# reject connections from any staging host just in case there's some globally enabled port.
+# There are however a few hosts in production we have marked 'staging-friendly'
+# that we do allow staging to talk to for mostly read-only data they need.
+#
+add rule {{_tn}} INPUT ip saddr 192.168.181.0/24 counter reject with icmp type host-prohibited
+add rule {{_tn}} INPUT ip saddr 192.168.181.0/24 counter reject with icmp type host-prohibited
+{% endif %}

@@ -1,0 +1,9 @@
+# _nft_block_rules
+# Default accept policy, standard end rules
+
+{% if nft_block_rules is defined %}
+# if there are block rules - put them in as-is
+{% for rule in nft_block_rules %}
+{{ rule }}
+{% endfor %}
+{% endif %}

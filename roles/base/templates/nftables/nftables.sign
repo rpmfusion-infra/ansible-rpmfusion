@@ -1,0 +1,20 @@
+# {{ ansible_managed }}
+# {{ template_path }}
+
+{#
+# Set small Table Names.
+# We need the big global ones so we can use them in *_rules but, that would be
+# a lot in these files.
+#}
+{% set _tn = nft_table_filter %}
+{% set _tnat = nft_table_nat %}
+
+
+{% include '_nft_accept_beg' %}
+
+{% include '_nft_accept_std' %}
+
+# Allow connections from client/server
+add rule {{_tn}} INPUT tcp dport 44333-44334 counter accept
+
+{% include '_nft_accept_end' %}

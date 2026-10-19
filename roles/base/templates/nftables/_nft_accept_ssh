@@ -1,0 +1,6 @@
+# _nft_accept_ssh
+# Accept ssh
+
+# allow ssh - always
+add rule {{_tn}} INPUT ct state new tcp dport 22 counter accept
+

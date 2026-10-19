@@ -1,0 +1,31 @@
+# {{ ansible_managed }}
+# {{ template_path }}
+
+{#
+# Set small Table Names.
+# We need the big global ones so we can use them in *_rules but, that would be
+# a lot in these files.
+#}
+{% set _tn = nft_table_filter %}
+{% set _tnat = nft_table_nat %}
+
+
+{% include '_nft_accept_beg' %}
+
+{% include '_nft_accept_std' %}
+
+{% include '_nft_blocked_ips' %}
+
+# allow ssh only from needed ips
+# vpn in from tun0
+add rule {{_tn}} INPUT iifname "tun0" ip saddr 192.168.182.0/24 ct state new tcp dport 22 counter accept
+# external ip for ovh
+add rule {{_tn}} INPUT ip saddr 54.38.192.28/32 ct state new tcp dport 22 counter accept
+
+{% include '_nft_accept_monitoring' %}
+
+{% include '_nft_accept_ports' %}
+
+{% include '_nft_custom_rules' %}
+
+{% include '_nft_accept_end' %}

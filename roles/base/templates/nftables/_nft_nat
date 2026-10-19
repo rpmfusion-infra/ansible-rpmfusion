@@ -1,0 +1,15 @@
+# _nft_nat
+# Setup forwarding via. "ip nat" table, if we have nat rules.
+
+{% if nft_nat_rules is defined %}
+
+add table {{_tnat}}
+add chain {{_tnat}}  PREROUTING { type nat hook prerouting priority {{_nft_prio_preroute}}; policy accept; }
+add chain {{_tnat}}       INPUT { type nat hook input priority {{_nft_prio_input}}; policy accept; }
+add chain {{_tnat}}      OUTPUT { type nat hook output priority {{_nft_prio_output}}; policy accept; }
+add chain {{_tnat}} POSTROUTING { type nat hook postrouting priority {{_nft_prio_postroute}}; policy accept; }
+
+{% for rule in nft_nat_rules %}
+{{ rule }}
+{% endfor %}
+{% endif %}

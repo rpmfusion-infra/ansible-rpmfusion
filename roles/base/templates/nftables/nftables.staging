@@ -1,0 +1,47 @@
+# {{ ansible_managed }}
+# {{ template_path }}
+
+{#
+# Set small Table Names.
+# We need the big global ones so we can use them in *_rules but, that would be
+# a lot in these files.
+#}
+{% set _tn = nft_table_filter %}
+{% set _tnat = nft_table_nat %}
+
+
+{% include '_nft_accept_beg' %}
+
+{% include '_nft_accept_std' %}
+
+{% include '_nft_accept_ssh' %}
+
+{% include '_nft_accept_monitoring' %}
+
+{% include '_nft_block_rules' %}
+
+{% include '_nft_accept_ports' %}
+
+# NOTE: This uses proxies_stg and not proxies. Also the VPN bits. ... so unique
+# version of '_nft_accept_proxy_ports'
+
+# if there are any proxy-only tcp_ports - allow them
+{% if proxy_tcp_ports is defined %}
+{% for port in proxy_tcp_ports %}
+{% for proxy in groups['proxies_stg'] %}
+{% if hostvars[proxy]['vpn'] %}
+#!# FIXME: This test is the negation of the one in iptables.
+add rule {{_tn}} INPUT ip saddr {{ hostvars[proxy]['ansible_tun0']['ipv4']['address'] }} tcp dport {{ port }} counter accept
+{% else %}
+add rule {{_tn}} INPUT ip saddr {{ hostvars[proxy]['ansible_eth0']['ipv4']['address'] }} tcp dport {{ port }} counter accept
+{% endif %}
+{% endfor %}
+# No nagios
+{% endfor %}
+{% endif %}
+
+{% include '_nft_custom_rules' %}
+
+{% include '_nft_accept_end' %}
+
+# No nat rules

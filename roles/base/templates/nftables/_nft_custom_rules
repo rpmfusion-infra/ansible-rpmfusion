@@ -1,0 +1,9 @@
+# _nft_custom_rules
+# Probably only use for: Default accept policy
+
+# if there are custom rules - put them in as-is
+{% if nft_custom_rules is defined %}
+{% for rule in nft_custom_rules %}
+{{ rule }}
+{% endfor %}
+{% endif %}

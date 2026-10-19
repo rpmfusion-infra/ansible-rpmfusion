@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+# _nft_accept_beg
+# Setup an ip filter table with default accept policy, and the std. allow rules.
+
+add table {{_tn}}
+add chain {{_tn}}   INPUT { type filter hook input priority 0; policy accept; }
+add chain {{_tn}} FORWARD { type filter hook forward priority 0; policy accept; }
+add chain {{_tn}}  OUTPUT { type filter hook output priority 0; policy accept; }

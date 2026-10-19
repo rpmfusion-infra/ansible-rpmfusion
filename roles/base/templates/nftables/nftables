@@ -1,0 +1,43 @@
+# {{ ansible_managed }}
+# {{ template_path }}
+
+{#
+# NOTE: This needs to be done at the top level because include inherits
+#       variables, but set variables don't escape.
+# Set small Table Names.
+# We need the big global ones so we can use them in *_rules but, that would be
+# a lot in these files.
+#}
+{% set _tn = nft_table_filter %}
+{% set _tnat = nft_table_nat %}
+
+
+{% include '_nft_accept_beg' %}
+
+{% include '_nft_accept_std' %}
+
+{% include '_nft_accept_ssh' %}
+
+{% include '_nft_accept_monitoring' %}
+
+{% include '_nft_accept_vpn' %}
+
+{% include '_nft_accept_staging_friends' %}
+
+{% include '_nft_block_rules' %}
+
+{% include '_nft_accept_ports' %}
+
+{% include '_nft_accept_proxy_ports' %}
+
+{% include '_nft_custom_rules' %}
+
+{% include '_nft_accept_end' %}
+
+
+{% set _nft_prio_preroute = "-100" %}
+{% set _nft_prio_input = "100" %}
+{% set _nft_prio_output = "-100" %}
+{% set _nft_prio_postroute = "100" %}
+
+{% include '_nft_nat' %}

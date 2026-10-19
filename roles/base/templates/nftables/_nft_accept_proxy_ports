@@ -1,0 +1,17 @@
+# _nft_accept_proxy_ports
+# Default accept policy, deal with proxy ports (if defined)
+
+# if there are any proxy-only tcp_ports - allow them
+{% if proxy_tcp_ports is defined %}
+{% for port in proxy_tcp_ports %}
+{% for proxy in (groups['proxies'] + groups['proxies_internal']) %}
+{% if hostvars[proxy]['datacenter'] == "ovh" and 'ansible_eth0' in hostvars[proxy] %}
+add rule {{_tn}} INPUT ip saddr {{ hostvars[proxy]['ansible_eth0']['ipv4']['address'] }} tcp dport {{ port }} counter accept
+{% else %}
+add rule {{_tn}} INPUT ip saddr {{ hostvars[proxy]['ansible_tun0']['ipv4']['address'] }} tcp dport {{ port }} counter accept
+{% endif %}
+{% endfor %}
+# nagios
+add rule {{_tn}} INPUT ip saddr 192.168.181.0/24 tcp dport {{ port }} counter accept
+{% endfor %}
+{% endif %}

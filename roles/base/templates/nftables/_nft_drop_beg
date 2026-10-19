@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# _nft_drop_beg
+# Setup an ip filter table with default drop policy.
+#
+# Note that there's no _nft_drop_end because _nft_accept_end drops everything
+# and we don't need that.
+
+add table {{_tn}}
+add chain {{_tn}}   INPUT { type filter hook input priority 0; policy drop; }
+add chain {{_tn}} FORWARD { type filter hook forward priority 0; policy drop; }
+add chain {{_tn}}  OUTPUT { type filter hook output priority 0; policy drop; }

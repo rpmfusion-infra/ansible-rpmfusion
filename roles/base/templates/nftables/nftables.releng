@@ -1,0 +1,43 @@
+# {{ ansible_managed }}
+# {{ template_path }}
+
+#
+# NOTE: Chaging this template updates iptables on all releng hosts :)
+# Please check with sysadmin-main before pushing out an update here.
+#
+
+{#
+# NOTE: We don't use _nft_accept_beg because INPUT policy default is drop
+
+# Set small Table Names.
+# We need the big global ones so we can use them in *_rules but, that would be
+# a lot in these files.
+#}
+{% set _tn = nft_table_filter %}
+{% set _tnat = nft_table_nat %}
+
+add table {{_tn}}
+add chain {{_tn}}   INPUT { type filter hook input priority 0; policy drop; }
+add chain {{_tn}} FORWARD { type filter hook forward priority 0; policy accept; }
+add chain {{_tn}}  OUTPUT { type filter hook output priority 0; policy accept; }
+
+{% include '_nft_accept_std' %}
+
+{% include '_nft_accept_monitoring' %}
+
+{% include '_nft_blocked_ips' %}
+
+# SSH
+add rule {{_tn}} INPUT tcp dport 22 counter accept
+
+{% include '_nft_accept_ssh' %}
+
+{% include '_nft_accept_http' %}
+
+{% include '_nft_accept_ports' %}
+
+{% include '_nft_custom_rules' %}
+
+{% include '_nft_accept_vpn' %}
+
+{% include '_nft_accept_end' %}
