@@ -1,0 +1,6 @@
+---
+- name: Restart dnf-automatic timer
+  ansible.builtin.systemd:
+    name: "{{ 'dnf5-automatic.timer' if (ansible_distribution_major_version | int >= 41 and ansible_distribution == 'Fedora') else 'dnf-automatic-install.timer' }}"
+    state: restarted
+    daemon_reload: yes
