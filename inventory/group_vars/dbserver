@@ -1,4 +1,13 @@
 ---
+ipa_client_shell_groups:
+  - sysadmin-dba
+  - sysadmin-noc
+  - sysadmin-veteran
+ipa_client_sudo_groups:
+  - sysadmin-dba
+ipa_host_group: dbserver
+ipa_host_group_desc: Database server hosts
+
 # common items for the releng-* boxes
 lvm_size: 20000
 mem_size: 2048
