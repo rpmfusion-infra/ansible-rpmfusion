@@ -3,10 +3,15 @@
 # BEGIN: Ansible roles_path variables
 #
 #   Background/reference about external repos pulled in:
-#       https://pagure.io/fedora-infrastructure/issue/5476
+#       https://forge.fedoraproject.org/infra/tickets/issues/5476
 #
 # IPA settings
 additional_host_keytabs: []
+#
+# Conditional for if anubis is enabled for a proxy application or not.
+# Defaults to false and only set to true on the particular site.
+#
+anubis: false
 ansible_base: /srv/web/infra
 # Default to managing the network, we want to not do this on select
 # hosts (like cloud nodes)
@@ -71,6 +76,8 @@ lvm_size: 20000
 # qa02.qa it's em3. currently this only affects whether GATEWAY, DOMAIN
 # and DNS1/DNS2 lines are put into ifcfg-(device).
 ansible_ifcfg_infra_net_devices: ['eth0', 'enc900']
+# Work around for https://github.com/ansible/ansible/issues/82685
+ansible_facts_parallel: false
 #
 # Autodetect python version
 #
@@ -329,14 +336,8 @@ fedmsg_debug_loopback: False
 
 # By default, nodes don't backup any dbs on them unless they declare it.
 dbs_to_backup: []
-
-# by default the number of procs we allow before we whine
-nrpe_procs_warn: 250
-nrpe_procs_crit: 300
-
-# by default, the number of emails in queue before we whine
-nrpe_check_postfix_queue_warn: 2
-nrpe_check_postfix_queue_crit: 5
+# dnf-automatic-install.service mode default: security-only
+dnf_automatic_type: security
 
 # env is staging or production, we default it to production here.
 env: production
