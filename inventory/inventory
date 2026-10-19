@@ -30,6 +30,7 @@ fas01.online.rpmfusion.net
 
 [ipsilon]
 ipsilon01.online.rpmfusion.net
+ipsilon02.ovh.rpmfusion.net
 
 [koji]
 koji01.online.rpmfusion.net
@@ -49,6 +50,8 @@ db02.ovh.rpmfusion.net
 
 [moin]
 moin01.online.rpmfusion.net
+
+[no_linux_system_roles:children]
 
 [openqa_workers]
 
@@ -94,6 +97,12 @@ buildppcle-02.osuosl.rpmfusion.net
 [squid:vars]
 ansible_python_interpreter=/usr/bin/python3
 
+# This is a list of hosts that are a little "friendly" with staging.
+# They are exempted from the iptables wall between staging and prod.
+# For instance, staging needs to send smtp mail data
+# to bastion (both of which are prod boxen).
+[staging_friendly]
+
 [bvirthost]
 
 [buildvmhost]
@@ -119,5 +128,8 @@ mirrorlist04.mv.rpmfusion.net
 [mirrorlist_server]
 mirrorlist06.hetzner.rpmfusion.net
 mirrorlist05.ovh.rpmfusion.net
+
+[zabbix]
+zabbix01.ovh.rpmfusion.net
 
 [zombie_infested]
