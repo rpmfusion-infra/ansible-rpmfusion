@@ -155,12 +155,12 @@
 - name: Create systemd kojid service override
   ansible.builtin.copy: src=builders/kojid.service.d.override.conf dest=/etc/systemd/system/kojid.service.d/override.conf
   notify:
-  - reload systemd
+  - Reload systemd
 
-- name: build /etc/kojid/kojid.conf from group vars
-  template: src=kojid.conf dest=/etc/kojid/kojid.conf
+- name: Build /etc/kojid/kojid.conf from group vars
+  ansible.builtin.template: src=kojid.conf dest=/etc/kojid/kojid.conf
   notify:
-  - restart kojid
+  - Restart kojid
   tags:
   - koji_builder
   - rpmautospec
@@ -174,7 +174,7 @@
   template: src=runroot.conf.j2 dest=/etc/kojid/plugins/runroot.conf
   when: "'runroot' in group_names"
   notify:
-  - restart kojid
+  - Restart kojid
   tags:
   - koji_builder
 
@@ -241,11 +241,7 @@
   ansible.builtin.copy: src=builders/site-defaults.cfg dest=/etc/mock/site-defaults.cfg mode=0644 owner=root group=mock
   tags:
   - koji_builder
-
-#
-# x86_64 builders run pungify, that needs hfs module in order to make
-# The efi/mac images. This module is only needed on rhel.
-#
+  - site-defaults
 
 # x86_64 builders run both x86_64 and i686 builds, that requires multilib
 # version of nosync installed to fully take advantage of nosync

@@ -1,0 +1,5 @@
+---
+koji_builder_client_secret_stg: "OVERRIDEME"
+koji_builder_client_id_stg: "OVERRIDEME"
+koji_builder_client_secret: "OVERRIDEME"
+koji_builder_client_id: "OVERRIDEME"
