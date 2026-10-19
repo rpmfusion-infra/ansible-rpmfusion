@@ -1,0 +1,9 @@
+---
+# The path to the secret file in the private repo.
+creds_src: "docs/contacts.txt"
+
+# The path for the encrypted credential on the remote machine
+creds_dst: "change-me.secret"
+
+# Remote dir. where creds get stored. Probably don't change this.
+systemd_creds_dir: "/etc/credstore.encrypted/"

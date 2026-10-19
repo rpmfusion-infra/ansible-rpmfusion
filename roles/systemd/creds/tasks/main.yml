@@ -1,0 +1,70 @@
+---
+- name: Get local secret file information
+  ansible.builtin.stat:
+    path: "{{ creds_src }}"
+    # In private the pem files can be symlinks
+    follow: true
+    # We only need mtime. Although get_selinux_context is too new atm.
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
+    # get_selinux_context: no
+  delegate_to: localhost
+  become: false
+  register: src_secret_stat
+
+- name: Fail if local secret does not exist
+  ansible.builtin.fail:
+    msg: "The local secret file ({{ creds_src }}) could not be found."
+  when: not src_secret_stat.stat.exists
+
+- name: Get remote credential file information
+  ansible.builtin.stat:
+    path: "{{ systemd_creds_dir }}/{{ creds_dst }}"
+    # We only need mtime. Although get_selinux_context is too new atm.
+    get_attributes: no
+    get_checksum: no
+    get_mime: no
+    # get_selinux_context: no
+  register: dst_secret_stat
+
+- name: Deploy and encrypt secret, when changed/new.
+  when: >
+    not dst_secret_stat.stat.exists or
+    (src_secret_stat.stat.mtime | int) != (dst_secret_stat.stat.mtime | int)
+  block:
+    - name: Ensure target directory exists for encrypted credential
+      ansible.builtin.file:
+        path: "{{ [systemd_creds_dir, creds_dst] | path_join | dirname }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create secure remote temporary directory for transfer
+      ansible.builtin.tempfile:
+        state: directory
+      register: temp_dir
+
+    - name: Copy plaintext secret to remote temporary location
+      ansible.builtin.copy:
+        src: "{{ creds_src }}"
+        dest: "{{ temp_dir.path }}/secret.plain"
+        mode: '0600'
+
+    - name: Encrypt secret using systemd-creds
+      ansible.builtin.command:
+        cmd: "systemd-creds encrypt {{ temp_dir.path }}/secret.plain {{ systemd_creds_dir }}/{{ creds_dst }}"
+
+    - name: Match remote file timestamp to local file
+      # Uses the epoch time (mtime) retrieved from the local stat check
+      ansible.builtin.file:
+        path: "{{ systemd_creds_dir }}/{{ creds_dst }}"
+        state: file
+        access_time: "{{ '%Y%m%d%H%M.%S' | strftime(src_secret_stat.stat.mtime) }}"
+        modification_time: "{{ '%Y%m%d%H%M.%S' | strftime(src_secret_stat.stat.mtime) }}"
+
+  always:
+    - name: Securely wipe plaintext temporary directory
+      ansible.builtin.file:
+        path: "{{ temp_dir.path }}"
+        state: absent
+      when: temp_dir is defined
