@@ -2,12 +2,12 @@
 # NOTE: should be used with --limit most of the time
 # NOTE: most of these vars_path come from group_vars/backup_server or from hostvars
 
-- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=db02.online.rpmfusion.net"
+#- import_playbook: "/srv/web/infra/ansible/playbooks/include/virt-create.yml myhosts=db02.ovh.rpmfusion.net"
 
 # Once the instance exists, configure it.
 
 - name: configure postgresql server system
-  hosts: db02.online.rpmfusion.net
+  hosts: db02.ovh.rpmfusion.net
   user: root
   gather_facts: True
 
