@@ -69,7 +69,6 @@ env_suffix: ""
 # Default netmask. All of our OVH nets are /24's. Almost all of our
 eth0_ipv4_nm: 24
 eth1_ip: 10.0.0.10
-eth1_nm: 255.255.255.0
 # END: Ansible roles_path variables
 #######
 freezes: true
@@ -81,7 +80,6 @@ ipa_admin_password: "{{ ipa_prod_admin_password }}"
 ipa_realm: RPMFUSION.ORG
 ipa_basedn: dc=fedoraproject,dc=org
 ipa_server: ipa02.ovh.rpmfusion.net
-ipa_realm: RPMFUSION.ORG
 ipa_server_nodes:
   - bastion01.osuosl.rpmfusion.net
   - ipa02.ovh.rpmfusion.net
